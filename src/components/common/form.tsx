@@ -100,4 +100,44 @@ const FormLabel = React.forwardRef<
 });
 FormLabel.displayName = 'FormLabel';
 
-export { Form, FormField, FormItem, FormLabel, useFormField };
+const FormControl = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => {
+  const { formItemId } = useFormField();
+
+  return (
+    <div
+      ref={ref}
+      id={formItemId}
+      className={cn('block w-full', className)}
+      {...props}
+    />
+  );
+});
+FormControl.displayName = 'FormControl';
+
+const FormMessage = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, children, ...props }, ref) => {
+  const { error } = useFormField();
+  const body = error ? String(error?.message) : children;
+
+  if (!body) {
+    return null;
+  }
+
+  return (
+    <p
+      ref={ref}
+      className={cn('text-sm font-medium text-destructive', className)}
+      {...props}
+    >
+      {body}
+    </p>
+  );
+});
+FormMessage.displayName = 'FormMessage';
+
+export { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, useFormField };

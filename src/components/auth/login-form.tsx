@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type z } from 'zod';
 import { signIn } from 'next-auth/react';
+import Link from 'next/link';
 
 import { loginSchema } from '~/src/components/auth/auth-schema';
 import Button from '~/src/components/common/button';
@@ -78,6 +79,12 @@ export default function LoginForm() {
         <Button onClick={() => signIn('kakao')} type="button">
           Kakao 로그인
         </Button>
+      </div>
+      <div className="text-center text-sm mt-4">
+        계정이 없으신가요?{' '}
+        <Link href="/signup" className="text-blue-500 hover:underline">
+          회원가입
+        </Link>
       </div>
     </Form>
   );
