@@ -1,8 +1,9 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import GoogleProvider from "next-auth/providers/google";
-import KakaoProvider from "next-auth/providers/kakao";
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import GoogleProvider from 'next-auth/providers/google';
+import KakaoProvider from 'next-auth/providers/kakao';
+import type { AuthOptions } from 'next-auth';
 
-import { db } from "~/lib/db";
+import { db } from '~/lib/db';
 
 export const authOptions = {
   adapter: PrismaAdapter(db),
@@ -18,9 +19,9 @@ export const authOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET,
   session: {
-    strategy: "jwt",
+    strategy: 'database' as const,
   },
   pages: {
-    signIn: "/auth/login",
+    signIn: '/auth/login',
   },
 };
