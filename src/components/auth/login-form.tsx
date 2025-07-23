@@ -73,10 +73,10 @@ export default function LoginForm() {
         </Button>
       </form>
       <div className="flex flex-col gap-4">
-        <Button onClick={() => signIn('google')} type="button">
+        <Button onClick={() => signIn('google', { callbackUrl: '/' })} type="button">
           Google 로그인
         </Button>
-        <Button onClick={() => signIn('kakao')} type="button">
+        <Button onClick={() => signIn('kakao', { callbackUrl: '/' })} type="button">
           Kakao 로그인
         </Button>
       </div>
