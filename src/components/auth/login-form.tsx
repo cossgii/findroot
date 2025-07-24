@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { type z } from 'zod';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { loginSchema } from '~/src/components/auth/auth-schema';
 import Button from '~/src/components/common/button';
@@ -14,9 +15,9 @@ import {
   FormLabel,
 } from '~/src/components/common/form';
 import Input from '~/src/components/common/input';
-// import { useLogin } from '~/src/services/auths/use-login';
 
 export default function LoginForm() {
+  const router = useRouter();
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     mode: 'onChange',
@@ -26,10 +27,25 @@ export default function LoginForm() {
     },
   });
 
-  //   const { mutate: Login, isPending } = useLogin(form);
-
   async function onSubmit(values: z.infer<typeof loginSchema>) {
-    // Login(values);
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: values.email,
+        password: values.password,
+      });
+
+      if (result?.error) {
+        console.error(result.error);
+        alert('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+        return;
+      }
+
+      router.push('/');
+    } catch (error) {
+      console.error(error);
+      alert('로그인 중 오류가 발생했습니다.');
+    }
   }
 
   return (
@@ -68,8 +84,11 @@ export default function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={!form.formState.isDirty}>
-          로그인
+        <Button
+          type="submit"
+          disabled={!form.formState.isDirty || form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? '로그인 중...' : '로그인'}
         </Button>
       </form>
       <div className="flex flex-col gap-4">
@@ -89,3 +108,4 @@ export default function LoginForm() {
     </Form>
   );
 }
+

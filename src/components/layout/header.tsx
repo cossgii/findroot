@@ -1,12 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useSession, signIn, signOut } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
+import { usePathname } from 'next/navigation'; // usePathname 임포트
 import { cn } from '~/src/utils/class-name';
 import Button from '~/src/components/common/button';
 
 export default function Header() {
   const { data: session, status } = useSession();
+  const pathname = usePathname(); // 현재 경로 가져오기
+
+  // 로그인 또는 회원가입 페이지인지 확인
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
 
   return (
     <header
@@ -33,15 +38,19 @@ export default function Header() {
             </Button>
           </div>
         ) : (
-          <div className="flex items-center space-x-4">
-            <Link href="/login">
-              <Button variant="outlined" size="small">
-                로그인
-              </Button>
-            </Link>
-          </div>
+          // 로그인 또는 회원가입 페이지가 아닐 때만 로그인 버튼 표시
+          !isAuthPage && (
+            <div className="flex items-center space-x-4">
+              <Link href="/login">
+                <Button variant="outlined" size="small">
+                  로그인
+                </Button>
+              </Link>
+            </div>
+          )
         )}
       </nav>
     </header>
   );
 }
+
