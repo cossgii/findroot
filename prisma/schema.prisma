@@ -56,3 +56,15 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model Restaurant {
+  id          String    @id @default(cuid())
+  name        String
+  latitude    Float
+  longitude   Float
+  address     String?
+  description String?
+  category    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
