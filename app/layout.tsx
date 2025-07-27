@@ -3,7 +3,7 @@ import { Provider } from 'jotai';
 import AuthProvider from '~/src/components/auth/auth-provider';
 import Header from '~/src/components/layout/header';
 import MainContainer from '~/src/components/layout/main-container';
-import '~/src/components/styles/globals.css';
+import '~/src/styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'My Awesome App',
