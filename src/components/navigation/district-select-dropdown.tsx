@@ -1,4 +1,3 @@
-// src/components/navigation/district-select-dropdown.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -10,12 +9,13 @@ import { cn } from '~/src/utils/class-name';
 
 export default function DistrictSelectDropdown() {
   const pathname = usePathname();
-  const [selectedDistrictName, setSelectedDistrictName] = useState('자치구 선택');
+  const [selectedDistrictName, setSelectedDistrictName] =
+    useState('자치구 선택');
 
   useEffect(() => {
     const currentDistrictId = pathname.split('/').pop();
     const foundDistrict = SEOUL_DISTRICTS.find(
-      (district) => district.id === currentDistrictId
+      (district) => district.id === currentDistrictId,
     );
     if (foundDistrict) {
       setSelectedDistrictName(foundDistrict.name);
@@ -31,8 +31,8 @@ export default function DistrictSelectDropdown() {
       trigger={
         <div
           className={cn(
-            "flex items-center justify-between px-4 py-2 border border-gray-300 rounded-md cursor-pointer",
-            "min-w-[120px] text-sm text-gray-700 hover:bg-gray-50"
+            'flex items-center justify-between px-4 py-2 border border-gray-300 rounded-md cursor-pointer',
+            'min-w-[120px] text-sm text-gray-700 hover:bg-gray-50',
           )}
         >
           <span>{selectedDistrictName}</span>
@@ -57,12 +57,12 @@ export default function DistrictSelectDropdown() {
       {SEOUL_DISTRICTS.map((district) => (
         <Link
           key={district.id}
-          href={district.id === 'all' ? '/districts' : `/districts/${district.id}`}
+          href={
+            district.id === 'all' ? '/districts' : `/districts/${district.id}`
+          }
           passHref
         >
-          <DropdownItem>
-            {district.name}
-          </DropdownItem>
+          <DropdownItem>{district.name}</DropdownItem>
         </Link>
       ))}
     </Dropdown>
