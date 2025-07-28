@@ -14,12 +14,9 @@ const config: Config = {
         floatingBar: 'var(--height-floating-bar)',
       },
       fontFamily: {
-        pretendard: [
-          'var(--font-pretendard)',
-          '-apple-system',
-          'BlinkMacSystemFont',
-          'system-ui',
-        ],
+        'dongle': ['var(--font-dongle)', 'sans-serif'],
+        'noto-sans-kr': ['var(--font-noto-sans-kr)', 'sans-serif'],
+        roboto: ['var(--font-roboto)', 'sans-serif'],
       },
       colors: {
         primary: {

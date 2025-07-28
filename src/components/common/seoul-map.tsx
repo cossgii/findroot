@@ -11,12 +11,15 @@ export function SeoulMap() {
   const router = useRouter();
   const svgObjectRef = useRef<SVGSVGElement>(null);
 
-  const DISTRICT_NAME_MAP: { [key: string]: string } = SEOUL_DISTRICTS.reduce((acc, district) => {
-    if (district.id !== 'all') {
-      acc[district.id] = district.name;
-    }
-    return acc;
-  }, {} as { [key: string]: string });
+  const DISTRICT_NAME_MAP: { [key: string]: string } = SEOUL_DISTRICTS.reduce(
+    (acc, district) => {
+      if (district.id !== 'all') {
+        acc[district.id] = district.name;
+      }
+      return acc;
+    },
+    {} as { [key: string]: string },
+  );
 
   useEffect(() => {
     const svgElement = svgObjectRef.current;
@@ -57,7 +60,10 @@ export function SeoulMap() {
         const x = bbox.x + bbox.width / 2;
         const y = bbox.y + bbox.height / 2;
 
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        const text = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'text',
+        );
         text.setAttribute('x', x.toString());
         text.setAttribute('y', y.toString());
 
@@ -65,13 +71,14 @@ export function SeoulMap() {
         text.textContent = koreanName;
 
         text.setAttribute('id', 'district-label');
-        text.style.fontSize = '24px';
+        text.style.fontSize = '36px';
         text.style.fontWeight = 'bold';
         text.style.fill = '#1F2937';
         text.style.textAnchor = 'middle';
         text.style.dominantBaseline = 'middle';
         text.style.pointerEvents = 'none';
         text.style.textShadow = '0px 0px 4px white';
+        text.style.fontFamily = 'var(--font-dongle), sans-serif';
 
         svgElement.appendChild(text);
       }

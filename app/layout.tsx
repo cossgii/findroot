@@ -3,6 +3,7 @@ import { Provider } from 'jotai';
 import AuthProvider from '~/src/components/auth/auth-provider';
 import Header from '~/src/components/layout/header';
 import MainContainer from '~/src/components/layout/main-container';
+import { dongle, notoSansKR, roboto } from '~/src/fonts/fonts';
 import '~/src/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body>
+      <body className={`${dongle.variable} ${notoSansKR.variable} ${roboto.variable} font-noto-sans-kr`}>
         <Provider>
           <AuthProvider>
             <Header />
