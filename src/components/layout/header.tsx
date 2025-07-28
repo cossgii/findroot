@@ -10,8 +10,9 @@ import AuthHeaderControls from '~/src/components/auth/auth-header-controls'; // 
 export default function Header() {
   const pathname = usePathname();
 
-  // 루트 페이지에서는 자치구 드롭다운을 숨깁니다.
-  const showDistrictDropdown = pathname !== '/';
+  // 특정 페이지에서는 자치구 드롭다운을 숨깁니다.
+  const hideDistrictDropdown = ['/', '/login', '/signup'].includes(pathname);
+  const showDistrictDropdown = !hideDistrictDropdown;
 
   return (
     <header
