@@ -11,10 +11,9 @@ const config: Config = {
       },
       spacing: {
         header: 'var(--height-header)',
-        floatingBar: 'var(--height-floating-bar)',
       },
       fontFamily: {
-        'dongle': ['var(--font-dongle)', 'sans-serif'],
+        dongle: ['var(--font-dongle)', 'sans-serif'],
         'noto-sans-kr': ['var(--font-noto-sans-kr)', 'sans-serif'],
         roboto: ['var(--font-roboto)', 'sans-serif'],
       },

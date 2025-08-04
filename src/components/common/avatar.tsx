@@ -3,7 +3,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
 
-import profilelarge from '~/public/images/profile-large.png';
+import profilelarge from '../../../public/assets/profile-large.png';
 import { cn } from '~/src/utils/class-name';
 
 const Avatar = React.forwardRef<

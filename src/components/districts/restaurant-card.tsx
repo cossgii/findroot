@@ -1,59 +1,55 @@
 'use client';
 
-import Image from 'next/image';
-import { useSetAtom } from 'jotai'; // useSetAtom import
-import { activeRestaurantModalIdAtom } from '~/src/stores/app-store'; // 아톰 import
+import { useSetAtom } from 'jotai';
+import { activeRestaurantModalIdAtom } from '~/src/stores/app-store';
 
 interface RestaurantCardProps {
-  id: number; // id prop 추가
+  id: number;
   name: string;
   description?: string;
-  imageUrl?: string;
-  address?: string;
   district?: string;
 }
 
 export default function RestaurantCard({
-  id, // id prop 받기
+  id,
   name,
   description,
-  imageUrl,
-  address,
   district,
 }: RestaurantCardProps) {
-  const setActiveRestaurantModalId = useSetAtom(activeRestaurantModalIdAtom); // 아톰 setter 가져오기
+  const setActiveRestaurantModalId = useSetAtom(activeRestaurantModalIdAtom);
 
-  const handleViewDetails = () => {
-    setActiveRestaurantModalId(id); // 클릭 시 해당 맛집 ID로 아톰 업데이트
+  const handleOpenModal = () => {
+    setActiveRestaurantModalId(id);
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
-      {imageUrl && (
-        <div className="relative w-full h-48">
-          <Image
-            src={imageUrl}
-            alt={name}
-            layout="fill"
-            objectFit="cover"
-            className="w-full h-full"
-          />
-        </div>
-      )}
-      <div className="p-4 flex-grow">
-        <h3 className="text-lg font-semibold mb-2">{name}</h3>
-        {description && <p className="text-gray-600 text-sm mb-2">{description}</p>}
-        {address && <p className="text-gray-500 text-xs">{address}</p>}
+    <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
+      <div className="flex-grow">
+        <h3 className="text-lg font-semibold">{name}</h3>
+        {description && <p className="text-gray-600 text-sm mt-1">{description}</p>}
         {district && <p className="text-gray-400 text-xs mt-1">{district}</p>}
       </div>
-      <div className="p-4 border-t border-gray-200">
-        <button
-          onClick={handleViewDetails} // 클릭 핸들러 연결
-          className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors"
+      <button
+        onClick={handleOpenModal}
+        className="p-2 rounded-full hover:bg-gray-200"
+        aria-label="메뉴 더보기"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          자세히 보기
-        </button>
-      </div>
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="12" cy="5" r="1" />
+          <circle cx="12" cy="19" r="1" />
+        </svg>
+      </button>
     </div>
   );
 }

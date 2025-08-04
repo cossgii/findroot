@@ -10,7 +10,7 @@ export default function MainContainer({
   return (
     <main
       className={cn(
-        'relative mx-auto min-h-dvh max-w-screen-desktop bg-secondary-50 pt-header',
+        'mx-auto h-full max-w-screen-desktop bg-secondary-50',
         'px-4 tablet:px-6 desktop:px-[6.25rem]',
         className,
       )}
