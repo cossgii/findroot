@@ -20,6 +20,13 @@ model User {
   password      String?
   accounts      Account[]
   sessions      Session[]
+
+  // Added for new features
+  places    Place[]
+  routes    Route[]
+  followers Follow[] @relation("Following")
+  following Follow[] @relation("Follower")
+  likes     Like[]
 }
 
 model Account {
@@ -57,7 +64,8 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Restaurant {
+// Renamed from Restaurant to Place and added relations
+model Place {
   id          String    @id @default(cuid())
   name        String
   latitude    Float
@@ -67,4 +75,69 @@ model Restaurant {
   category    String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  creator   User   @relation(fields: [creatorId], references: [id])
+  creatorId String
+
+  routes   RoutePlace[]
+  likes    Like[]
 }
+
+// New model for routes
+model Route {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  creator   User   @relation(fields: [creatorId], references: [id])
+  creatorId String
+
+  places   RoutePlace[]
+  likes    Like[]
+}
+
+// Join table for the many-to-many relationship between Route and Place
+model RoutePlace {
+  routeId String
+  placeId String
+  order   Int
+
+  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@id([routeId, placeId])
+}
+
+// New model for the follow system
+model Follow {
+  followerId  String
+  followingId String
+
+  follower  User @relation("Follower", fields: [followerId], references: [id])
+  following User @relation("Following", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+}
+
+// New model for the like system
+model Like {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  place   Place?  @relation(fields: [placeId], references: [id])
+  placeId String?
+
+  route   Route?  @relation(fields: [routeId], references: [id])
+  routeId String?
+
+  @@unique([userId, placeId])
+  @@unique([userId, routeId])
+}
+
+// New model for the comment system
+

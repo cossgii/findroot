@@ -1,20 +1,23 @@
 import { NextResponse } from 'next/server';
-import { db } from '~/lib/db';
-import bcrypt from 'bcryptjs'; // bcryptjs 설치 필요: pnpm add bcryptjs
+import { db } from '@/lib/db';
+import bcrypt from 'bcryptjs';
+
+// The hardcoded ID of the main account that every new user will follow.
+const MAIN_ACCOUNT_ID = 'cmdgvgj7o0001bsv4avsk90hh'; // TODO: Replace with a real, permanent admin/main account ID
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    // Note: The original code didn't include 'name', but it's good practice for a user model.
+    // Assuming the client will send 'name' along with email and password.
+    const { email, password, name } = await request.json();
 
-    // 1. 입력값 유효성 검사
-    if (!email || !password) {
+    if (!email || !password || !name) {
       return NextResponse.json(
-        { message: 'Email and password are required' },
+        { message: 'Email, password, and name are required' },
         { status: 400 },
       );
     }
 
-    // 2. 이메일 중복 확인
     const existingUser = await db.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json(
@@ -23,21 +26,31 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. 비밀번호 해싱
-    const hashedPassword = await bcrypt.hash(password, 10); // saltRounds 10
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. 사용자 생성 및 저장
-    const user = await db.user.create({
+    const newUser = await db.user.create({
       data: {
         email,
-        password: hashedPassword, // 해싱된 비밀번호 저장
+        name,
+        password: hashedPassword,
       },
     });
+
+    // Automatically follow the main account
+    // This ensures that new users will have content in their feed.
+    if (newUser.id !== MAIN_ACCOUNT_ID) { // Prevents the main account from following itself
+      await db.follow.create({
+        data: {
+          followerId: newUser.id,
+          followingId: MAIN_ACCOUNT_ID,
+        },
+      });
+    }
 
     return NextResponse.json(
       {
         message: 'User registered successfully',
-        user: { id: user.id, email: user.email },
+        user: { id: newUser.id, email: newUser.email, name: newUser.name },
       },
       { status: 201 },
     );

@@ -7,6 +7,7 @@ interface RestaurantCardProps {
   id: number;
   name: string;
   description?: string;
+  address?: string; // address prop 유지
   district?: string;
 }
 
@@ -14,6 +15,7 @@ export default function RestaurantCard({
   id,
   name,
   description,
+  address, // prop으로 받음
   district,
 }: RestaurantCardProps) {
   const setActiveRestaurantModalId = useSetAtom(activeRestaurantModalIdAtom);
@@ -21,6 +23,8 @@ export default function RestaurantCard({
   const handleOpenModal = () => {
     setActiveRestaurantModalId(id);
   };
+
+  // address는 렌더링하지 않음
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
