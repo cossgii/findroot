@@ -95,3 +95,24 @@ export async function getPlaceById(id: string) {
 
   return place;
 }
+
+/**
+ * Fetches places created by a specific user.
+ * @param creatorId - The ID of the user who created the places.
+ * @returns A list of places created by the specified user.
+ */
+export async function getPlacesByCreatorId(creatorId: string) {
+  return db.place.findMany({
+    where: {
+      creatorId,
+    },
+    include: {
+      creator: {
+        select: { id: true, name: true, image: true },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}

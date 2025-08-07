@@ -27,6 +27,8 @@ model User {
   followers Follow[] @relation("Following")
   following Follow[] @relation("Follower")
   likes     Like[]
+  sentMessages    Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 model Account {
@@ -140,4 +142,18 @@ model Like {
 }
 
 // New model for the comment system
+model Message {
+  id          String    @id @default(cuid())
+  senderId    String
+  receiverId  String
+  content     String
+  createdAt   DateTime  @default(now())
+  isRead      Boolean   @default(false)
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId])
+}
 

@@ -37,3 +37,33 @@ export async function getPlaceLikesCount(placeId: string) {
     },
   });
 }
+
+export async function getLikedPlacesByUserId(userId: string) {
+  return db.like.findMany({
+    where: {
+      userId,
+      placeId: { not: null },
+    },
+    include: {
+      place: true, // 좋아요 누른 장소 정보 포함
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
+
+export async function getLikedRoutesByUserId(userId: string) {
+  return db.like.findMany({
+    where: {
+      userId,
+      routeId: { not: null },
+    },
+    include: {
+      route: true, // 좋아요 누른 루트 정보 포함
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
