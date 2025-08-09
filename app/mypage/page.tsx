@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { User } from '@prisma/client';
+import { useSetAtom } from 'jotai';
+import { modalAtom } from '~/src/stores/app-store';
 import UserProfileDisplay from '~/src/components/mypage/UserProfileDisplay';
 import UserProfileEditForm from '~/src/components/mypage/UserProfileEditForm';
-import AddPlaceModal from '~/src/components/mypage/AddPlaceModal';
-import AddRouteModal from '~/src/components/mypage/AddRouteModal';
 import MessageInbox from '~/src/components/mypage/MessageInbox';
 import SendMessageForm from '~/src/components/mypage/SendMessageForm';
 import MainContainer from '~/src/components/layout/main-container';
@@ -15,10 +15,9 @@ import ToggleSwitch from '~/src/components/common/ToggleSwitch';
 
 const MyPage = () => {
   const { data: session, status } = useSession();
+  const setModal = useSetAtom(modalAtom);
   const [user, setUser] = useState<User | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isPlaceModalOpen, setIsPlaceModalOpen] = useState(false);
-  const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);
   const [messageSentCount, setMessageSentCount] = useState(0); // 메시지 전송 시 갱신 트리거
   const [likedPlaces, setLikedPlaces] = useState<any[]>([]); // TODO: Like & Place 타입 정의
   const [likedRoutes, setLikedRoutes] = useState<any[]>([]); // TODO: Like & Route 타입 정의
@@ -93,6 +92,14 @@ const MyPage = () => {
     setMessageSentCount((prev) => prev + 1);
   };
 
+  const openAddPlaceModal = () => {
+    setModal({ type: 'ADD_PLACE', props: { onPlaceAdded: handlePlaceAdded } });
+  };
+
+  const openAddRouteModal = () => {
+    setModal({ type: 'ADD_ROUTE', props: { onRouteAdded: handleRouteAdded } });
+  };
+
   return (
     <MainContainer className="flex flex-col items-center py-8">
       <h1 className="text-3xl font-bold mb-8">마이페이지</h1>
@@ -137,10 +144,10 @@ const MyPage = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold mb-4">콘텐츠 관리</h2>
             <div className="flex justify-center space-x-4">
-              <Button onClick={() => setIsPlaceModalOpen(true)} className="w-auto px-6">
+              <Button onClick={openAddPlaceModal} className="w-auto px-6">
                 장소 등록
               </Button>
-              <Button onClick={() => setIsRouteModalOpen(true)} className="w-auto px-6">
+              <Button onClick={openAddRouteModal} className="w-auto px-6">
                 루트 등록
               </Button>
             </div>
@@ -177,18 +184,6 @@ const MyPage = () => {
           </div>
         </div>
       )}
-
-      <AddPlaceModal
-        isOpen={isPlaceModalOpen}
-        onClose={() => setIsPlaceModalOpen(false)}
-        onPlaceAdded={handlePlaceAdded}
-      />
-
-      <AddRouteModal
-        isOpen={isRouteModalOpen}
-        onClose={() => setIsRouteModalOpen(false)}
-        onRouteAdded={handleRouteAdded}
-      />
     </MainContainer>
   );
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useSetAtom } from 'jotai';
-import { activeRestaurantModalIdAtom } from '~/src/stores/app-store';
+import { modalAtom } from '~/src/stores/app-store';
 
 interface RestaurantCardProps {
   id: number;
@@ -18,10 +18,10 @@ export default function RestaurantCard({
   address, // prop으로 받음
   district,
 }: RestaurantCardProps) {
-  const setActiveRestaurantModalId = useSetAtom(activeRestaurantModalIdAtom);
+  const setModal = useSetAtom(modalAtom);
 
   const handleOpenModal = () => {
-    setActiveRestaurantModalId(id);
+    setModal({ type: 'RESTAURANT_DETAIL', props: { restaurantId: id } });
   };
 
   // address는 렌더링하지 않음
@@ -57,5 +57,3 @@ export default function RestaurantCard({
     </div>
   );
 }
-
-
