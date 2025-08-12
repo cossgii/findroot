@@ -3,19 +3,11 @@ import { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { modalAtom } from '~/src/stores/app-store';
 
-// Kakao Maps SDK의 PlaceResult 객체에 대한 타입을 명시적으로 정의합니다.
-interface PlaceResult {
-  id: string;
-  place_name: string;
-  address_name: string;
-  road_address_name: string;
-  x: string; // longitude
-  y: string; // latitude
-}
-
 export const usePlaceSearch = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [searchResults, setSearchResults] = useState<PlaceResult[]>([]);
+  const [searchResults, setSearchResults] = useState<
+    kakao.maps.services.Places.PlaceResult[]
+  >([]);
   const [selectedPlace, setSelectedPlace] = useState<{
     latitude: number;
     longitude: number;
@@ -23,7 +15,8 @@ export const usePlaceSearch = () => {
     address: string;
     id: string;
   } | null>(null);
-  const [isKakaoMapServicesLoaded, setIsKakaoMapServicesLoaded] = useState(false);
+  const [isKakaoMapServicesLoaded, setIsKakaoMapServicesLoaded] =
+    useState(false);
   const [, setModal] = useAtom(modalAtom);
 
   useEffect(() => {
@@ -67,7 +60,9 @@ export const usePlaceSearch = () => {
     ps.keywordSearch(searchKeyword, (data, status) => {
       if (status === window.kakao.maps.services.Places.Status.OK) {
         setSearchResults(data);
-      } else if (status === window.kakao.maps.services.Places.Status.ZERO_RESULT) {
+      } else if (
+        status === window.kakao.maps.services.Places.Status.ZERO_RESULT
+      ) {
         setModal({
           type: 'INFO_MESSAGE',
           props: {
@@ -91,7 +86,7 @@ export const usePlaceSearch = () => {
     });
   };
 
-  const handleSelectPlace = (place: PlaceResult) => {
+  const handleSelectPlace = (place: kakao.maps.services.Places.PlaceResult) => {
     const lat = parseFloat(place.y);
     const lng = parseFloat(place.x);
     const address = place.address_name;

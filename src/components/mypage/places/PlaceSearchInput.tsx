@@ -3,18 +3,12 @@ import React from 'react';
 import Input from '~/src/components/common/input';
 import Button from '~/src/components/common/button';
 
-interface PlaceResult {
-  id: string;
-  place_name: string;
-  address_name: string;
-}
-
 interface PlaceSearchInputProps {
   searchKeyword: string;
   setSearchKeyword: (keyword: string) => void;
   handleSearch: () => void;
-  searchResults: PlaceResult[];
-  handleSelectPlace: (place: PlaceResult) => void;
+  searchResults: kakao.maps.services.Places.PlaceResult[];
+  handleSelectPlace: (place: kakao.maps.services.Places.PlaceResult) => void;
   isKakaoMapServicesLoaded: boolean;
 }
 

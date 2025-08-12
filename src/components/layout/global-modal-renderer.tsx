@@ -8,8 +8,8 @@ import { Place } from '@prisma/client';
 // Import all modal components
 import Modal from '~/src/components/districts/modal';
 import RestaurantDetailModalContent from '~/src/components/districts/restaurant-detail-modal-content';
-import AddPlaceModal from '~/src/components/mypage/AddPlaceModal';
-import AddRouteModal from '~/src/components/mypage/AddRouteModal';
+import AddPlaceModal from '~/src/components/mypage/places/AddPlaceModal';
+import AddRouteModal from '~/src/components/mypage/routes/AddRouteModal';
 
 /**
  * A helper component to fetch data for the restaurant detail modal.
