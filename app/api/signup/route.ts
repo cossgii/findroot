@@ -1,22 +1,14 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db } from '~/lib/db';
 import bcrypt from 'bcryptjs';
-
-// The hardcoded ID of the main account that every new user will follow.
-const MAIN_ACCOUNT_ID = 'cmdgvgj7o0001bsv4avsk90hh'; // TODO: Replace with a real, permanent admin/main account ID
+import { z } from 'zod'; // Import z for ZodError
+import { signupSchema } from '~/src/components/auth/auth-schema';
+import { MAIN_ACCOUNT_ID } from '~/config';
 
 export async function POST(request: Request) {
   try {
-    // Note: The original code didn't include 'name', but it's good practice for a user model.
-    // Assuming the client will send 'name' along with email and password.
-    const { email, password, name } = await request.json();
-
-    if (!email || !password || !name) {
-      return NextResponse.json(
-        { message: 'Email, password, and name are required' },
-        { status: 400 },
-      );
-    }
+    const body = await request.json();
+    const { email, password, name } = signupSchema.parse(body);
 
     const existingUser = await db.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -28,24 +20,29 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await db.user.create({
-      data: {
-        email,
-        name,
-        password: hashedPassword,
-      },
-    });
-
-    // Automatically follow the main account
-    // This ensures that new users will have content in their feed.
-    if (newUser.id !== MAIN_ACCOUNT_ID) { // Prevents the main account from following itself
-      await db.follow.create({
+    // 트랜잭션을 사용하여 유저 생성과 팔로우 작업을 원자적으로 처리합니다.
+    const newUser = await db.$transaction(async (prisma) => {
+      const createdUser = await prisma.user.create({
         data: {
-          followerId: newUser.id,
-          followingId: MAIN_ACCOUNT_ID,
+          email,
+          name,
+          password: hashedPassword,
         },
       });
-    }
+
+      // 새로운 유저가 대표 계정을 자동으로 팔로우합니다.
+      // 피드에 초기 콘텐츠가 보이도록 보장합니다.
+      if (createdUser.id !== MAIN_ACCOUNT_ID) {
+        // 대표 계정이 자기 자신을 팔로우하는 것을 방지합니다.
+        await prisma.follow.create({
+          data: {
+            followerId: createdUser.id,
+            followingId: MAIN_ACCOUNT_ID,
+          },
+        });
+      }
+      return createdUser;
+    });
 
     return NextResponse.json(
       {
@@ -56,6 +53,12 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error('Signup error:', error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: 'Validation error', errors: error.issues },
+        { status: 400 },
+      );
+    }
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 },

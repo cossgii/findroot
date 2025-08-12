@@ -20,6 +20,7 @@ export const useAddPlaceForm = ({ onClose, onPlaceAdded }: UseAddPlaceFormProps)
       latitude: 0,
       longitude: 0,
       address: '',
+      district: '',
       description: '',
       category: '',
     },

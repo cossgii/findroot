@@ -2,7 +2,6 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
@@ -17,27 +16,16 @@ import {
   FormMessage,
 } from '~/src/components/common/form';
 import Input from '~/src/components/common/input';
+import { signupSchema } from '~/src/components/auth/auth-schema';
 
-const formSchema = z
-  .object({
-    email: z.string().email({ message: '유효한 이메일 주소를 입력해주세요.' }),
-    password: z
-      .string()
-      .min(6, { message: '비밀번호는 최소 6자 이상이어야 합니다.' }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: '비밀번호가 일치하지 않습니다.',
-    path: ['confirmPassword'],
-  });
-
-type SignupFormValues = z.infer<typeof formSchema>;
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 export function SignupForm() {
   const router = useRouter();
   const form = useForm<SignupFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(signupSchema),
     defaultValues: {
+      name: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -52,14 +40,24 @@ export function SignupForm() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          name: values.name,
           email: values.email,
           password: values.password,
+          confirmPassword: values.confirmPassword,
         }),
       });
 
       if (!signupResponse.ok) {
         const data = await signupResponse.json();
-        if (data.message) {
+        if (data.message === 'Validation error' && data.errors) {
+          data.errors.forEach((err: any) => {
+            if (err.path && err.path.length > 0) {
+              form.setError(err.path[0], { message: err.message });
+            } else {
+              form.setError('root.serverError', { message: err.message });
+            }
+          });
+        } else if (data.message) {
           if (data.message.includes('email already exists')) {
             form.setError('email', { message: '이미 가입된 이메일입니다.' });
           } else {
@@ -110,6 +108,20 @@ export function SignupForm() {
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>이름</FormLabel>
+              <FormControl>
+                <Input placeholder="홍길동" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <FormField
           control={form.control}
           name="password"

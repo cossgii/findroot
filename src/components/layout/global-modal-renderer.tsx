@@ -2,7 +2,7 @@
 
 import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
-import { modalAtom } from '~/src/stores/app-store';
+import { modalAtom, InfoMessageModalProps, AddPlaceModalProps, AddRouteModalProps, RestaurantDetailModalProps } from '~/src/stores/app-store'; // InfoMessageModalProps 임포트
 import { Place } from '@prisma/client';
 
 // Import all modal components
@@ -15,7 +15,7 @@ import AddRouteModal from '~/src/components/mypage/AddRouteModal';
  * A helper component to fetch data for the restaurant detail modal.
  * This keeps the data fetching logic isolated to when it's needed.
  */
-const RestaurantDetailModal = ({ restaurantId, onClose }: { restaurantId: number; onClose: () => void }) => {
+const RestaurantDetailModal = ({ restaurantId, onClose }: RestaurantDetailModalProps & { onClose: () => void }) => {
   const [restaurant, setRestaurant] = useState<Place | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +52,27 @@ const RestaurantDetailModal = ({ restaurantId, onClose }: { restaurantId: number
   );
 };
 
+// INFO_MESSAGE 타입의 모달을 위한 컴포넌트
+const InfoMessageModal = ({ title, message, onClose }: InfoMessageModalProps & { onClose: () => void }) => {
+  return (
+    <Modal isOpen={true} onClose={onClose}>
+      <div className="p-6">
+        <h2 className="text-xl font-bold mb-4">{title}</h2>
+        <p>{message}</p>
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            확인
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+
 export default function GlobalModalRenderer() {
   const [modal, setModal] = useAtom(modalAtom);
 
@@ -65,13 +86,13 @@ export default function GlobalModalRenderer() {
 
   switch (modal.type) {
     case 'RESTAURANT_DETAIL':
-      return <RestaurantDetailModal {...modal.props} onClose={closeModal} />;
+      return <RestaurantDetailModal {...(modal.props as RestaurantDetailModalProps)} onClose={closeModal} />;
     case 'ADD_PLACE':
-      // AddPlaceModal expects isOpen and onClose. We manage that here.
-      return <AddPlaceModal isOpen={true} {...modal.props} onClose={closeModal} />;
+      return <AddPlaceModal isOpen={true} {...(modal.props as AddPlaceModalProps)} onClose={closeModal} />;
     case 'ADD_ROUTE':
-      // AddRouteModal expects isOpen and onClose. We manage that here.
-      return <AddRouteModal isOpen={true} {...modal.props} onClose={closeModal} />;
+      return <AddRouteModal isOpen={true} {...(modal.props as AddRouteModalProps)} onClose={closeModal} />;
+    case 'INFO_MESSAGE':
+      return <InfoMessageModal {...(modal.props as InfoMessageModalProps)} onClose={closeModal} />;
     default:
       return null;
   }

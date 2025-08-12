@@ -8,7 +8,10 @@ import { Place } from '@prisma/client';
 const createRouteSchema = z.object({
   name: z.string().min(1, { message: '루트 이름을 입력해주세요.' }),
   description: z.string().optional(),
-  selectedPlaces: z.array(z.string()).min(1, { message: '최소 하나 이상의 장소를 선택해주세요.' }),
+  districtId: z.string().min(1, { message: '자치구를 선택해주세요.' }),
+  selectedPlaces: z
+    .array(z.string())
+    .min(1, { message: '최소 하나 이상의 장소를 선택해주세요.' }),
 });
 
 type AddRouteFormValues = z.infer<typeof createRouteSchema>;
@@ -18,15 +21,20 @@ interface UseAddRouteFormProps {
   onRouteAdded: () => void;
 }
 
-export const useAddRouteForm = ({ onClose, onRouteAdded }: UseAddRouteFormProps) => {
+export const useAddRouteForm = ({
+  onClose,
+  onRouteAdded,
+}: UseAddRouteFormProps) => {
   const { data: session } = useSession();
   const [userPlaces, setUserPlaces] = useState<Place[]>([]);
+  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
 
   const form = useForm<AddRouteFormValues>({
     resolver: zodResolver(createRouteSchema),
     defaultValues: {
       name: '',
       description: '',
+      districtId: '',
       selectedPlaces: [],
     },
   });
@@ -35,19 +43,25 @@ export const useAddRouteForm = ({ onClose, onRouteAdded }: UseAddRouteFormProps)
     if (session?.user?.id) {
       const fetchUserPlaces = async () => {
         try {
-          const response = await fetch(`/api/users/${session.user.id}/places`);
+          const url = selectedDistrict
+            ? `/api/users/${session.user.id}/places?district=${selectedDistrict}`
+            : `/api/users/${session.user.id}/places`;
+
+          const response = await fetch(url);
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           const places: Place[] = await response.json();
           setUserPlaces(places);
+          // Reset selected places if district changes
+          form.setValue('selectedPlaces', []);
         } catch (error) {
           console.error('Error fetching user places:', error);
         }
       };
       fetchUserPlaces();
     }
-  }, [session]);
+  }, [session, selectedDistrict]);
 
   const onSubmit = async (values: AddRouteFormValues) => {
     if (!session?.user?.id) {
@@ -64,6 +78,7 @@ export const useAddRouteForm = ({ onClose, onRouteAdded }: UseAddRouteFormProps)
         body: JSON.stringify({
           name: values.name,
           description: values.description,
+          districtId: values.districtId, // Pass districtId
         }),
       });
 
@@ -100,5 +115,5 @@ export const useAddRouteForm = ({ onClose, onRouteAdded }: UseAddRouteFormProps)
     }
   };
 
-  return { form, onSubmit, userPlaces };
+  return { form, onSubmit, userPlaces, selectedDistrict, setSelectedDistrict };
 };

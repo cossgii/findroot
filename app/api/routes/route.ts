@@ -7,6 +7,7 @@ import { z } from 'zod';
 const createRouteSchema = z.object({
   name: z.string().min(1, { message: '루트 이름을 입력해주세요.' }),
   description: z.string().optional(),
+  districtId: z.string().min(1, { message: '자치구 ID를 입력해주세요.' }),
 });
 
 export async function POST(request: Request) {

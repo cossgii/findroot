@@ -6,17 +6,24 @@ import type { AuthOptions } from 'next-auth';
 import * as bcrypt from 'bcryptjs';
 
 import { db } from '~/lib/db';
+import {
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  KAKAO_CLIENT_ID,
+  KAKAO_CLIENT_SECRET,
+  NEXTAUTH_SECRET,
+} from '~/config';
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(db),
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
     }),
     KakaoProvider({
-      clientId: process.env.KAKAO_CLIENT_ID!,
-      clientSecret: process.env.KAKAO_CLIENT_SECRET!,
+      clientId: KAKAO_CLIENT_ID,
+      clientSecret: KAKAO_CLIENT_SECRET,
     }),
     CredentialsProvider({
       name: 'Credentials',
@@ -62,7 +69,7 @@ export const authOptions: AuthOptions = {
       },
     }),
   ],
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt' as const,
   },

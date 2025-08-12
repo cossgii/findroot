@@ -3,6 +3,7 @@ import { db } from '~/lib/db';
 interface CreateRouteInput {
   name: string;
   description?: string;
+  districtId: string;
 }
 
 export async function createRoute(data: CreateRouteInput, creatorId: string) {

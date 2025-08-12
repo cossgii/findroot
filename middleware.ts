@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { NEXTAUTH_SECRET } from '~/config';
 
 export async function middleware(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ req, secret: NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
   // 1. 로그인된 사용자가 로그인/회원가입 페이지에 접근 시 메인 페이지로 리디렉션
@@ -29,6 +30,6 @@ export async function middleware(req: NextRequest) {
 // api, _next/static, _next/image, favicon.ico를 제외한 모든 경로에서 미들웨어를 실행합니다.
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*) ',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };

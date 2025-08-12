@@ -12,13 +12,13 @@ interface AddRouteModalProps {
 }
 
 export default function AddRouteModal({ isOpen, onClose, onRouteAdded }: AddRouteModalProps) {
-  const { form, onSubmit, userPlaces } = useAddRouteForm({ onClose, onRouteAdded });
+  const { form, onSubmit, userPlaces, selectedDistrict, setSelectedDistrict } = useAddRouteForm({ onClose, onRouteAdded });
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-4">새 루트 등록</h2>
-        <AddRouteForm form={form} onSubmit={onSubmit} onClose={onClose} userPlaces={userPlaces} />
+        <AddRouteForm form={form} onSubmit={onSubmit} onClose={onClose} userPlaces={userPlaces} selectedDistrict={selectedDistrict} setSelectedDistrict={setSelectedDistrict} />
       </div>
     </Modal>
   );

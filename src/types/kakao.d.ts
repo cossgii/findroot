@@ -5,6 +5,7 @@ declare namespace kakao.maps {
     constructor(container: HTMLElement, options: MapOptions);
     setCenter(latlng: LatLng): void;
     getCenter(): LatLng;
+    relayout(): void; // relayout 추가
   }
 
   interface MapOptions {
@@ -30,11 +31,13 @@ declare namespace kakao.maps {
   }
 
   class MarkerImage {
-    constructor(src: string, size: Size, options: MarkerImageOptions);
+    constructor(src: string, size: Size, options?: MarkerImageOptions);
   }
 
   interface MarkerImageOptions {
-    offset: Point;
+    offset?: Point;
+    spriteOrigin?: Point;
+    spriteSize?: Size;
   }
 
   class Size {
@@ -45,7 +48,88 @@ declare namespace kakao.maps {
     constructor(x: number, y: number);
   }
 
+  class Polyline {
+    constructor(options: PolylineOptions);
+    setMap(map: Map | null): void;
+  }
+
+  interface PolylineOptions {
+    path: LatLng[] | LatLng[][];
+    strokeWeight?: number;
+    strokeColor?: string;
+    strokeOpacity?: number;
+    strokeStyle?: string;
+    endArrow?: boolean;
+  }
+
   namespace event {
-    function addListener(target: any, type: string, callback: () => void): void;
+    function addListener(target: Map | Marker | Polyline, type: string, callback: (...args: any[]) => void): void;
+  }
+}
+
+declare namespace kakao.maps.services {
+  class Places {
+    constructor();
+    keywordSearch(
+      keyword: string,
+      callback: Places.KeywordSearchCallback,
+      options?: Places.KeywordSearchOptions
+    ): void;
+  }
+
+  namespace Places {
+    enum Status {
+      OK = 'OK',
+      ZERO_RESULT = 'ZERO_RESULT',
+      ERROR = 'ERROR',
+    }
+
+    interface KeywordSearchOptions {
+      category_group_code?: string;
+      location?: kakao.maps.LatLng;
+      radius?: number;
+      bounds?: kakao.maps.LatLngBounds;
+      size?: number;
+      page?: number;
+      sort?: string;
+      rect?: string;
+    }
+
+    interface PlaceResult {
+      id: string;
+      place_name: string;
+      category_name: string;
+      category_group_code: string;
+      category_group_name: string;
+      phone: string;
+      address_name: string;
+      road_address_name: string;
+      x: string; // longitude
+      y: string; // latitude
+      place_url: string;
+      distance: string;
+    }
+
+    type KeywordSearchCallback = (
+      data: PlaceResult[],
+      status: Status,
+      pagination: Pagination
+    ) => void;
+
+    interface Pagination {
+      total_count: number;
+      pageable_count: number;
+      is_end: boolean;
+      same_name: {
+        region: string;
+        keyword: string;
+        selected_region: string;
+      };
+      gotoFirst(): void;
+      gotoLast(): void;
+      gotoPage(page: number): void;
+      nextPage(): void;
+      prevPage(): void;
+    }
   }
 }

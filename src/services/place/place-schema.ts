@@ -5,6 +5,7 @@ export const createPlaceSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   address: z.string().optional(),
+  district: z.string().optional(),
   description: z.string().optional(),
   category: z.string().optional(),
 });

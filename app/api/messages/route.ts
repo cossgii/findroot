@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { sendMessage } from '~/src/services/message/messageService';
 import { z } from 'zod';
-import { MAIN_ACCOUNT_ID } from '~/app/api/signup/route'; // MAIN_ACCOUNT_ID 가져오기
+import { MAIN_ACCOUNT_ID } from '~/config';
 
 const messageSchema = z.object({
   content: z.string().min(1, { message: '메시지 내용을 입력해주세요.' }),
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: 'Invalid request body', errors: error.errors },
+        { message: 'Invalid request body', errors: error.issues },
         { status: 400 },
       );
     }

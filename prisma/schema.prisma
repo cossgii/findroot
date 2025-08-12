@@ -13,11 +13,11 @@ datasource db {
 
 model User {
   id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
+  name          String
+  email         String    @unique
   emailVerified DateTime?
   image         String?
-  password      String?
+  password      String
   accounts      Account[]
   sessions      Session[]
 
@@ -73,12 +73,13 @@ model Place {
   latitude    Float
   longitude   Float
   address     String?
+  district    String? // Added district field
   description String?
   category    String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  creator   User   @relation(fields: [creatorId], references: [id])
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId String
 
   routes   RoutePlace[]
@@ -90,10 +91,11 @@ model Route {
   id          String       @id @default(cuid())
   name        String
   description String?
+  districtId  String? // Added districtId field
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  creator   User   @relation(fields: [creatorId], references: [id])
+  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId String
 
   places   RoutePlace[]
@@ -117,8 +119,8 @@ model Follow {
   followerId  String
   followingId String
 
-  follower  User @relation("Follower", fields: [followerId], references: [id])
-  following User @relation("Following", fields: [followingId], references: [id])
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
 }
@@ -128,13 +130,13 @@ model Like {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
-  place   Place?  @relation(fields: [placeId], references: [id])
+  place   Place?  @relation(fields: [placeId], references: [id], onDelete: Cascade)
   placeId String?
 
-  route   Route?  @relation(fields: [routeId], references: [id])
+  route   Route?  @relation(fields: [routeId], references: [id], onDelete: Cascade)
   routeId String?
 
   @@unique([userId, placeId])
@@ -150,8 +152,8 @@ model Message {
   createdAt   DateTime  @default(now())
   isRead      Boolean   @default(false)
 
-  sender   User @relation("SentMessages", fields: [senderId], references: [id])
-  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@index([senderId])
   @@index([receiverId])
