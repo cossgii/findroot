@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getPlaceById } from '~/src/services/place/placeService';
 
+// Define the expected type for params
+interface PlaceRouteParams {
+  placeId: string;
+}
+
 export async function GET(
   request: Request,
-  { params }: { params: { placeId: string } },
+  context: { params: PlaceRouteParams }, // Use the defined interface
 ) {
   try {
-    const placeId = params.placeId;
+    const placeId = context.params.placeId; // Access params from context
     const place = await getPlaceById(placeId);
 
     if (!place) {

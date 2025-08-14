@@ -63,73 +63,83 @@ declare namespace kakao.maps {
   }
 
   namespace event {
-    function addListener(target: Map | Marker | Polyline, type: string, callback: (...args: any[]) => void): void;
+    function addListener(
+      target: Map | Marker | Polyline,
+      type: string,
+      callback: (...args: any[]) => void,
+    ): void;
   }
 }
 
 declare namespace kakao.maps.services {
+  enum Status {
+    OK = 'OK',
+    ZERO_RESULT = 'ZERO_RESULT',
+    ERROR = 'ERROR',
+  }
+
   class Places {
     constructor();
     keywordSearch(
       keyword: string,
-      callback: Places.KeywordSearchCallback,
-      options?: Places.KeywordSearchOptions
+      callback: (
+        data: PlaceResult[],
+        status: Status,
+        pagination: Pagination,
+      ) => void,
+      options?: KeywordSearchOptions,
     ): void;
   }
 
-  namespace Places {
-    enum Status {
-      OK = 'OK',
-      ZERO_RESULT = 'ZERO_RESULT',
-      ERROR = 'ERROR',
-    }
+  interface KeywordSearchOptions {
+    category_group_code?: string;
+    location?: kakao.maps.LatLng;
+    radius?: number;
+    bounds?: kakao.maps.LatLngBounds;
+    size?: number;
+    page?: number;
+    sort?: string;
+    rect?: string;
+  }
 
-    interface KeywordSearchOptions {
-      category_group_code?: string;
-      location?: kakao.maps.LatLng;
-      radius?: number;
-      bounds?: kakao.maps.LatLngBounds;
-      size?: number;
-      page?: number;
-      sort?: string;
-      rect?: string;
-    }
+  interface PlaceResult {
+    id: string;
+    place_name: string;
+    category_name: string;
+    category_group_code: string;
+    category_group_name: string;
+    phone: string;
+    address_name: string;
+    road_address_name: string;
+    x: string; // longitude
+    y: string; // latitude
+    place_url: string;
+    distance: string;
+  }
 
-    interface PlaceResult {
-      id: string;
-      place_name: string;
-      category_name: string;
-      category_group_code: string;
-      category_group_name: string;
-      phone: string;
-      address_name: string;
-      road_address_name: string;
-      x: string; // longitude
-      y: string; // latitude
-      place_url: string;
-      distance: string;
-    }
-
-    type KeywordSearchCallback = (
-      data: PlaceResult[],
-      status: Status,
-      pagination: Pagination
-    ) => void;
-
-    interface Pagination {
-      total_count: number;
-      pageable_count: number;
-      is_end: boolean;
-      same_name: {
-        region: string;
-        keyword: string;
-        selected_region: string;
-      };
-      gotoFirst(): void;
-      gotoLast(): void;
-      gotoPage(page: number): void;
-      nextPage(): void;
-      prevPage(): void;
-    }
+  interface Pagination {
+    total_count: number;
+    pageable_count: number;
+    is_end: boolean;
+    same_name: {
+      region: string;
+      keyword: string;
+      selected_region: string;
+    };
+    gotoFirst(): void;
+    gotoLast(): void;
+    gotoPage(page: number): void;
+    nextPage(): void;
+    prevPage(): void;
   }
 }
+
+declare global {
+  interface Window {
+    kakao: {
+      maps: typeof kakao.maps;
+      // Add other top-level properties of window.kakao if they exist and are used
+    };
+  }
+}
+

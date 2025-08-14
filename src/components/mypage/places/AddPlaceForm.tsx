@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react'; // Import useMemo
 import { UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
-import { CATEGORIES } from '~/src/utils/categories';
 import { createPlaceSchema } from '~/src/services/place/place-schema';
+import { PlaceCategory } from '@prisma/client';
 import {
   Form,
   FormField,
@@ -37,10 +37,10 @@ export default function AddPlaceForm({
     selectedPlace,
     handleSearch,
     handleSelectPlace,
-    isKakaoMapServicesLoaded,
+    isKakaoPlacesServiceReady,
   } = usePlaceSearch();
 
-  const defaultCenter = { lat: 37.5665, lng: 126.978 };
+  const defaultCenter = useMemo(() => ({ lat: 37.5665, lng: 126.978 }), []); // Memoize defaultCenter
 
   useEffect(() => {
     if (selectedPlace) {
@@ -69,7 +69,7 @@ export default function AddPlaceForm({
             handleSearch={handleSearch}
             searchResults={searchResults}
             handleSelectPlace={handleSelectPlace}
-            isKakaoMapServicesLoaded={isKakaoMapServicesLoaded}
+            isKakaoPlacesServiceReady={isKakaoPlacesServiceReady}
           />
         </FormItem>
 
@@ -77,8 +77,8 @@ export default function AddPlaceForm({
           <KakaoMap
             latitude={selectedPlace?.latitude || defaultCenter.lat}
             longitude={selectedPlace?.longitude || defaultCenter.lng}
-            markers={
-              selectedPlace
+            markers={useMemo(() => {
+              return selectedPlace
                 ? [
                     {
                       latitude: selectedPlace.latitude,
@@ -87,8 +87,8 @@ export default function AddPlaceForm({
                       id: selectedPlace.id,
                     },
                   ]
-                : []
-            }
+                : [];
+            }, [selectedPlace])} // Memoize markers array
             className="w-full h-full"
           />
         </div>
@@ -180,11 +180,8 @@ export default function AddPlaceForm({
                   className="w-full rounded-xl border-2 border-secondary-50 bg-gray-50 px-[16px] py-[10px] shadow-sm outline-2 transition-colors duration-75 hover:border-primary-300 focus:outline-primary-600"
                 >
                   <option value="">선택하세요</option>
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
+                  <option value={PlaceCategory.MEAL}>식사 (MEAL)</option>
+                  <option value={PlaceCategory.DRINK}>음료 (DRINK)</option>
                 </select>
               </FormControl>
               <FormMessage />

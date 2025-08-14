@@ -11,7 +11,11 @@ interface AddPlaceModalProps {
   onPlaceAdded: () => void;
 }
 
-export default function AddPlaceModal({ isOpen, onClose, onPlaceAdded }: AddPlaceModalProps) {
+export default function AddPlaceModal({
+  isOpen,
+  onClose,
+  onPlaceAdded,
+}: AddPlaceModalProps) {
   const { form, onSubmit } = useAddPlaceForm({ onClose, onPlaceAdded });
 
   return (

@@ -1,7 +1,6 @@
-
-import { useState, useEffect } from 'react';
-import { useAtom } from 'jotai';
-import { modalAtom } from '~/src/stores/app-store';
+import { useState } from 'react';
+import { useAtom, useAtomValue } from 'jotai'; // Import useAtomValue
+import { modalAtom, isKakaoMapApiLoadedAtom } from '~/src/stores/app-store'; // Import isKakaoMapApiLoadedAtom
 
 export const usePlaceSearch = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -15,26 +14,13 @@ export const usePlaceSearch = () => {
     address: string;
     id: string;
   } | null>(null);
-  const [isKakaoMapServicesLoaded, setIsKakaoMapServicesLoaded] =
-    useState(false);
+  const isKakaoPlacesServiceReady = useAtomValue(isKakaoMapApiLoadedAtom); // Use global state
   const [, setModal] = useAtom(modalAtom);
 
-  useEffect(() => {
-    const checkKakaoMapServices = () => {
-      if (window.kakao && window.kakao.maps && window.kakao.maps.services) {
-        setIsKakaoMapServicesLoaded(true);
-        clearInterval(interval);
-      }
-    };
-
-    const interval = setInterval(checkKakaoMapServices, 500);
-    checkKakaoMapServices();
-
-    return () => clearInterval(interval);
-  }, []);
+  console.log("usePlaceSearch: isKakaoPlacesServiceReady =", isKakaoPlacesServiceReady);
 
   const handleSearch = () => {
-    if (!isKakaoMapServicesLoaded) {
+    if (!isKakaoPlacesServiceReady) {
       setModal({
         type: 'INFO_MESSAGE',
         props: {
@@ -56,12 +42,24 @@ export const usePlaceSearch = () => {
       return;
     }
 
+    // Add a check for Places service availability
+    if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services || !window.kakao.maps.services.Places || !window.kakao.maps.services.Status) {
+      setModal({
+        type: 'INFO_MESSAGE',
+        props: {
+          title: '알림',
+          message: '카카오 장소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.',
+        },
+      });
+      return;
+    }
+
     const ps = new window.kakao.maps.services.Places();
     ps.keywordSearch(searchKeyword, (data, status) => {
-      if (status === window.kakao.maps.services.Places.Status.OK) {
+      if (status === window.kakao.maps.services.Status.OK) {
         setSearchResults(data);
       } else if (
-        status === window.kakao.maps.services.Places.Status.ZERO_RESULT
+        status === window.kakao.maps.services.Status.ZERO_RESULT
       ) {
         setModal({
           type: 'INFO_MESSAGE',
@@ -72,7 +70,7 @@ export const usePlaceSearch = () => {
         });
         setSearchResults([]);
         setSelectedPlace(null);
-      } else if (status === window.kakao.maps.services.Places.Status.ERROR) {
+      } else if (status === window.kakao.maps.services.Status.ERROR) {
         setModal({
           type: 'INFO_MESSAGE',
           props: {
@@ -108,7 +106,7 @@ export const usePlaceSearch = () => {
     selectedPlace,
     handleSearch,
     handleSelectPlace,
-    isKakaoMapServicesLoaded,
-    setSelectedPlace,
-  };
+    isKakaoPlacesServiceReady,
+     setSelectedPlace,
+   };
 };

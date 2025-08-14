@@ -1,20 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useSession } from 'next-auth/react';
 import { Place } from '@prisma/client';
-
-const createRouteSchema = z.object({
-  name: z.string().min(1, { message: '루트 이름을 입력해주세요.' }),
-  description: z.string().optional(),
-  districtId: z.string().min(1, { message: '자치구를 선택해주세요.' }),
-  selectedPlaces: z
-    .array(z.string())
-    .min(1, { message: '최소 하나 이상의 장소를 선택해주세요.' }),
-});
-
-type AddRouteFormValues = z.infer<typeof createRouteSchema>;
+import {
+  createRouteSchema,
+  CreateRouteInput,
+} from '~/src/services/route/route-schema';
 
 interface UseAddRouteFormProps {
   onClose: () => void;
@@ -25,95 +16,84 @@ export const useAddRouteForm = ({
   onClose,
   onRouteAdded,
 }: UseAddRouteFormProps) => {
-  const { data: session } = useSession();
-  const [userPlaces, setUserPlaces] = useState<Place[]>([]);
-  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
-
-  const form = useForm<AddRouteFormValues>({
+  const form = useForm<CreateRouteInput>({
     resolver: zodResolver(createRouteSchema),
     defaultValues: {
       name: '',
       description: '',
       districtId: '',
-      selectedPlaces: [],
+      placeForRound1Id: undefined,
+      placeForRound2Id: undefined,
+      placeForCafeId: undefined,
     },
   });
 
-  useEffect(() => {
-    if (session?.user?.id) {
-      const fetchUserPlaces = async () => {
-        try {
-          const url = selectedDistrict
-            ? `/api/users/${session.user.id}/places?district=${selectedDistrict}`
-            : `/api/users/${session.user.id}/places`;
+  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
 
-          const response = await fetch(url);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const places: Place[] = await response.json();
-          setUserPlaces(places);
-          // Reset selected places if district changes
-          form.setValue('selectedPlaces', []);
-        } catch (error) {
-          console.error('Error fetching user places:', error);
-        }
-      };
-      fetchUserPlaces();
-    }
-  }, [session, selectedDistrict]);
+  // State to hold the actual Place objects for display
+  const [selectedRound1Place, setSelectedRound1Place] = useState<Place | null>(
+    null,
+  );
+  const [selectedRound2Place, setSelectedRound2Place] = useState<Place | null>(
+    null,
+  );
+  const [selectedCafePlace, setSelectedCafePlace] = useState<Place | null>(null);
 
-  const onSubmit = async (values: AddRouteFormValues) => {
-    if (!session?.user?.id) {
-      alert('로그인 후 루트를 등록할 수 있습니다.');
-      return;
-    }
-
-    try {
-      const routeResponse = await fetch('/api/routes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: values.name,
-          description: values.description,
-          districtId: values.districtId, // Pass districtId
-        }),
-      });
-
-      if (!routeResponse.ok) {
-        const errorData = await routeResponse.json();
-        alert(`루트 등록 실패: ${errorData.message}`);
-        return;
-      }
-
-      const newRoute = await routeResponse.json();
-
-      for (let i = 0; i < values.selectedPlaces.length; i++) {
-        const placeId = values.selectedPlaces[i];
-        await fetch('/api/route-places', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            routeId: newRoute.id,
-            placeId: placeId,
-            order: i,
-          }),
-        });
-      }
-
-      alert('루트가 성공적으로 등록되었습니다.');
-      form.reset();
-      onRouteAdded();
-      onClose();
-    } catch (error) {
-      console.error('Error adding route:', error);
-      alert('루트 등록 중 오류가 발생했습니다.');
-    }
+  const onSubmit = async (values: CreateRouteInput) => {
+    // This will be handled by the API call in AddRouteModal or a parent component
+    // For now, just log and close
+    console.log('Route form submitted with values:', values);
+    onRouteAdded();
+    onClose();
   };
 
-  return { form, onSubmit, userPlaces, selectedDistrict, setSelectedDistrict };
+  // Function to assign a place to a specific slot
+  const assignPlaceToSlot = (
+    place: Place,
+    slot: 'round1' | 'round2' | 'cafe',
+  ) => {
+    if (slot === 'round1') {
+      form.setValue('placeForRound1Id', place.id);
+      setSelectedRound1Place(place);
+    } else if (slot === 'round2') {
+      form.setValue('placeForRound2Id', place.id);
+      setSelectedRound2Place(place);
+    } else if (slot === 'cafe') {
+      form.setValue('placeForCafeId', place.id);
+      setSelectedCafePlace(place);
+    }
+    // Trigger validation for the assigned slot
+    form.trigger(
+      `placeFor${slot.charAt(0).toUpperCase() + slot.slice(1)}Id` as keyof CreateRouteInput,
+    );
+  };
+
+  // Function to clear a slot
+  const clearSlot = (slot: 'round1' | 'round2' | 'cafe') => {
+    if (slot === 'round1') {
+      form.setValue('placeForRound1Id', undefined);
+      setSelectedRound1Place(null);
+    } else if (slot === 'round2') {
+      form.setValue('placeForRound2Id', undefined);
+      setSelectedRound2Place(null);
+    } else if (slot === 'cafe') {
+      form.setValue('placeForCafeId', undefined);
+      setSelectedCafePlace(null);
+    }
+    form.trigger(
+      `placeFor${slot.charAt(0).toUpperCase() + slot.slice(1)}Id` as keyof CreateRouteInput,
+    );
+  };
+
+  return {
+    form,
+    onSubmit,
+    selectedDistrict,
+    setSelectedDistrict,
+    assignPlaceToSlot,
+    clearSlot,
+    selectedRound1Place,
+    selectedRound2Place,
+    selectedCafePlace,
+  };
 };

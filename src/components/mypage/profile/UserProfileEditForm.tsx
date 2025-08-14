@@ -7,14 +7,27 @@ import { z } from 'zod';
 import { User } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '~/src/components/common/form';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '~/src/components/common/form';
 import Input from '~/src/components/common/input';
 import Button from '~/src/components/common/button';
 
 const userProfileSchema = z.object({
   name: z.string().min(1, { message: '이름을 입력해주세요.' }).optional(),
-  email: z.string().email({ message: '유효한 이메일 주소를 입력해주세요.' }).optional(),
-  image: z.string().url({ message: '유효한 이미지 URL을 입력해주세요.' }).optional(),
+  email: z
+    .string()
+    .email({ message: '유효한 이메일 주소를 입력해주세요.' })
+    .optional(),
+  image: z
+    .string()
+    .url({ message: '유효한 이미지 URL을 입력해주세요.' })
+    .optional(),
 });
 
 type UserProfileFormValues = z.infer<typeof userProfileSchema>;
@@ -111,9 +124,7 @@ export default function UserProfileEditForm({
           <Button type="button" variant="outlined" onClick={onCancel}>
             취소
           </Button>
-          <Button type="submit">
-            저장
-          </Button>
+          <Button type="submit">저장</Button>
         </div>
       </form>
     </Form>

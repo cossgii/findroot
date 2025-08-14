@@ -3,11 +3,10 @@ import { CATEGORIES } from '~/src/utils/categories';
 import { Place } from '@prisma/client';
 
 interface RestaurantListContainerProps {
-  districtId: string;
   places: Place[];
 }
 
-export default function RestaurantListContainer({ districtId, places }: RestaurantListContainerProps) {
+export default function RestaurantListContainer({ places }: RestaurantListContainerProps) {
   const restaurantsToShow = places;
 
   return (

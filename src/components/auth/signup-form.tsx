@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
+import { z } from 'zod';
 
 import Button from '~/src/components/common/button';
 import {
@@ -50,7 +51,7 @@ export function SignupForm() {
       if (!signupResponse.ok) {
         const data = await signupResponse.json();
         if (data.message === 'Validation error' && data.errors) {
-          data.errors.forEach((err: any) => {
+          data.errors.forEach((err: z.ZodIssue) => {
             if (err.path && err.path.length > 0) {
               form.setError(err.path[0], { message: err.message });
             } else {
@@ -64,7 +65,9 @@ export function SignupForm() {
             form.setError('root.serverError', { message: data.message });
           }
         } else {
-          form.setError('root.serverError', { message: '회원가입에 실패했습니다.' });
+          form.setError('root.serverError', {
+            message: '회원가입에 실패했습니다.',
+          });
         }
         return;
       }
@@ -81,14 +84,17 @@ export function SignupForm() {
       } else {
         // 자동 로그인 실패 시 (이론적으로는 발생하기 어려움)
         form.setError('root.serverError', {
-          message: '회원가입은 완료되었으나, 자동 로그인에 실패했습니다. 다시 로그인해주세요.',
+          message:
+            '회원가입은 완료되었으나, 자동 로그인에 실패했습니다. 다시 로그인해주세요.',
         });
         // 로그인 페이지로 리디렉션
         setTimeout(() => router.push('/login'), 3000);
       }
     } catch (error) {
       console.error('Signup error:', error);
-      form.setError('root.serverError', { message: '네트워크 오류 또는 서버 문제' });
+      form.setError('root.serverError', {
+        message: '네트워크 오류 또는 서버 문제',
+      });
     }
   }
 
@@ -121,7 +127,7 @@ export function SignupForm() {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="password"
@@ -153,7 +159,11 @@ export function SignupForm() {
             {form.formState.errors.root.serverError.message}
           </p>
         )}
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={form.formState.isSubmitting}
+        >
           {form.formState.isSubmitting ? '가입하는 중...' : '회원가입'}
         </Button>
       </form>
@@ -166,4 +176,3 @@ export function SignupForm() {
     </Form>
   );
 }
-

@@ -1,6 +1,10 @@
 import { db } from '~/lib/db';
 
-export async function sendMessage(senderId: string, receiverId: string, content: string) {
+export async function sendMessage(
+  senderId: string,
+  receiverId: string,
+  content: string,
+) {
   if (!db) throw new Error('Database client not initialized.');
   return db.message.create({
     data: {

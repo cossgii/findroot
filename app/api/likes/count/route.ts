@@ -6,7 +6,10 @@ export async function GET(request: Request) {
   const placeId = searchParams.get('placeId');
 
   if (!placeId) {
-    return NextResponse.json({ message: 'placeId is required' }, { status: 400 });
+    return NextResponse.json(
+      { message: 'placeId is required' },
+      { status: 400 },
+    );
   }
 
   try {
@@ -14,6 +17,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ count }, { status: 200 });
   } catch (error) {
     console.error('Error fetching likes count:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Internal Server Error' },
+      { status: 500 },
+    );
   }
 }

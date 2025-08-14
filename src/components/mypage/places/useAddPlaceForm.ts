@@ -11,7 +11,10 @@ interface UseAddPlaceFormProps {
   onPlaceAdded: () => void;
 }
 
-export const useAddPlaceForm = ({ onClose, onPlaceAdded }: UseAddPlaceFormProps) => {
+export const useAddPlaceForm = ({
+  onClose,
+  onPlaceAdded,
+}: UseAddPlaceFormProps) => {
   const { data: session } = useSession();
   const form = useForm<AddPlaceFormValues>({
     resolver: zodResolver(createPlaceSchema),

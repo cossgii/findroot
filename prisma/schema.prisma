@@ -3,12 +3,17 @@
 
 generator client {
   provider = "prisma-client-js"
-  // previewFeatures = ["jsonProtocol"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// Enum for simple Place categorization
+enum PlaceCategory {
+  MEAL
+  DRINK
 }
 
 model User {
@@ -21,9 +26,11 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
-  // Added for new features
+  // User's created content
   places    Place[]
   routes    Route[]
+
+  // Social features
   followers Follow[] @relation("Following")
   following Follow[] @relation("Follower")
   likes     Like[]
@@ -66,55 +73,54 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Renamed from Restaurant to Place and added relations
 model Place {
   id          String    @id @default(cuid())
   name        String
   latitude    Float
   longitude   Float
   address     String?
-  district    String? // Added district field
+  district    String?
   description String?
-  category    String?
+  category    PlaceCategory // Changed from String? to the new Enum
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId String
 
-  routes   RoutePlace[]
   likes    Like[]
+
+  // Back-relations to routes where this place is used
+  routesAsRound1 Route[] @relation("RouteAsRound1")
+  routesAsRound2 Route[] @relation("RouteAsRound2")
+  routesAsCafe   Route[] @relation("RouteAsCafe")
 }
 
-// New model for routes
 model Route {
   id          String       @id @default(cuid())
   name        String
   description String?
-  districtId  String? // Added districtId field
+  districtId  String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
   creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId String
 
-  places   RoutePlace[]
   likes    Like[]
+
+  // --- New 3-Slot Structure ---
+  placeForRound1Id String?
+  placeForRound2Id String?
+  placeForCafeId   String?
+
+  placeForRound1 Place? @relation("RouteAsRound1", fields: [placeForRound1Id], references: [id], onDelete: SetNull)
+  placeForRound2 Place? @relation("RouteAsRound2", fields: [placeForRound2Id], references: [id], onDelete: SetNull)
+  placeForCafe   Place? @relation("RouteAsCafe",   fields: [placeForCafeId],   references: [id], onDelete: SetNull)
 }
 
-// Join table for the many-to-many relationship between Route and Place
-model RoutePlace {
-  routeId String
-  placeId String
-  order   Int
+// The RoutePlace model is now deleted.
 
-  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
-
-  @@id([routeId, placeId])
-}
-
-// New model for the follow system
 model Follow {
   followerId  String
   followingId String
@@ -125,7 +131,6 @@ model Follow {
   @@id([followerId, followingId])
 }
 
-// New model for the like system
 model Like {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
@@ -143,7 +148,6 @@ model Like {
   @@unique([userId, routeId])
 }
 
-// New model for the comment system
 model Message {
   id          String    @id @default(cuid())
   senderId    String

@@ -10,7 +10,7 @@ import { Place } from '@prisma/client';
 
 interface DistrictClientProps {
   districtId: string;
-  districtInfo: typeof SEOUL_DISTRICTS[number] | undefined;
+  districtInfo: (typeof SEOUL_DISTRICTS)[number] | undefined;
   center: { lat: number; lng: number };
   places: Place[];
 }

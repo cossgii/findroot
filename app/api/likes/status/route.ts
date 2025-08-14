@@ -14,7 +14,10 @@ export async function GET(request: Request) {
   const userId = session.user.id;
 
   if (!placeId) {
-    return NextResponse.json({ message: 'placeId is required' }, { status: 400 });
+    return NextResponse.json(
+      { message: 'placeId is required' },
+      { status: 400 },
+    );
   }
 
   try {
@@ -22,6 +25,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ liked }, { status: 200 });
   } catch (error) {
     console.error('Error fetching like status:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Internal Server Error' },
+      { status: 500 },
+    );
   }
 }

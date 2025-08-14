@@ -1,9 +1,10 @@
-import js from "@eslint/js";
-import globals from "globals";
-import tseslint from "typescript-eslint";
+import js from '@eslint/js';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
 import pluginReact from "eslint-plugin-react";
+import pluginNext from "@next/eslint-plugin-next";
 import { defineConfig } from "eslint/config";
-import prettierConfig from "eslint-config-prettier"; // eslint-config-prettier 임포트
+import prettierConfig from "eslint-config-prettier";
 
 export default defineConfig([
   // 1. Ignore generated files and directories
@@ -18,6 +19,7 @@ export default defineConfig([
       "next-env.d.ts",
       "tsconfig.json",
       "eslint.config.mjs", // Ignore itself
+      "next.config.js", // Ignore next.config.js
       "package.json",
       "prisma/**",
       "lib/**",
@@ -50,7 +52,7 @@ export default defineConfig([
     ],
     rules: {
       // Disable rules that conflict with Prettier or are too strict for generated files
-      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^$" }],
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unsafe-function-type": "off",
       "@typescript-eslint/no-empty-object-type": "off",
@@ -82,18 +84,20 @@ export default defineConfig([
     files: ["**/*.{jsx,tsx}"],
     plugins: {
       react: pluginReact,
+      "@next/next": pluginNext, // Use the Next.js plugin
     },
     extends: [
       pluginReact.configs.flat.recommended,
     ],
+    rules: {
+      ...pluginNext.configs.recommended.rules, // Spread recommended rules from Next.js plugin
+      "react/react-in-jsx-scope": "off", // Not needed for React 17+ JSX Transform
+      "react/prop-types": "off", // Use TypeScript for prop types
+    },
     settings: {
       react: {
         version: "detect", // Automatically detect React version
       },
-    },
-    rules: {
-      "react/react-in-jsx-scope": "off", // Not needed for React 17+ JSX Transform
-      "react/prop-types": "off", // Use TypeScript for prop types
     },
   },
 

@@ -2,7 +2,11 @@
 
 import React from 'react';
 import { User } from '@prisma/client';
-import { Avatar, AvatarFallback, AvatarImage } from '~/src/components/common/avatar';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '~/src/components/common/avatar';
 
 interface UserProfileDisplayProps {
   user: User;

@@ -17,7 +17,10 @@ export async function GET() {
     return NextResponse.json(user);
   } catch (error) {
     console.error('Error fetching user profile:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Internal Server Error' },
+      { status: 500 },
+    );
   }
 }
 
@@ -32,10 +35,17 @@ export async function PUT(request: Request) {
   const { name, email, image } = body; // 예시: 이름, 이메일, 이미지 업데이트
 
   try {
-    const updatedUser = await updateUser(session.user.id, { name, email, image });
+    const updatedUser = await updateUser(session.user.id, {
+      name,
+      email,
+      image,
+    });
     return NextResponse.json(updatedUser);
   } catch (error) {
     console.error('Error updating user profile:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Internal Server Error' },
+      { status: 500 },
+    );
   }
 }

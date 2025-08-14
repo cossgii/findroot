@@ -4,7 +4,6 @@ export interface Category {
 }
 
 export const CATEGORIES: Category[] = [
-  { id: 'cafe', name: '카페' },
-  { id: 'meal1', name: '1차' },
-  { id: 'meal2', name: '2차' },
+  { id: 'MEAL', name: '식사' }, // Aligned with PlaceCategory enum
+  { id: 'DRINK', name: '음료' }, // Aligned with PlaceCategory enum
 ];

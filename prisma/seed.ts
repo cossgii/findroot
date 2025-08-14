@@ -1,5 +1,5 @@
-
-import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
+import { PrismaClient, PlaceCategory } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -29,7 +29,7 @@ async function main() {
       longitude: 127.0276,
       address: '서울특별시 강남구 강남대로',
       description: '강남역 근처의 맛있는 식당입니다.',
-      category: 'meal1',
+      category: PlaceCategory.MEAL, // Changed to Enum
       creatorId: user.id,
     },
     {
@@ -38,7 +38,7 @@ async function main() {
       longitude: 126.9239,
       address: '서울특별시 마포구 양화로',
       description: '분위기 좋은 홍대 카페입니다.',
-      category: 'cafe',
+      category: PlaceCategory.DRINK, // Changed to Enum
       creatorId: user.id,
     },
     {
@@ -47,16 +47,16 @@ async function main() {
       longitude: 126.9941,
       address: '서울특별시 용산구 이태원로',
       description: '이태원에서 즐기는 신나는 펍!',
-      category: 'meal2',
+      category: PlaceCategory.MEAL, // Changed to Enum
       creatorId: user.id,
     },
-     {
+    {
       name: '강남역 또 다른 맛집',
       latitude: 37.4985,
-      longitude: 127.0280,
+      longitude: 127.028,
       address: '서울특별시 강남구 테헤란로',
       description: '강남역의 숨겨진 맛집.',
-      category: 'meal1',
+      category: PlaceCategory.MEAL, // Changed to Enum
       creatorId: user.id,
     },
   ];

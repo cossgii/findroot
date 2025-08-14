@@ -2,13 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { createRoute } from '~/src/services/route/routeService';
+import { createRouteSchema } from '~/src/services/route/route-schema';
 import { z } from 'zod';
-
-const createRouteSchema = z.object({
-  name: z.string().min(1, { message: '루트 이름을 입력해주세요.' }),
-  description: z.string().optional(),
-  districtId: z.string().min(1, { message: '자치구 ID를 입력해주세요.' }),
-});
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -18,8 +13,10 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
+    // Validate the body against the new schema
     const validatedData = createRouteSchema.parse(body);
 
+    // Call the new createRoute service function
     const newRoute = await createRoute(validatedData, session.user.id);
 
     return NextResponse.json(newRoute, { status: 201 });

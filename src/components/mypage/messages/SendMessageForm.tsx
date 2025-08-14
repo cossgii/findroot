@@ -1,12 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
 
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '~/src/components/common/form';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '~/src/components/common/form';
 import Input from '~/src/components/common/input';
 import Button from '~/src/components/common/button';
 
@@ -20,7 +27,9 @@ const sendMessageSchema = z.object({
 
 type SendMessageFormValues = z.infer<typeof sendMessageSchema>;
 
-export default function SendMessageForm({ onMessageSent }: SendMessageFormProps) {
+export default function SendMessageForm({
+  onMessageSent,
+}: SendMessageFormProps) {
   const { data: session } = useSession();
   const form = useForm<SendMessageFormValues>({
     resolver: zodResolver(sendMessageSchema),
@@ -80,7 +89,10 @@ export default function SendMessageForm({ onMessageSent }: SendMessageFormProps)
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={!session?.user?.id || form.formState.isSubmitting}>
+          <Button
+            type="submit"
+            disabled={!session?.user?.id || form.formState.isSubmitting}
+          >
             {form.formState.isSubmitting ? '전송 중...' : '메시지 전송'}
           </Button>
         </form>

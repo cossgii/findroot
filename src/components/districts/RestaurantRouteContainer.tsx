@@ -7,7 +7,10 @@ interface RestaurantRouteContainerProps {
   places: Place[];
 }
 
-export default function RestaurantRouteContainer({ districtId, places }: RestaurantRouteContainerProps) {
+export default function RestaurantRouteContainer({
+  districtId,
+  places,
+}: RestaurantRouteContainerProps) {
   const restaurantsInDistrict = places;
 
   const routeRestaurants: Place[] = [];

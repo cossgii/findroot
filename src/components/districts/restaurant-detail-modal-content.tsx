@@ -25,7 +25,9 @@ export default function RestaurantDetailModalContent({
       const fetchLikeStatus = async () => {
         try {
           const [statusRes, countRes] = await Promise.all([
-            fetch(`/api/likes/status?userId=${userId}&placeId=${restaurant.id}`),
+            fetch(
+              `/api/likes/status?userId=${userId}&placeId=${restaurant.id}`,
+            ),
             fetch(`/api/likes/count?placeId=${restaurant.id}`),
           ]);
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Input from '~/src/components/common/input';
 import Button from '~/src/components/common/button';
@@ -9,7 +8,7 @@ interface PlaceSearchInputProps {
   handleSearch: () => void;
   searchResults: kakao.maps.services.Places.PlaceResult[];
   handleSelectPlace: (place: kakao.maps.services.Places.PlaceResult) => void;
-  isKakaoMapServicesLoaded: boolean;
+  isKakaoPlacesServiceReady: boolean;
 }
 
 export default function PlaceSearchInput({
@@ -18,8 +17,10 @@ export default function PlaceSearchInput({
   handleSearch,
   searchResults,
   handleSelectPlace,
-  isKakaoMapServicesLoaded,
+  isKakaoPlacesServiceReady,
 }: PlaceSearchInputProps) {
+  console.log("PlaceSearchInput: isKakaoPlacesServiceReady =", isKakaoPlacesServiceReady);
+
   return (
     <div>
       <div className="flex space-x-2">
@@ -32,7 +33,7 @@ export default function PlaceSearchInput({
           type="button"
           onClick={handleSearch}
           className="w-auto px-4"
-          disabled={!isKakaoMapServicesLoaded}
+          disabled={!isKakaoPlacesServiceReady}
         >
           검색
         </Button>

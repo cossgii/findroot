@@ -27,7 +27,10 @@ export default function Dropdown({
   // 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -46,9 +49,9 @@ export default function Dropdown({
       {isOpen && (
         <div
           className={cn(
-            "absolute mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20",
+            'absolute mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20',
             align === 'left' ? 'left-0' : 'right-0',
-            contentClassName
+            contentClassName,
           )}
         >
           {children}
@@ -73,8 +76,8 @@ export function DropdownItem({
     <div
       onClick={onClick}
       className={cn(
-        "px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer",
-        className
+        'px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer',
+        className,
       )}
     >
       {children}

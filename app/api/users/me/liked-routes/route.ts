@@ -14,6 +14,9 @@ export async function GET() {
     return NextResponse.json(likedRoutes);
   } catch (error) {
     console.error('Error fetching liked routes:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Internal Server Error' },
+      { status: 500 },
+    );
   }
 }

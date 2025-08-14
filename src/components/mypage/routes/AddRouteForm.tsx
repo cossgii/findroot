@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { z } from 'zod';
-import { Place } from '@prisma/client';
+import { Place } from '@prisma/client'; // Keep Place import for type hinting if needed elsewhere
+import { CreateRouteInput } from '~/src/services/route/route-schema'; // Import the new schema type
 
 import {
   Form,
@@ -16,67 +16,36 @@ import {
 import Input from '~/src/components/common/input';
 import Button from '~/src/components/common/button';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
-import PlaceSelectionList from './PlaceSelectionList';
+// import PlaceSelectionList from './PlaceSelectionList'; // No longer needed
 import RouteMap from './RouteMap';
-
-const createRouteSchema = z.object({
-  name: z.string().min(1, { message: '루트 이름을 입력해주세요.' }),
-  description: z.string().optional(),
-  districtId: z.string().min(1, { message: '자치구를 선택해주세요.' }),
-  selectedPlaces: z
-    .array(z.string())
-    .min(1, { message: '최소 하나 이상의 장소를 선택해주세요.' }),
-});
-
-type AddRouteFormValues = z.infer<typeof createRouteSchema>;
+import PlaceSlotSelector from './PlaceSlotSelector'; // New component for selecting places for slots
 
 interface AddRouteFormProps {
-  form: UseFormReturn<AddRouteFormValues>;
-  onSubmit: (values: AddRouteFormValues) => void;
+  form: UseFormReturn<CreateRouteInput>; // Use CreateRouteInput
+  onSubmit: (values: CreateRouteInput) => void;
   onClose: () => void;
-  userPlaces: Place[];
   selectedDistrict: string | null;
   setSelectedDistrict: (district: string) => void;
+  assignPlaceToSlot: (place: Place, slot: 'round1' | 'round2' | 'cafe') => void;
+  clearSlot: (slot: 'round1' | 'round2' | 'cafe') => void;
+  selectedRound1Place: Place | null;
+  selectedRound2Place: Place | null;
+  selectedCafePlace: Place | null;
 }
 
 export default function AddRouteForm({
   form,
   onSubmit,
   onClose,
-  userPlaces,
   selectedDistrict,
   setSelectedDistrict,
+  assignPlaceToSlot,
+  clearSlot,
+  selectedRound1Place,
+  selectedRound2Place,
+  selectedCafePlace,
 }: AddRouteFormProps) {
-  const handlePlaceSelection = (placeId: string, isChecked: boolean) => {
-    const currentSelected = form.getValues('selectedPlaces');
-    const placeToToggle = userPlaces.find((p) => p.id === placeId);
-
-    if (!placeToToggle) return;
-
-    if (isChecked) {
-      const existingPlaceInSameCategory = userPlaces.find(
-        (p) =>
-          currentSelected.includes(p.id) &&
-          p.category === placeToToggle.category,
-      );
-
-      let newSelection = currentSelected;
-      if (existingPlaceInSameCategory) {
-        newSelection = newSelection.filter(
-          (id) => id !== existingPlaceInSameCategory.id,
-        );
-      }
-      form.setValue('selectedPlaces', [...newSelection, placeId], {
-        shouldValidate: true,
-      });
-    } else {
-      form.setValue(
-        'selectedPlaces',
-        currentSelected.filter((id) => id !== placeId),
-        { shouldValidate: true },
-      );
-    }
-  };
+  // No more handlePlaceSelection as we are using fixed slots
 
   return (
     <Form {...form}>
@@ -143,27 +112,71 @@ export default function AddRouteForm({
         {selectedDistrict ? (
           <>
             <RouteMap
-              userPlaces={userPlaces}
-              selectedPlaces={form.watch('selectedPlaces')}
-              onMarkerClick={(id) =>
-                handlePlaceSelection(
-                  id,
-                  !form.watch('selectedPlaces').includes(id),
-                )
-              }
+              selectedRound1Place={selectedRound1Place}
+              selectedRound2Place={selectedRound2Place}
+              selectedCafePlace={selectedCafePlace}
+              onMarkerClick={() => {}} // Marker click logic will be handled by PlaceSlotSelector
             />
 
             <FormField
               control={form.control}
-              name="selectedPlaces"
-              render={() => (
+              name="placeForRound1Id"
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>장소 선택</FormLabel>
+                  <FormLabel>1차 장소 (식사)</FormLabel>
                   <FormControl>
-                    <PlaceSelectionList
-                      userPlaces={userPlaces}
-                      selectedPlaces={form.watch('selectedPlaces')}
-                      handlePlaceSelection={handlePlaceSelection}
+                    <PlaceSlotSelector
+                      selectedPlace={selectedRound1Place}
+                      onSelectPlace={(place) =>
+                        assignPlaceToSlot(place, 'round1')
+                      }
+                      onClearPlace={() => clearSlot('round1')}
+                      districtId={selectedDistrict}
+                      currentSelectedSlotId={field.value}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="placeForRound2Id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>2차 장소 (식사)</FormLabel>
+                  <FormControl>
+                    <PlaceSlotSelector
+                      selectedPlace={selectedRound2Place}
+                      onSelectPlace={(place) =>
+                        assignPlaceToSlot(place, 'round2')
+                      }
+                      onClearPlace={() => clearSlot('round2')}
+                      districtId={selectedDistrict}
+                      currentSelectedSlotId={field.value}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="placeForCafeId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>카페 장소 (음료)</FormLabel>
+                  <FormControl>
+                    <PlaceSlotSelector
+                      selectedPlace={selectedCafePlace}
+                      onSelectPlace={(place) =>
+                        assignPlaceToSlot(place, 'cafe')
+                      }
+                      onClearPlace={() => clearSlot('cafe')}
+                      districtId={selectedDistrict}
+                      currentSelectedSlotId={field.value}
                     />
                   </FormControl>
                   <FormMessage />

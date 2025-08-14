@@ -13,7 +13,9 @@ export async function middleware(req: NextRequest) {
 
   // 2. 보호가 필요한 경로 목록
   const protectedPaths = ['/mypage'];
-  const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path));
+  const isProtectedPath = protectedPaths.some((path) =>
+    pathname.startsWith(path),
+  );
 
   // 3. 로그인되지 않은 사용자가 보호된 경로에 접근 시 로그인 페이지로 리디렉션
   if (!token && isProtectedPath) {
@@ -29,7 +31,5 @@ export async function middleware(req: NextRequest) {
 // 미들웨어가 적용될 경로를 설정합니다.
 // api, _next/static, _next/image, favicon.ico를 제외한 모든 경로에서 미들웨어를 실행합니다.
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };

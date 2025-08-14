@@ -67,7 +67,6 @@ export default function Modal({
       }}
       // 나머지 디자인은 클래스로 적용
       className={cn('bg-black/50 p-4', overlayClassName)}
-      
     >
       <div
         ref={modalRef}
@@ -78,7 +77,6 @@ export default function Modal({
           'bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto',
           contentClassName,
         )}
-        
       >
         {children}
         <button

@@ -12,7 +12,10 @@ export async function POST(request: Request) {
   const { placeId } = await request.json();
 
   if (!placeId) {
-    return NextResponse.json({ message: 'placeId is required' }, { status: 400 });
+    return NextResponse.json(
+      { message: 'placeId is required' },
+      { status: 400 },
+    );
   }
 
   try {
@@ -20,7 +23,10 @@ export async function POST(request: Request) {
     return NextResponse.json(like, { status: 201 });
   } catch (error) {
     console.error('Error adding like:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Internal Server Error' },
+      { status: 500 },
+    );
   }
 }
 
@@ -33,7 +39,10 @@ export async function DELETE(request: Request) {
   const { placeId } = await request.json();
 
   if (!placeId) {
-    return NextResponse.json({ message: 'placeId is required' }, { status: 400 });
+    return NextResponse.json(
+      { message: 'placeId is required' },
+      { status: 400 },
+    );
   }
 
   try {
@@ -41,6 +50,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: 'Like removed' }, { status: 200 });
   } catch (error) {
     console.error('Error removing like:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Internal Server Error' },
+      { status: 500 },
+    );
   }
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { User } from '@prisma/client';
+import { User, Like, Place, Route } from '@prisma/client';
 import { useSetAtom } from 'jotai';
 import { modalAtom } from '~/src/stores/app-store';
 import UserProfileDisplay from '~/src/components/mypage/profile/UserProfileDisplay';
@@ -13,14 +13,22 @@ import MainContainer from '~/src/components/layout/main-container';
 import Button from '~/src/components/common/button';
 import ToggleSwitch from '~/src/components/common/ToggleSwitch';
 
+interface LikedPlace extends Like {
+  place: Place;
+}
+
+interface LikedRoute extends Like {
+  route: Route;
+}
+
 const MyPage = () => {
   const { data: session, status } = useSession();
   const setModal = useSetAtom(modalAtom);
   const [user, setUser] = useState<User | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [messageSentCount, setMessageSentCount] = useState(0); // 메시지 전송 시 갱신 트리거
-  const [likedPlaces, setLikedPlaces] = useState<any[]>([]); // TODO: Like & Place 타입 정의
-  const [likedRoutes, setLikedRoutes] = useState<any[]>([]); // TODO: Like & Route 타입 정의
+  const [likedPlaces, setLikedPlaces] = useState<LikedPlace[]>([]);
+  const [likedRoutes, setLikedRoutes] = useState<LikedRoute[]>([]);
   const [isProfileAndMessageView, setIsProfileAndMessageView] = useState(true); // true: 프로필/메시지, false: 장소/루트
 
   useEffect(() => {
@@ -117,12 +125,19 @@ const MyPage = () => {
         <div className="w-full max-w-md space-y-8">
           <div className="bg-white rounded-lg shadow-md p-6">
             {isEditing ? (
-              <UserProfileEditForm user={user} onSave={handleSave} onCancel={handleCancel} />
+              <UserProfileEditForm
+                user={user}
+                onSave={handleSave}
+                onCancel={handleCancel}
+              />
             ) : (
               <>
                 <UserProfileDisplay user={user} />
                 <div className="mt-6 flex justify-center">
-                  <Button onClick={() => setIsEditing(true)} className="w-auto px-6">
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    className="w-auto px-6"
+                  >
                     프로필 수정
                   </Button>
                 </div>

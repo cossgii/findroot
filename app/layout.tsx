@@ -1,10 +1,16 @@
 import type { Metadata } from 'next';
 import { Provider } from 'jotai';
 import AuthProvider from '~/src/components/auth/auth-provider';
+import { useSetAtom } from 'jotai'; // Import useSetAtom
 import GlobalModalRenderer from '~/src/components/layout/global-modal-renderer';
 import Header from '~/src/components/layout/header';
+import Script from 'next/script'; // Import Script
 import { dongle, notoSansKR, roboto } from '~/src/fonts/fonts';
 import '~/src/styles/globals.css';
+
+// Import the atom
+import { isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
+import KakaoMapApiLoader from '~/src/components/common/kakao-map-api-loader'; // Import the new component
 
 export const metadata: Metadata = {
   title: 'My Awesome App',
@@ -30,6 +36,7 @@ export default function RootLayout({
                 {children}
               </main>
               <GlobalModalRenderer />
+              <KakaoMapApiLoader /> {/* Render the imported loader component */}
             </AuthProvider>
           </Provider>
         </div>
