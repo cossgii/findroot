@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Modal from '~/src/components/districts/modal';
-import { useAddRouteForm } from './useAddRouteForm';
+import { useAddRouteForm } from '~/src/hooks/mypage/useAddRouteForm';
 import AddRouteForm from './AddRouteForm';
 
 interface AddRouteModalProps {

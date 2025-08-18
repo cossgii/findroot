@@ -14,7 +14,7 @@ import {
 import Input from '~/src/components/common/input';
 import Button from '~/src/components/common/button';
 import KakaoMap from '~/src/components/common/kakao-map';
-import { usePlaceSearch } from './usePlaceSearch';
+import { usePlaceSearch } from '~/src/hooks/mypage/usePlaceSearch';
 import PlaceSearchInput from './PlaceSearchInput';
 
 type AddPlaceFormValues = z.infer<typeof createPlaceSchema>;

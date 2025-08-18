@@ -20,9 +20,8 @@ export default function Dropdown({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const toggleDropdown = () => {
-    setIsOpen((prev) => !prev);
-  };
+  const closeDropdown = () => setIsOpen(false);
+  const toggleDropdown = () => setIsOpen((prev) => !prev);
 
   // 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
@@ -31,7 +30,7 @@ export default function Dropdown({
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
       ) {
-        setIsOpen(false);
+        closeDropdown();
       }
     };
 
@@ -54,7 +53,12 @@ export default function Dropdown({
             contentClassName,
           )}
         >
-          {children}
+          {React.Children.map(children, (child) => {
+            if (React.isValidElement(child)) {
+              return React.cloneElement(child, { onClose: closeDropdown });
+            }
+            return child;
+          })}
         </div>
       )}
     </div>
@@ -65,16 +69,23 @@ interface DropdownItemProps {
   children: React.ReactNode;
   onClick?: () => void;
   className?: string;
+  onClose?: () => void; // New prop
 }
 
 export function DropdownItem({
   children,
   onClick,
   className,
+  onClose, // Destructure new prop
 }: DropdownItemProps) {
+  const handleClick = () => {
+    onClick?.();
+    onClose?.();
+  };
+
   return (
     <div
-      onClick={onClick}
+      onClick={handleClick}
       className={cn(
         'px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer',
         className,

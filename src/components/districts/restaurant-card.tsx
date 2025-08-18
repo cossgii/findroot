@@ -6,14 +6,12 @@ import { modalAtom } from '~/src/stores/app-store';
 interface RestaurantCardProps {
   id: string;
   name: string;
-  description?: string;
   district?: string;
 }
 
 export default function RestaurantCard({
   id,
   name,
-  description,
   district,
 }: RestaurantCardProps) {
   const setModal = useSetAtom(modalAtom);

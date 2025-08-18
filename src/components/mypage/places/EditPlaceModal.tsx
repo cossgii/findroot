@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Modal from '~/src/components/districts/modal';
-import { useEditPlaceForm } from './useEditPlaceForm';
+import { useEditPlaceForm } from '~/src/hooks/mypage/useEditPlaceForm';
 import EditPlaceForm from './EditPlaceForm';
 
 interface EditPlaceModalProps {

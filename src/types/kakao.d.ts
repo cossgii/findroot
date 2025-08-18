@@ -66,7 +66,7 @@ declare namespace kakao.maps {
     function addListener(
       target: Map | Marker | Polyline,
       type: string,
-      callback: (...args: any[]) => void,
+      callback: (...args: unknown[]) => void,
     ): void;
   }
 }

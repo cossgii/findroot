@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { User } from '@prisma/client';
 import { useSession } from 'next-auth/react';
-import Image from 'next/image';
 
 import {
   Form,

@@ -3,6 +3,7 @@
 import { cn } from '~/src/utils/class-name';
 
 export type MyPageTab = 'profile' | 'content' | 'likes' | 'messages';
+export type MyPageSubTab = 'places' | 'routes';
 
 interface MyPageTabsProps {
   activeTab: MyPageTab;

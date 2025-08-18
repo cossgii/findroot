@@ -110,7 +110,7 @@ export const usePlaceSearch = () => {
       district = match[1];
     }
 
-    setSelectedPlace((prevSelectedPlace) => {
+    setSelectedPlace(() => {
       const newSelectedPlace = {
         latitude: lat,
         longitude: lng,

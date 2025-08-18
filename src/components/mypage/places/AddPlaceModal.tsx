@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Modal from '~/src/components/districts/modal';
-import { useAddPlaceForm } from './useAddPlaceForm';
+import { useAddPlaceForm } from '~/src/hooks/mypage/useAddPlaceForm';
 import AddPlaceForm from './AddPlaceForm';
 
 interface AddPlaceModalProps {
