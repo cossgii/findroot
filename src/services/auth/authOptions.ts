@@ -138,8 +138,17 @@ export const authOptions: AuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
+      if (token.id && session.user) {
+        const userFromDb = await db.user.findUnique({
+          where: { id: token.id as string },
+        });
+
+        if (userFromDb) {
+          session.user.name = userFromDb.name;
+          session.user.email = userFromDb.email;
+          session.user.image = userFromDb.image;
+          session.user.id = userFromDb.id;
+        }
       }
       return session;
     },

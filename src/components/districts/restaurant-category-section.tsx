@@ -22,6 +22,7 @@ export default function RestaurantCategorySection({
               name={restaurant.name}
               address={restaurant.address} // address prop 다시 전달
               district={restaurant.district}
+              description={restaurant.description}
             />
           ))
         ) : (

@@ -1,5 +1,6 @@
 import { db } from '~/lib/db';
 import { CreatePlaceInput } from './place-schema';
+import { Place } from '@prisma/client';
 
 /**
  * Creates a new place in the database.
@@ -114,5 +115,61 @@ export async function getPlacesByCreatorId(creatorId: string) {
     orderBy: {
       createdAt: 'desc',
     },
+  });
+}
+
+/**
+ * Deletes a place from the database.
+ * @param placeId - The ID of the place to delete.
+ * @param userId - The ID of the user attempting to delete the place (for authorization).
+ * @returns The deleted place.
+ * @throws Error if the place is not found or the user is not authorized.
+ */
+export async function deletePlace(placeId: string, userId: string) {
+  const placeToDelete = await db.place.findUnique({
+    where: { id: placeId },
+  });
+
+  if (!placeToDelete) {
+    throw new Error('Place not found.');
+  }
+
+  if (placeToDelete.creatorId !== userId) {
+    throw new Error('Unauthorized to delete this place.');
+  }
+
+  return db.place.delete({
+    where: { id: placeId },
+  });
+}
+
+/**
+ * Updates an existing place in the database.
+ * @param placeId - The ID of the place to update.
+ * @param userId - The ID of the user attempting to update the place (for authorization).
+ * @param data - The partial data to update the place with.
+ * @returns The updated place.
+ * @throws Error if the place is not found or the user is not authorized.
+ */
+export async function updatePlace(
+  placeId: string,
+  userId: string,
+  data: Partial<Place>,
+) {
+  const placeToUpdate = await db.place.findUnique({
+    where: { id: placeId },
+  });
+
+  if (!placeToUpdate) {
+    throw new Error('Place not found.');
+  }
+
+  if (placeToUpdate.creatorId !== userId) {
+    throw new Error('Unauthorized to update this place.');
+  }
+
+  return db.place.update({
+    where: { id: placeId },
+    data: data,
   });
 }

@@ -2,20 +2,22 @@
 
 import React from 'react';
 import Modal from '~/src/components/districts/modal';
-import { useAddRouteForm } from './useAddRouteForm';
-import AddRouteForm from './AddRouteForm';
+import { useEditRouteForm } from './useEditRouteForm';
+import EditRouteForm from './EditRouteForm';
 
-interface AddRouteModalProps {
+interface EditRouteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onRouteAdded: () => void;
+  routeId: string;
+  onRouteUpdated: () => void;
 }
 
-export default function AddRouteModal({
+export default function EditRouteModal({
   isOpen,
   onClose,
-  onRouteAdded,
-}: AddRouteModalProps) {
+  routeId,
+  onRouteUpdated,
+}: EditRouteModalProps) {
   const {
     form,
     onSubmit,
@@ -28,13 +30,17 @@ export default function AddRouteModal({
     selectedDistrict,
     mapCenter,
     handleDistrictChange,
-  } = useAddRouteForm({ onClose, onRouteAdded });
+  } = useEditRouteForm({
+    routeId,
+    onClose,
+    onRouteUpdated,
+  });
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} contentClassName="max-w-2xl">
       <div className="p-6">
-        <h2 className="text-2xl font-bold mb-4">새 루트 등록</h2>
-        <AddRouteForm
+        <h2 className="text-2xl font-bold mb-4">루트 정보 수정</h2>
+        <EditRouteForm
           form={form}
           onSubmit={onSubmit}
           onClose={onClose}

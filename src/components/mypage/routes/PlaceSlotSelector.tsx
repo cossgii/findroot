@@ -1,17 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Place } from '@prisma/client';
-import Input from '~/src/components/common/input';
+import React from 'react';
+import { Place, PlaceCategory } from '@prisma/client';
 import Button from '~/src/components/common/button';
-import { useAtom, useAtomValue } from 'jotai';
-import { modalAtom, isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
+import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
 interface PlaceSlotSelectorProps {
   selectedPlace: Place | null;
   onSelectPlace: (place: Place) => void;
   onClearPlace: () => void;
   districtId: string | null;
+  expectedCategory?: PlaceCategory;
+  userPlaces: Place[];
 }
 
 export default function PlaceSlotSelector({
@@ -19,107 +19,42 @@ export default function PlaceSlotSelector({
   onSelectPlace,
   onClearPlace,
   districtId,
+  expectedCategory,
+  userPlaces,
 }: PlaceSlotSelectorProps) {
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [searchResults, setSearchResults] = useState<
-    kakao.maps.services.Places.PlaceResult[]
-  >([]);
-  const isKakaoMapServicesLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
-  const [, setModal] = useAtom(modalAtom);
-
-  const handleSearch = () => {
-    if (!isKakaoMapServicesLoaded) {
-      setModal({
-        type: 'INFO_MESSAGE',
-        props: {
-          title: '알림',
-          message: '지도를 로드 중입니다. 잠시 후 다시 시도해주세요.',
-        },
-      });
+  const handleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedPlaceId = e.target.value;
+    if (selectedPlaceId === '') {
+      onClearPlace();
       return;
     }
 
-    if (!searchKeyword.trim()) {
-      setModal({
-        type: 'INFO_MESSAGE',
-        props: {
-          title: '알림',
-          message: '검색어를 입력해주세요.',
-        },
-      });
-      return;
+    const place = userPlaces.find((p) => p.id === selectedPlaceId);
+    if (place) {
+      onSelectPlace(place);
     }
-
-    // Add a check for Places service availability
-    if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services || !window.kakao.maps.services.Places || !window.kakao.maps.services.Status) {
-        setModal({
-            type: 'INFO_MESSAGE',
-            props: {
-                title: '알림',
-                message: '카카오 장소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.',
-            },
-        });
-        return;
-    }
-
-    // Combine search keyword with district for more relevant results
-    const query = districtId ? `${districtId} ${searchKeyword}` : searchKeyword;
-
-    const ps = new window.kakao.maps.services.Places();
-    ps.keywordSearch(query, (data, status) => {
-      if (status === window.kakao.maps.services.Status.OK) {
-        setSearchResults(data);
-      } else if (
-        status === window.kakao.maps.services.Status.ZERO_RESULT
-      ) {
-        setModal({
-          type: 'INFO_MESSAGE',
-          props: {
-            title: '검색 결과 없음',
-            message: '검색 결과가 없습니다.',
-          },
-        });
-        setSearchResults([]);
-      } else if (status === window.kakao.maps.services.Status.ERROR) {
-        setModal({
-          type: 'INFO_MESSAGE',
-          props: {
-            title: '오류 발생',
-            message: '검색 중 오류가 발생했습니다.',
-          },
-        });
-        setSearchResults([]);
-      }
-    });
   };
 
-  const handleSelect = (
-    placeResult: kakao.maps.services.Places.PlaceResult,
-  ) => {
-    // Convert kakao place result to our Place type structure
-    const newPlace: Place = {
-      id: placeResult.id,
-      name: placeResult.place_name,
-      latitude: parseFloat(placeResult.y),
-      longitude: parseFloat(placeResult.x),
-      address: placeResult.address_name,
-      district: placeResult.address_name.split(' ')[1] || '', // Simple extraction for district
-      description: '', // Kakao API doesn't provide this directly
-      category: 'MEAL', // Default or infer based on category_group_code if possible
-      createdAt: new Date(), // Placeholder
-      updatedAt: new Date(), // Placeholder
-      creatorId: '', // Placeholder
-    };
-    onSelectPlace(newPlace);
-    setSearchKeyword('');
-    setSearchResults([]);
+  const getDistrictNameById = (id: string) => {
+    return SEOUL_DISTRICTS.find((d) => d.id === id)?.name || id;
   };
+
+  const filteredPlaces = userPlaces.filter((place) => {
+    const districtName = districtId ? getDistrictNameById(districtId) : null;
+    const matchesDistrict = districtName ? place.district === districtName : true;
+    const matchesCategory = expectedCategory
+      ? place.category === expectedCategory
+      : true;
+    return matchesDistrict && matchesCategory;
+  });
+
+  const selectedValue = selectedPlace ? selectedPlace.id : '';
 
   return (
     <div className="space-y-2">
       {selectedPlace ? (
         <div className="flex items-center justify-between p-2 border rounded-md bg-gray-50">
-          <span>
+          <span className="text-sm">
             {selectedPlace.name} ({selectedPlace.address})
           </span>
           <Button
@@ -127,42 +62,31 @@ export default function PlaceSlotSelector({
             onClick={onClearPlace}
             size="small"
             variant="outlined"
+            className="w-auto px-2 py-1 text-xs"
           >
             선택 해제
           </Button>
         </div>
       ) : (
-        <>
-          <div className="flex space-x-2">
-            <Input
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="장소 이름 또는 주소를 검색하세요"
-              className="flex-grow"
-            />
-            <Button
-              type="button"
-              onClick={handleSearch}
-              className="w-auto px-4"
-              disabled={!isKakaoMapServicesLoaded}
-            >
-              검색
-            </Button>
-          </div>
-          {searchResults.length > 0 && (
-            <ul className="border rounded-md max-h-40 overflow-y-auto bg-white mt-2">
-              {searchResults.map((result) => (
-                <li
-                  key={result.id}
-                  className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                  onClick={() => handleSelect(result)}
-                >
-                  <strong>{result.place_name}</strong> - {result.address_name}
-                </li>
-              ))}
-            </ul>
+        <select
+          onChange={handleSelect}
+          value={selectedValue}
+          className="w-full rounded-xl border-2 border-secondary-50 bg-gray-50 px-4 py-2 shadow-sm outline-2 transition-colors duration-75 hover:border-primary-300 focus:outline-primary-600 text-sm"
+        >
+          <option value="">장소를 선택하세요</option>
+          {filteredPlaces.length === 0 ? (
+            <option value="" disabled>
+              이 지역에 등록된 해당 카테고리의 장소가 없습니다.
+            </option>
+          ) : (
+            filteredPlaces.map((place) => (
+              <option key={place.id} value={place.id}>
+                {place.name} ({place.address}) -{' '}
+                {place.category === PlaceCategory.MEAL ? '식사' : '음료'}
+              </option>
+            ))
           )}
-        </>
+        </select>
       )}
     </div>
   );

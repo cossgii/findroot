@@ -4,7 +4,7 @@ import { useSetAtom } from 'jotai';
 import { modalAtom } from '~/src/stores/app-store';
 
 interface RestaurantCardProps {
-  id: number;
+  id: string;
   name: string;
   description?: string;
   district?: string;
@@ -28,9 +28,7 @@ export default function RestaurantCard({
     <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
       <div className="flex-grow">
         <h3 className="text-lg font-semibold">{name}</h3>
-        {description && (
-          <p className="text-gray-600 text-sm mt-1">{description}</p>
-        )}
+        
         {district && <p className="text-gray-400 text-xs mt-1">{district}</p>}
       </div>
       <button

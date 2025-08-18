@@ -30,17 +30,17 @@ export async function PUT(request: Request) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json();
-  // TODO: Zod를 사용하여 입력값 유효성 검사 추가
-  const { name, email, image } = body; // 예시: 이름, 이메일, 이미지 업데이트
-
   try {
-    const updatedUser = await updateUser(session.user.id, {
-      name,
-      email,
-      image,
-    });
+    const body = await request.json();
+    const { name, image } = body;
+
+    const dataToUpdate: { name?: string; image?: string } = {};
+    if (name) dataToUpdate.name = name;
+    if (image !== undefined) dataToUpdate.image = image;
+
+    const updatedUser = await updateUser(session.user.id, dataToUpdate);
     return NextResponse.json(updatedUser);
+    
   } catch (error) {
     console.error('Error updating user profile:', error);
     return NextResponse.json(

@@ -1,99 +1,189 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Place } from '@prisma/client';
-import {
-  createRouteSchema,
-  CreateRouteInput,
-} from '~/src/services/route/route-schema';
+import { Place, RouteStopLabel } from '@prisma/client';
+import { useSession } from 'next-auth/react';
+import { z } from 'zod';
+import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+
+// Define the shape of a stop in the route creation UI
+export interface RouteStop {
+  listId: string; // Unique ID for React list operations
+  place: Place;
+  label: RouteStopLabel;
+}
+
+// Define the Zod schema for the form itself (name and description)
+const routeDetailsSchema = z.object({
+  name: z.string().min(1, { message: '루트 이름을 입력해주세요.' }),
+  description: z.string().optional(),
+});
+
+type RouteDetails = z.infer<typeof routeDetailsSchema>;
 
 interface UseAddRouteFormProps {
   onClose: () => void;
   onRouteAdded: () => void;
 }
 
+const MAX_STOPS = 5;
+const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 };
+
 export const useAddRouteForm = ({
   onClose,
   onRouteAdded,
 }: UseAddRouteFormProps) => {
-  const form = useForm<CreateRouteInput>({
-    resolver: zodResolver(createRouteSchema),
+  const { data: session } = useSession();
+  const form = useForm<RouteDetails>({
+    resolver: zodResolver(routeDetailsSchema),
     defaultValues: {
       name: '',
       description: '',
-      districtId: '',
-      placeForRound1Id: undefined,
-      placeForRound2Id: undefined,
-      placeForCafeId: undefined,
     },
   });
 
+  const [stops, setStops] = useState<RouteStop[]>([]);
+  const [userPlaces, setUserPlaces] = useState<Place[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  const [mapCenter, setMapCenter] = useState(SEOUL_CENTER);
 
-  // State to hold the actual Place objects for display
-  const [selectedRound1Place, setSelectedRound1Place] = useState<Place | null>(
-    null,
-  );
-  const [selectedRound2Place, setSelectedRound2Place] = useState<Place | null>(
-    null,
-  );
-  const [selectedCafePlace, setSelectedCafePlace] = useState<Place | null>(null);
+  // Fetch all places created by the user
+  useEffect(() => {
+    const fetchUserPlaces = async () => {
+      if (!session?.user?.id) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/users/${session.user.id}/places`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch user places');
+        }
+        const places: Place[] = await response.json();
+        setUserPlaces(places);
+      } catch (err) {
+        setError('장소 목록을 불러오는 데 실패했습니다.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const onSubmit = async (values: CreateRouteInput) => {
-    // This will be handled by the API call in AddRouteModal or a parent component
-    // For now, just log and close
-    console.log('Route form submitted with values:', values);
-    onRouteAdded();
-    onClose();
+    fetchUserPlaces();
+  }, [session]);
+
+  // --- Stop Management Functions ---
+
+  const addStop = (place: Place, label: RouteStopLabel) => {
+    if (stops.length >= MAX_STOPS) {
+      alert(`경유지는 최대 ${MAX_STOPS}개까지 추가할 수 있습니다.`);
+      return;
+    }
+    setStops((prev) => {
+      const newStops = [...prev, { listId: Date.now().toString(), place, label }];
+      setMapCenter({ lat: place.latitude, lng: place.longitude }); // Update map center
+      return newStops;
+    });
   };
 
-  // Function to assign a place to a specific slot
-  const assignPlaceToSlot = (
-    place: Place,
-    slot: 'round1' | 'round2' | 'cafe',
-  ) => {
-    if (slot === 'round1') {
-      form.setValue('placeForRound1Id', place.id);
-      setSelectedRound1Place(place);
-    } else if (slot === 'round2') {
-      form.setValue('placeForRound2Id', place.id);
-      setSelectedRound2Place(place);
-    } else if (slot === 'cafe') {
-      form.setValue('placeForCafeId', place.id);
-      setSelectedCafePlace(place);
-    }
-    // Trigger validation for the assigned slot
-    form.trigger(
-      `placeFor${slot.charAt(0).toUpperCase() + slot.slice(1)}Id` as keyof CreateRouteInput,
+  const removeStop = (listId: string) => {
+    setStops((prev) => {
+      const newStops = prev.filter((stop) => stop.listId !== listId);
+      if (newStops.length > 0) {
+        const lastStop = newStops[newStops.length - 1];
+        setMapCenter({ lat: lastStop.place.latitude, lng: lastStop.place.longitude });
+      } else {
+        setMapCenter(SEOUL_CENTER);
+      }
+      return newStops;
+    });
+  };
+
+  const updateStopLabel = (listId: string, newLabel: RouteStopLabel) => {
+    setStops((prev) =>
+      prev.map((stop) =>
+        stop.listId === listId ? { ...stop, label: newLabel } : stop,
+      ),
     );
   };
 
-  // Function to clear a slot
-  const clearSlot = (slot: 'round1' | 'round2' | 'cafe') => {
-    if (slot === 'round1') {
-      form.setValue('placeForRound1Id', undefined);
-      setSelectedRound1Place(null);
-    } else if (slot === 'round2') {
-      form.setValue('placeForRound2Id', undefined);
-      setSelectedRound2Place(null);
-    } else if (slot === 'cafe') {
-      form.setValue('placeForCafeId', undefined);
-      setSelectedCafePlace(null);
+  const reorderStops = (sourceIndex: number, destinationIndex: number) => {
+    setStops((prev) => {
+      const result = Array.from(prev);
+      const [removed] = result.splice(sourceIndex, 1);
+      result.splice(destinationIndex, 0, removed);
+      return result;
+    });
+  };
+
+  // --- District and Map Functions ---
+  const handleDistrictChange = (districtId: string) => {
+    setSelectedDistrict(districtId);
+    const districtInfo = SEOUL_DISTRICTS.find((d) => d.id === districtId);
+    if (districtInfo) {
+      setMapCenter({ lat: districtInfo.lat, lng: districtInfo.lng });
+    } else {
+      setMapCenter(SEOUL_CENTER);
     }
-    form.trigger(
-      `placeFor${slot.charAt(0).toUpperCase() + slot.slice(1)}Id` as keyof CreateRouteInput,
-    );
+  };
+
+  // --- Form Submission ---
+
+  const onSubmit = async (data: RouteDetails) => {
+    if (stops.length === 0) {
+      alert('경유지를 하나 이상 추가해주세요.');
+      return;
+    }
+
+    const placesForApi = stops.map((stop, index) => ({
+      placeId: stop.place.id,
+      order: index + 1,
+      label: stop.label,
+    }));
+
+    const payload = {
+      ...data,
+      places: placesForApi,
+      // Add districtId to the payload if a district is selected
+      districtId: selectedDistrict,
+    };
+
+    try {
+      const response = await fetch('/api/routes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create route');
+      }
+
+      alert('루트가 성공적으로 생성되었습니다.');
+      onRouteAdded();
+      onClose();
+    } catch (err) {
+      alert('루트 생성에 실패했습니다.');
+      console.error(err);
+    }
   };
 
   return {
     form,
+    stops,
+    userPlaces,
+    isLoading,
+    error,
+    addStop,
+    removeStop,
+    updateStopLabel,
+    reorderStops,
     onSubmit,
     selectedDistrict,
-    setSelectedDistrict,
-    assignPlaceToSlot,
-    clearSlot,
-    selectedRound1Place,
-    selectedRound2Place,
-    selectedCafePlace,
+    mapCenter,
+    handleDistrictChange,
   };
 };

@@ -13,11 +13,10 @@ export const usePlaceSearch = () => {
     name: string;
     address: string;
     id: string;
+    district: string | null; // Added district field
   } | null>(null);
   const isKakaoPlacesServiceReady = useAtomValue(isKakaoMapApiLoadedAtom); // Use global state
   const [, setModal] = useAtom(modalAtom);
-
-  console.log("usePlaceSearch: isKakaoPlacesServiceReady =", isKakaoPlacesServiceReady);
 
   const handleSearch = () => {
     if (!isKakaoPlacesServiceReady) {
@@ -89,12 +88,38 @@ export const usePlaceSearch = () => {
     const lng = parseFloat(place.x);
     const address = place.address_name;
 
-    setSelectedPlace({
-      latitude: lat,
-      longitude: lng,
-      name: place.place_name,
-      address: address,
-      id: place.id,
+    // Check if the address is in Seoul
+    if (!address.includes('서울')) {
+      setModal({
+        type: 'INFO_MESSAGE',
+        props: {
+          title: '장소 선택 불가',
+          message: '현재는 서울 지역의 장소만 등록할 수 있습니다.',
+        },
+      });
+      setSelectedPlace(null); // Clear selected place if not in Seoul
+      setSearchResults([]);
+      return;
+    }
+
+    // Extract district from the address
+    let district: string | null = null;
+    const seoulDistrictRegex = /서울\s*([가-힣]+구)/;
+    const match = address.match(seoulDistrictRegex);
+    if (match && match[1]) {
+      district = match[1];
+    }
+
+    setSelectedPlace((prevSelectedPlace) => {
+      const newSelectedPlace = {
+        latitude: lat,
+        longitude: lng,
+        name: place.place_name,
+        address: address,
+        id: place.id,
+        district: district, // Assign extracted district
+      };
+      return newSelectedPlace;
     });
     setSearchResults([]);
   };

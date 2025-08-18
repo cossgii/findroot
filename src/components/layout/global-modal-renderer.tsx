@@ -8,7 +8,9 @@ import {
   AddPlaceModalProps,
   AddRouteModalProps,
   RestaurantDetailModalProps,
-} from '~/src/stores/app-store'; // InfoMessageModalProps 임포트
+  EditPlaceModalProps,
+  EditRouteModalProps,
+} from '~/src/stores/app-store';
 import { Place } from '@prisma/client';
 
 // Import all modal components
@@ -16,6 +18,8 @@ import Modal from '~/src/components/districts/modal';
 import RestaurantDetailModalContent from '~/src/components/districts/restaurant-detail-modal-content';
 import AddPlaceModal from '~/src/components/mypage/places/AddPlaceModal';
 import AddRouteModal from '~/src/components/mypage/routes/AddRouteModal';
+import EditPlaceModal from '~/src/components/mypage/places/EditPlaceModal';
+import EditRouteModal from '~/src/components/mypage/routes/EditRouteModal';
 
 /**
  * A helper component to fetch data for the restaurant detail modal.
@@ -124,6 +128,22 @@ export default function GlobalModalRenderer() {
       return (
         <InfoMessageModal
           {...(modal.props as InfoMessageModalProps)}
+          onClose={closeModal}
+        />
+      );
+    case 'EDIT_PLACE':
+      return (
+        <EditPlaceModal
+          isOpen={true}
+          {...(modal.props as EditPlaceModalProps)}
+          onClose={closeModal}
+        />
+      );
+    case 'EDIT_ROUTE':
+      return (
+        <EditRouteModal
+          isOpen={true}
+          {...(modal.props as EditRouteModalProps)}
           onClose={closeModal}
         />
       );

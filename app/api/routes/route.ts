@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
-import { createRoute } from '~/src/services/route/routeService';
-import { createRouteSchema } from '~/src/services/route/route-schema';
+import {
+  createRoute,
+  NewRouteApiSchema,
+} from '~/src/services/route/routeService';
 import { z } from 'zod';
 
 export async function POST(request: Request) {
@@ -13,10 +15,8 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    // Validate the body against the new schema
-    const validatedData = createRouteSchema.parse(body);
+    const validatedData = NewRouteApiSchema.parse(body);
 
-    // Call the new createRoute service function
     const newRoute = await createRoute(validatedData, session.user.id);
 
     return NextResponse.json(newRoute, { status: 201 });

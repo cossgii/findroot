@@ -18,6 +18,7 @@ export const useAddPlaceForm = ({
   const { data: session } = useSession();
   const form = useForm<AddPlaceFormValues>({
     resolver: zodResolver(createPlaceSchema),
+    mode: 'onTouched', // Validate on blur/change after first touch
     defaultValues: {
       name: '',
       latitude: 0,
@@ -25,7 +26,7 @@ export const useAddPlaceForm = ({
       address: '',
       district: '',
       description: '',
-      category: '',
+      // category is intentionally left out to be undefined initially
     },
   });
 
@@ -46,7 +47,7 @@ export const useAddPlaceForm = ({
 
       if (response.ok) {
         alert('장소가 성공적으로 등록되었습니다.');
-        form.reset();
+        form.reset({}, { shouldValidate: false }); // Reset form without triggering immediate validation
         onPlaceAdded();
         onClose();
       } else {

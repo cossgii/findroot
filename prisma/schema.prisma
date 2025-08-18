@@ -16,6 +16,13 @@ enum PlaceCategory {
   DRINK
 }
 
+// Enum for labeling stops in a route
+enum RouteStopLabel {
+  MEAL
+  CAFE
+  BAR
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String
@@ -81,7 +88,7 @@ model Place {
   address     String?
   district    String?
   description String?
-  category    PlaceCategory // Changed from String? to the new Enum
+  category    PlaceCategory
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -89,11 +96,9 @@ model Place {
   creatorId String
 
   likes    Like[]
-
-  // Back-relations to routes where this place is used
-  routesAsRound1 Route[] @relation("RouteAsRound1")
-  routesAsRound2 Route[] @relation("RouteAsRound2")
-  routesAsCafe   Route[] @relation("RouteAsCafe")
+  
+  // Relation to the new RoutePlace model
+  routes RoutePlace[]
 }
 
 model Route {
@@ -109,17 +114,25 @@ model Route {
 
   likes    Like[]
 
-  // --- New 3-Slot Structure ---
-  placeForRound1Id String?
-  placeForRound2Id String?
-  placeForCafeId   String?
-
-  placeForRound1 Place? @relation("RouteAsRound1", fields: [placeForRound1Id], references: [id], onDelete: SetNull)
-  placeForRound2 Place? @relation("RouteAsRound2", fields: [placeForRound2Id], references: [id], onDelete: SetNull)
-  placeForCafe   Place? @relation("RouteAsCafe",   fields: [placeForCafeId],   references: [id], onDelete: SetNull)
+  // Relation to the new RoutePlace model
+  places RoutePlace[]
 }
 
-// The RoutePlace model is now deleted.
+// New join table for the many-to-many relationship between Route and Place
+model RoutePlace {
+  id      String @id @default(cuid())
+  routeId String
+  placeId String
+  order   Int             // The order of the place within the route
+  label   RouteStopLabel  // The user-defined label for this stop
+
+  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@index([routeId])
+  @@index([placeId])
+}
+
 
 model Follow {
   followerId  String
@@ -162,4 +175,3 @@ model Message {
   @@index([senderId])
   @@index([receiverId])
 }
-

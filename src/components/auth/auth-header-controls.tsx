@@ -17,6 +17,7 @@ export default function AuthHeaderControls() {
   const pathname = usePathname();
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const isMyPage = pathname === '/mypage';
 
   if (status === 'loading') {
     return <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />;
@@ -35,11 +36,13 @@ export default function AuthHeaderControls() {
           </button>
         }
       >
-        <DropdownItem>
-          <Link href="/mypage" className="block w-full text-left">
-            마이페이지
-          </Link>
-        </DropdownItem>
+        {!isMyPage && (
+          <DropdownItem>
+            <Link href="/mypage" className="block w-full text-left">
+              마이페이지
+            </Link>
+          </DropdownItem>
+        )}
         <DropdownItem onClick={() => signOut()}>로그아웃</DropdownItem>
       </Dropdown>
     );

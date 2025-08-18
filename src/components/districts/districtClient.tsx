@@ -44,9 +44,9 @@ export default function DistrictClient({
           />
         </div>
         {isRouteView ? (
-          <RestaurantRouteContainer districtId={districtId} places={places} />
+          <RestaurantRouteContainer districtId={districtId} />
         ) : (
-          <RestaurantListContainer districtId={districtId} places={places} />
+          <RestaurantListContainer places={places} />
         )}
       </div>
     </div>

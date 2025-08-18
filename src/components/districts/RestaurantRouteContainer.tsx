@@ -1,62 +1,119 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import RestaurantCard from '~/src/components/districts/restaurant-card';
-import { CATEGORIES } from '~/src/utils/categories';
-import { Place } from '@prisma/client';
+import { Place, Route } from '@prisma/client';
+
+// Define a type for Route with included Places
+interface RouteWithPlaces extends Route {
+  placeForRound1: Place | null;
+  placeForRound2: Place | null;
+  placeForCafe: Place | null;
+}
 
 interface RestaurantRouteContainerProps {
   districtId: string;
-  places: Place[];
+  // places prop is no longer directly used for route generation, but might be useful for map later
+  // places: Place[]; // Removed as it's not used for route generation anymore
 }
 
 export default function RestaurantRouteContainer({
   districtId,
-  places,
 }: RestaurantRouteContainerProps) {
-  const restaurantsInDistrict = places;
+  const { data: session, status } = useSession();
+  const [routes, setRoutes] = useState<RouteWithPlaces[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const routeRestaurants: Place[] = [];
+  useEffect(() => {
+    if (status === 'loading') return; // Wait for session to load
 
-  // 각 카테고리별로 첫 번째 맛집을 찾아서 루트에 추가
-  CATEGORIES.forEach((category) => {
-    const foundRestaurant = restaurantsInDistrict.find(
-      (restaurant) => restaurant.category === category.id,
-    );
-    if (foundRestaurant) {
-      routeRestaurants.push(foundRestaurant);
+    if (!session?.user?.id) {
+      setLoading(false);
+      setError('로그인 후 사용자 생성 루트를 볼 수 있습니다.');
+      return;
     }
-  });
 
-  // 맛집이 2개 미만이면 루트를 구성할 수 없음
-  if (routeRestaurants.length < 2) {
+    const fetchUserRoutes = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(
+          `/api/users/${session.user.id}/routes?districtId=${districtId}`,
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch user routes');
+        }
+        const data: RouteWithPlaces[] = await response.json();
+        setRoutes(data);
+      } catch (err) {
+        console.error('Error fetching user routes:', err);
+        setError('사용자 루트를 불러오는 데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserRoutes();
+  }, [districtId, session, status]); // Depend on districtId and session status
+
+  if (loading) {
+    return <p className="text-gray-500">사용자 루트를 불러오는 중...</p>;
+  }
+
+  if (error) {
+    return <p className="text-red-500">오류: {error}</p>;
+  }
+
+  if (routes.length === 0) {
     return (
       <p className="text-gray-500">
-        이 지역에는 2개 이상의 카테고리 맛집이 있어야 루트 추천이 가능합니다.
+        이 지역에 생성된 사용자 루트가 없습니다.
       </p>
     );
   }
 
-  const routeName = routeRestaurants.map((r) => r.name).join(' - ');
-  const routeReview = `${districtId}에서 즐길 수 있는 추천 코스! ${routeName} 루트를 통해 즐거운 시간을 보내세요.`;
-
   return (
     <div className="flex flex-col space-y-6">
-      <div className="p-4 bg-blue-50 rounded-lg shadow-sm">
-        <h3 className="text-xl font-bold mb-2">추천 루트: {routeName}</h3>
-        <p className="text-gray-700">리뷰: {routeReview}</p>
-      </div>
-
-      <h4 className="text-lg font-semibold">루트 상세</h4>
-      <div className="flex flex-col space-y-4">
-        {routeRestaurants.map((restaurant) => (
-          <RestaurantCard
-            key={restaurant.id}
-            id={restaurant.id}
-            name={restaurant.name}
-            description={restaurant.description || ''}
-            address={restaurant.address || ''}
-            district={districtId} // district is not a part of Place model, so we use the prop
-          />
-        ))}
-      </div>
+      {routes.map((route) => (
+        <div key={route.id} className="p-4 bg-blue-50 rounded-lg shadow-sm">
+          <h3 className="text-xl font-bold mb-2">루트 이름: {route.name}</h3>
+          {route.description && (
+            <p className="text-gray-700 mb-2">설명: {route.description}</p>
+          )}
+          <h4 className="text-lg font-semibold mt-4 mb-2">루트 상세 장소</h4>
+          <div className="flex flex-col space-y-4">
+            {route.placeForRound1 && (
+              <RestaurantCard
+                id={route.placeForRound1.id}
+                name={route.placeForRound1.name}
+                description={route.placeForRound1.description || ''}
+                address={route.placeForRound1.address || ''}
+                district={route.placeForRound1.district || ''}
+              />
+            )}
+            {route.placeForRound2 && (
+              <RestaurantCard
+                id={route.placeForRound2.id}
+                name={route.placeForRound2.name}
+                description={route.placeForRound2.description || ''}
+                address={route.placeForRound2.address || ''}
+                district={route.placeForRound2.district || ''}
+              />
+            )}
+            {route.placeForCafe && (
+              <RestaurantCard
+                id={route.placeForCafe.id}
+                name={route.placeForCafe.name}
+                description={route.placeForCafe.description || ''}
+                address={route.placeForCafe.address || ''}
+                district={route.placeForCafe.district || ''}
+              />
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
+
