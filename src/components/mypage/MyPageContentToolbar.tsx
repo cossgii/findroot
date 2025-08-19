@@ -5,7 +5,7 @@ import { cn } from '~/src/utils/class-name';
 import Button from '~/src/components/common/button';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
-import { type MyPageSubTab } from '../MyPageTabs';
+import { type MyPageSubTab } from '~/src/components/mypage/MyPageTabs';
 
 interface MyPageContentToolbarProps {
   activeTab: 'content' | 'likes';

@@ -1,7 +1,7 @@
 'use client';
 
 import { type MyPageSubTab } from '../MyPageTabs';
-import { LikedPlace, MyLikedRoute } from '~/src/hooks/useMyPageData';
+import { LikedPlace, MyLikedRoute } from '~/src/hooks/mypage/useMyPageData';
 
 interface LikedContentListProps {
   activeSubTab: MyPageSubTab;

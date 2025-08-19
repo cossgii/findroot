@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Place, Route, RoutePlace, RouteStopLabel } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 import { UpdateRouteApiSchema } from '~/src/services/route/routeService';
 
@@ -41,7 +42,9 @@ export const useEditRouteForm = ({
   onRouteUpdated,
 }: UseEditRouteFormProps) => {
   const { data: session } = useSession();
-  const form = useForm<RouteDetails>();
+  const form = useForm<RouteDetails>({
+    resolver: zodResolver(routeDetailsSchema),
+  });
 
   const [stops, setStops] = useState<RouteStop[]>([]);
   const [userPlaces, setUserPlaces] = useState<Place[]>([]);

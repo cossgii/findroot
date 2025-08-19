@@ -6,7 +6,9 @@ import { modalAtom } from '~/src/stores/app-store';
 interface RestaurantCardProps {
   id: string;
   name: string;
-  district?: string;
+  district?: string | null;
+  address?: string | null;
+  description?: string | null;
 }
 
 export default function RestaurantCard({

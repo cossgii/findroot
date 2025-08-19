@@ -2,10 +2,10 @@ export interface Restaurant {
   id: string;
   name: string;
   category: string;
-  address: string;
-  district: string;
+  address?: string | null;
+  district?: string | null;
   imageUrl?: string;
-  description?: string;
+  description?: string | null;
 }
 
 export interface Category {

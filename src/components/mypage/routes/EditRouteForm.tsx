@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Place, RouteStopLabel } from '@prisma/client';
-import { RouteStop } from './useEditRouteForm';
+import { RouteStop } from '~/src/hooks/mypage/useEditRouteForm';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
 import {

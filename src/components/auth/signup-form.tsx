@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Path } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -53,7 +53,7 @@ export function SignupForm() {
         if (data.message === 'Validation error' && data.errors) {
           data.errors.forEach((err: z.ZodIssue) => {
             if (err.path && err.path.length > 0) {
-              form.setError(err.path[0], { message: err.message });
+              form.setError(err.path[0] as Path<SignupFormValues>, { message: err.message });
             } else {
               form.setError('root.serverError', { message: err.message });
             }

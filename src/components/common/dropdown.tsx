@@ -54,7 +54,7 @@ export default function Dropdown({
           )}
         >
           {React.Children.map(children, (child) => {
-            if (React.isValidElement(child)) {
+            if (React.isValidElement<DropdownItemProps>(child)) {
               return React.cloneElement(child, { onClose: closeDropdown });
             }
             return child;

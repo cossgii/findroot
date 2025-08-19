@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
-import { deletePlace, getPlaceById, updatePlace } from '~/src/services/place/placeService';
+import {
+  deletePlace,
+  getPlaceById,
+  updatePlace,
+} from '~/src/services/place/placeService';
 import { z } from 'zod';
 import { PlaceCategory } from '@prisma/client';
 
-// Define the expected type for params
 interface PlaceRouteParams {
   placeId: string;
 }
-
-// Schema for updating a place
 const updatePlaceSchema = z.object({
   name: z.string().min(1, { message: '이름을 입력해주세요.' }).optional(),
   latitude: z.number().optional(),
@@ -23,10 +24,11 @@ const updatePlaceSchema = z.object({
 
 export async function GET(
   request: Request,
-  context: { params: PlaceRouteParams }, // Use the defined interface
+  context: { params: Promise<PlaceRouteParams> },
 ) {
   try {
-    const placeId = context.params.placeId; // Access params from context
+    const params = await context.params;
+    const placeId = params.placeId;
     const place = await getPlaceById(placeId);
 
     if (!place) {
@@ -45,7 +47,7 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  context: { params: PlaceRouteParams },
+  context: { params: Promise<PlaceRouteParams> },
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -53,9 +55,13 @@ export async function DELETE(
   }
 
   try {
-    const placeId = context.params.placeId;
+    const params = await context.params;
+    const placeId = params.placeId;
     await deletePlace(placeId, session.user.id);
-    return NextResponse.json({ message: 'Place deleted successfully' }, { status: 200 });
+    return NextResponse.json(
+      { message: 'Place deleted successfully' },
+      { status: 200 },
+    );
   } catch (error) {
     console.error('Error deleting place:', error);
     if (error instanceof Error) {
@@ -74,7 +80,7 @@ export async function DELETE(
 
 export async function PUT(
   request: Request,
-  context: { params: PlaceRouteParams },
+  context: { params: Promise<PlaceRouteParams> },
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -82,11 +88,16 @@ export async function PUT(
   }
 
   try {
-    const placeId = context.params.placeId;
+    const params = await context.params;
+    const placeId = params.placeId;
     const body = await request.json();
     const validatedData = updatePlaceSchema.parse(body);
 
-    const updatedPlace = await updatePlace(placeId, session.user.id, validatedData);
+    const updatedPlace = await updatePlace(
+      placeId,
+      session.user.id,
+      validatedData,
+    );
     return NextResponse.json(updatedPlace, { status: 200 });
   } catch (error) {
     console.error('Error updating place:', error);

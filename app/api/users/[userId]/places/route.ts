@@ -5,12 +5,12 @@ import { getPlacesByCreatorId } from '~/src/services/place/placeService';
 
 export async function GET(
   request: Request,
-  { params }: { params: { userId: string } },
+  { params }: { params: Promise<{ userId: string }> },
 ) {
-  const resolvedParams = await Promise.resolve(params);
+  const resolvedParams = await params;
   const userId = resolvedParams.userId;
   const session = await getServerSession(authOptions);
-  // 요청하는 userId와 세션의 userId가 일치하는지 확인 (보안 강화)
+
   if (!session?.user?.id || session.user.id !== userId) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }

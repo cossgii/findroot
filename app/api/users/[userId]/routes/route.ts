@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
-import { getRoutesByCreatorId, getRoutesByCreatorIdAndDistrictId } from '~/src/services/route/routeService';
+import {
+  getRoutesByCreatorId,
+  getRoutesByCreatorIdAndDistrictId,
+} from '~/src/services/route/routeService';
 
 export async function GET(
   request: Request,
-  { params }: { params: { userId: string } },
+  { params }: { params: Promise<{ userId: string }> },
 ) {
   const session = await getServerSession(authOptions);
-  const userIdFromParams = params.userId;
+  const resolvedParams = await params;
+  const userIdFromParams = resolvedParams.userId;
 
-  // 인증 및 권한 확인
   if (!session?.user?.id || session.user.id !== userIdFromParams) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }

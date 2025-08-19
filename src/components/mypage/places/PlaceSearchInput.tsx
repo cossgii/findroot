@@ -6,8 +6,8 @@ interface PlaceSearchInputProps {
   searchKeyword: string;
   setSearchKeyword: (keyword: string) => void;
   handleSearch: () => void;
-  searchResults: kakao.maps.services.Places.PlaceResult[];
-  handleSelectPlace: (place: kakao.maps.services.Places.PlaceResult) => void;
+  searchResults: kakao.maps.services.PlaceResult[];
+  handleSelectPlace: (place: kakao.maps.services.PlaceResult) => void;
   isKakaoPlacesServiceReady: boolean;
 }
 

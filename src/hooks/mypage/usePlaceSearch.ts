@@ -5,7 +5,7 @@ import { modalAtom, isKakaoMapApiLoadedAtom } from '~/src/stores/app-store'; // 
 export const usePlaceSearch = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchResults, setSearchResults] = useState<
-    kakao.maps.services.Places.PlaceResult[]
+    kakao.maps.services.PlaceResult[]
   >([]);
   const [selectedPlace, setSelectedPlace] = useState<{
     latitude: number;
@@ -83,7 +83,7 @@ export const usePlaceSearch = () => {
     });
   };
 
-  const handleSelectPlace = (place: kakao.maps.services.Places.PlaceResult) => {
+  const handleSelectPlace = (place: kakao.maps.services.PlaceResult) => {
     const lat = parseFloat(place.y);
     const lng = parseFloat(place.x);
     const address = place.address_name;

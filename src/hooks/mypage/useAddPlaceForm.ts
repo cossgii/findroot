@@ -47,7 +47,7 @@ export const useAddPlaceForm = ({
 
       if (response.ok) {
         alert('장소가 성공적으로 등록되었습니다.');
-        form.reset({}, { shouldValidate: false }); // Reset form without triggering immediate validation
+        form.reset({}); // Reset form without triggering immediate validation
         onPlaceAdded();
         onClose();
       } else {
