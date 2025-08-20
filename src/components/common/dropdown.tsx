@@ -1,14 +1,14 @@
-// src/components/common/dropdown.tsx
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { cn } from '~/src/utils/class-name';
 
 interface DropdownProps {
-  trigger: React.ReactNode; // 드롭다운을 여는 요소 (버튼 등)
-  children: React.ReactNode; // 드롭다운 내부에 표시될 내용
-  align?: 'left' | 'right'; // 드롭다운 정렬 (기본: right)
-  contentClassName?: string; // 드롭다운 내용 컨테이너에 적용될 추가 CSS 클래스
+  trigger: React.ReactNode;
+  children: React.ReactNode;
+  align?: 'left' | 'right';
+  contentClassName?: string;
 }
 
 export default function Dropdown({
@@ -19,11 +19,15 @@ export default function Dropdown({
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   const closeDropdown = () => setIsOpen(false);
   const toggleDropdown = () => setIsOpen((prev) => !prev);
 
-  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    closeDropdown();
+  }, [pathname]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (

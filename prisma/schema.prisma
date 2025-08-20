@@ -159,6 +159,9 @@ model Like {
 
   @@unique([userId, placeId])
   @@unique([userId, routeId])
+
+  @@index([placeId])
+  @@index([routeId])
 }
 
 model Message {

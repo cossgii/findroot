@@ -1,4 +1,5 @@
 import { atom } from 'jotai';
+import { ComponentType } from 'react';
 
 export type ModalType =
   | 'ADD_PLACE'
@@ -6,7 +7,15 @@ export type ModalType =
   | 'RESTAURANT_DETAIL'
   | 'INFO_MESSAGE'
   | 'EDIT_PLACE'
-  | 'EDIT_ROUTE';
+  | 'EDIT_ROUTE'
+  | 'CONFIRMATION';
+
+export interface ConfirmationModalProps {
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
 
 export interface AddPlaceModalProps {
   onPlaceAdded: () => void;
@@ -44,6 +53,7 @@ export interface ModalState {
     | InfoMessageModalProps
     | EditPlaceModalProps
     | EditRouteModalProps
+    | ConfirmationModalProps // Add ConfirmationModalProps here
     | Record<string, never>;
 }
 
@@ -53,5 +63,16 @@ const initialState: ModalState = {
 };
 
 export const modalAtom = atom<ModalState>(initialState);
+
+export const openModalAtom = atom(
+  null,
+  (get, set, props: ConfirmationModalProps) => {
+    set(modalAtom, { type: 'CONFIRMATION', props: props });
+  },
+);
+
+export const closeModalAtom = atom(null, (get, set) => {
+  set(modalAtom, initialState);
+});
 
 export const isKakaoMapApiLoadedAtom = atom<boolean>(false);

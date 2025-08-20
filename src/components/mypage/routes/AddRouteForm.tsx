@@ -74,6 +74,14 @@ export default function AddRouteForm({
     return userPlaces.filter((place) => place.district === districtName);
   }, [userPlaces, selectedDistrict, stops]);
 
+  const filteredPlacesForDropdown = useMemo(() => {
+    if (!selectedDistrict) {
+      return [];
+    }
+    const districtName = SEOUL_DISTRICTS.find(d => d.id === selectedDistrict)?.name;
+    return userPlaces.filter(place => place.district === districtName);
+  }, [userPlaces, selectedDistrict]);
+
   if (isLoading) {
     return <p>장소 목록을 불러오는 중...</p>;
   }
@@ -189,7 +197,7 @@ export default function AddRouteForm({
                 <div className="flex flex-col sm:flex-row gap-2">
                   <select
                     onChange={(e) => {
-                      const selectedPlace = userPlaces.find(
+                      const selectedPlace = filteredPlacesForDropdown.find(
                         (p) => p.id === e.target.value,
                       );
                       setPlaceToAdd(selectedPlace || null);
@@ -197,7 +205,7 @@ export default function AddRouteForm({
                     className="w-full rounded-xl border-2 border-secondary-50 bg-white px-4 py-2 shadow-sm text-sm flex-grow"
                   >
                     <option value="">장소를 선택하세요</option>
-                    {userPlaces.map((place) => (
+                    {filteredPlacesForDropdown.map((place) => (
                       <option key={place.id} value={place.id}>
                         {place.name}
                       </option>

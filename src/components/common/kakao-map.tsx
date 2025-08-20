@@ -53,15 +53,15 @@ const KakaoMap = ({
     }
   }, [isApiLoaded, latitude, longitude]);
 
-  // Effect 2: Update Center
+  // Effect 2: Update Center (only if no markers)
   useEffect(() => {
-    if (mapInstanceRef.current) {
+    if (mapInstanceRef.current && markers.length === 0) {
       const newCenter = new window.kakao.maps.LatLng(latitude, longitude);
       mapInstanceRef.current.setCenter(newCenter);
     }
-  }, [latitude, longitude]);
+  }, [latitude, longitude, markers]);
 
-  // Effect 3: Update Markers and Polylines
+  // Effect 3: Update Markers, Polylines, and Bounds
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -70,27 +70,34 @@ const KakaoMap = ({
     markerInstancesRef.current.forEach((marker) => marker.setMap(null));
     markerInstancesRef.current = [];
 
-    // Add new markers
-    markers.forEach((markerData) => {
-      const markerPosition = new window.kakao.maps.LatLng(
-        markerData.latitude,
-        markerData.longitude,
-      );
+    if (markers.length > 0) {
+      const bounds = new window.kakao.maps.LatLngBounds();
 
-      const marker = new window.kakao.maps.Marker({
-        position: markerPosition,
-        title: markerData.title,
+      markers.forEach((markerData) => {
+        const markerPosition = new window.kakao.maps.LatLng(
+          markerData.latitude,
+          markerData.longitude,
+        );
+
+        const marker = new window.kakao.maps.Marker({
+          position: markerPosition,
+          title: markerData.title,
+        });
+
+        marker.setMap(map);
+        markerInstancesRef.current.push(marker);
+
+        if (markerData.id && onMarkerClick) {
+          window.kakao.maps.event.addListener(marker, 'click', () => {
+            onMarkerClick(markerData.id);
+          });
+        }
+
+        bounds.extend(markerPosition);
       });
 
-      marker.setMap(map);
-      markerInstancesRef.current.push(marker);
-
-      if (markerData.id && onMarkerClick) {
-        window.kakao.maps.event.addListener(marker, 'click', () => {
-          onMarkerClick(markerData.id);
-        });
-      }
-    });
+      map.setBounds(bounds);
+    }
 
     // Clear existing polylines
     polylineInstancesRef.current.forEach((line) => line.setMap(null));

@@ -10,6 +10,9 @@ interface LikesTabPanelProps {
   likedRoutes: MyLikedRoute[];
   selectedDistrict: string;
   onDistrictChange: (districtId: string) => void;
+  // NEW: Add setters from useMyPageData
+  setLikedPlaces: React.Dispatch<React.SetStateAction<LikedPlace[]>>;
+  setLikedRoutes: React.Dispatch<React.SetStateAction<MyLikedRoute[]>>;
 }
 
 export default function LikesTabPanel({
@@ -17,6 +20,8 @@ export default function LikesTabPanel({
   likedRoutes,
   selectedDistrict,
   onDistrictChange,
+  setLikedPlaces, // NEW
+  setLikedRoutes, // NEW
 }: LikesTabPanelProps) {
   const [activeSubTab, setActiveSubTab] = useState<'places' | 'routes'>('places');
 
@@ -35,7 +40,10 @@ export default function LikesTabPanel({
         activeSubTab={activeSubTab}
         likedPlaces={likedPlaces}
         likedRoutes={likedRoutes}
+        setLikedPlaces={setLikedPlaces} // NEW
+        setLikedRoutes={setLikedRoutes} // NEW
       />
     </div>
   );
 }
+

@@ -1,22 +1,38 @@
+declare global {
+  interface Window {
+    kakao: {
+      maps: typeof kakao.maps;
+    };
+  }
+}
+
 declare namespace kakao.maps {
   function load(callback: () => void): void;
-
-  class Map {
-    constructor(container: HTMLElement, options: MapOptions);
-    setCenter(latlng: LatLng): void;
-    getCenter(): LatLng;
-    relayout(): void; // relayout 추가
-  }
-
-  interface MapOptions {
-    center: LatLng;
-    level: number;
-  }
 
   class LatLng {
     constructor(lat: number, lng: number);
     getLat(): number;
     getLng(): number;
+  }
+
+  class LatLngBounds {
+    constructor(sw?: LatLng, ne?: LatLng);
+    extend(latlng: LatLng): void;
+    getSouthWest(): LatLng;
+    getNorthEast(): LatLng;
+  }
+
+  class Map {
+    constructor(container: HTMLElement, options: MapOptions);
+    setCenter(latlng: LatLng): void;
+    getCenter(): LatLng;
+    relayout(): void;
+    setBounds(bounds: LatLngBounds): void;
+  }
+
+  interface MapOptions {
+    center: LatLng;
+    level: number;
   }
 
   class Marker {
@@ -62,84 +78,94 @@ declare namespace kakao.maps {
     endArrow?: boolean;
   }
 
+  interface KakaoMouseEvent {
+    latLng: LatLng;
+    point: Point;
+  }
+
   namespace event {
+    // 1. Map 클릭 이벤트
+    function addListener(
+      target: Map,
+      type: 'click',
+      callback: (e: KakaoMouseEvent) => void,
+    ): void;
+
+    // 2. Marker 클릭 이벤트
+    function addListener(
+      target: Marker,
+      type: 'click',
+      callback: (e: MouseEvent) => void,
+    ): void;
+
+    // 3. 그 외 모든 경우
     function addListener(
       target: Map | Marker | Polyline,
       type: string,
       callback: (...args: unknown[]) => void,
     ): void;
   }
-}
 
-declare namespace kakao.maps.services {
-  enum Status {
-    OK = 'OK',
-    ZERO_RESULT = 'ZERO_RESULT',
-    ERROR = 'ERROR',
-  }
+  namespace services {
+    enum Status {
+      OK = 'OK',
+      ZERO_RESULT = 'ZERO_RESULT',
+      ERROR = 'ERROR',
+    }
 
-  class Places {
-    constructor();
-    keywordSearch(
-      keyword: string,
-      callback: (
-        data: PlaceResult[],
-        status: Status,
-        pagination: Pagination,
-      ) => void,
-      options?: KeywordSearchOptions,
-    ): void;
-  }
+    class Places {
+      constructor();
+      keywordSearch(
+        keyword: string,
+        callback: (
+          data: PlaceResult[],
+          status: Status,
+          pagination: Pagination,
+        ) => void,
+        options?: KeywordSearchOptions,
+      ): void;
+    }
 
-  interface KeywordSearchOptions {
-    category_group_code?: string;
-    location?: kakao.maps.LatLng;
-    radius?: number;
-    bounds?: kakao.maps.LatLngBounds;
-    size?: number;
-    page?: number;
-    sort?: string;
-    rect?: string;
-  }
+    interface KeywordSearchOptions {
+      category_group_code?: string;
+      location?: LatLng;
+      radius?: number;
+      bounds?: LatLngBounds;
+      size?: number;
+      page?: number;
+      sort?: string;
+      rect?: string;
+    }
 
-  interface PlaceResult {
-    id: string;
-    place_name: string;
-    category_name: string;
-    category_group_code: string;
-    category_group_name: string;
-    phone: string;
-    address_name: string;
-    road_address_name: string;
-    x: string; // longitude
-    y: string; // latitude
-    place_url: string;
-    distance: string;
-  }
+    interface PlaceResult {
+      id: string;
+      place_name: string;
+      category_name: string;
+      category_group_code: string;
+      category_group_name: string;
+      phone: string;
+      address_name: string;
+      road_address_name: string;
+      x: string;
+      y: string;
+      place_url: string;
+      distance: string;
+    }
 
-  interface Pagination {
-    total_count: number;
-    pageable_count: number;
-    is_end: boolean;
-    same_name: {
-      region: string;
-      keyword: string;
-      selected_region: string;
-    };
-    gotoFirst(): void;
-    gotoLast(): void;
-    gotoPage(page: number): void;
-    nextPage(): void;
-    prevPage(): void;
-  }
-}
-
-declare global {
-  interface Window {
-    kakao: {
-      maps: typeof kakao.maps;
-      // Add other top-level properties of window.kakao if they exist and are used
-    };
+    interface Pagination {
+      total_count: number;
+      pageable_count: number;
+      is_end: boolean;
+      same_name: {
+        region: string;
+        keyword: string;
+        selected_region: string;
+      };
+      gotoFirst(): void;
+      gotoLast(): void;
+      gotoPage(page: number): void;
+      nextPage(): void;
+      prevPage(): void;
+    }
   }
 }
-

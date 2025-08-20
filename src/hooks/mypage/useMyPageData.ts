@@ -89,7 +89,9 @@ export function useMyPageData(activeTab: MyPageTab) {
     user,
     setUser,
     likedPlaces,
+    setLikedPlaces, // ADDED
     likedRoutes,
+    setLikedRoutes, // ADDED
     myCreatedPlaces,
     setMyCreatedPlaces,
     myCreatedRoutes,

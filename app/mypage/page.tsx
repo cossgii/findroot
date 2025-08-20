@@ -27,7 +27,9 @@ const MyPage = () => {
     myCreatedRoutes,
     setMyCreatedRoutes,
     likedPlaces,
+    setLikedPlaces, // NEW
     likedRoutes,
+    setLikedRoutes, // NEW
     isLoading,
     refreshContent,
   } = useMyPageData(activeTab);
@@ -88,7 +90,9 @@ const MyPage = () => {
             selectedDistrict={selectedDistrict}
             onDistrictChange={setSelectedDistrict}
             likedPlaces={filteredLikedPlaces}
+            setLikedPlaces={setLikedPlaces} // NEW
             likedRoutes={filteredLikedRoutes}
+            setLikedRoutes={setLikedRoutes} // NEW
           />
         );
       case 'messages':

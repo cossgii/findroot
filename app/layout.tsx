@@ -6,8 +6,8 @@ import Header from '~/src/components/layout/header';
 import { dongle, notoSansKR, roboto } from '~/src/fonts/fonts';
 import '~/src/styles/globals.css';
 
-// Import the atom
-import KakaoMapApiLoader from '~/src/components/common/kakao-map-api-loader'; // Import the new component
+import KakaoMapApiLoader from '~/src/components/common/kakao-map-api-loader';
+import Toast from '~/src/components/common/Toast';
 
 export const metadata: Metadata = {
   title: 'My Awesome App',
@@ -33,7 +33,8 @@ export default function RootLayout({
                 {children}
               </main>
               <GlobalModalRenderer />
-              <KakaoMapApiLoader /> {/* Render the imported loader component */}
+              <KakaoMapApiLoader />
+              <Toast /> {/* <-- Toast 컴포넌트를 Provider 안으로 이동 */}
             </AuthProvider>
           </Provider>
         </div>

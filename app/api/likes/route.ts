@@ -9,17 +9,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const { placeId } = await request.json();
+  const { placeId, routeId } = await request.json();
 
-  if (!placeId) {
+  if (!placeId && !routeId) {
     return NextResponse.json(
-      { message: 'placeId is required' },
+      { message: 'placeId or routeId is required' },
       { status: 400 },
     );
   }
 
   try {
-    const like = await addLike(session.user.id, placeId);
+    const like = await addLike(session.user.id, { placeId, routeId });
     return NextResponse.json(like, { status: 201 });
   } catch (error) {
     console.error('Error adding like:', error);
@@ -36,17 +36,17 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const { placeId } = await request.json();
+  const { placeId, routeId } = await request.json();
 
-  if (!placeId) {
+  if (!placeId && !routeId) {
     return NextResponse.json(
-      { message: 'placeId is required' },
+      { message: 'placeId or routeId is required' },
       { status: 400 },
     );
   }
 
   try {
-    await removeLike(session.user.id, placeId);
+    await removeLike(session.user.id, { placeId, routeId });
     return NextResponse.json({ message: 'Like removed' }, { status: 200 });
   } catch (error) {
     console.error('Error removing like:', error);

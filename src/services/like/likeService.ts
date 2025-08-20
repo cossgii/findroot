@@ -1,30 +1,45 @@
 import { db } from '~/lib/db';
 
-export async function addLike(userId: string, placeId: string) {
+interface LikeInput {
+  placeId?: string;
+  routeId?: string;
+}
+
+export async function addLike(userId: string, { placeId, routeId }: LikeInput) {
+  if (!placeId && !routeId) {
+    throw new Error('Place ID or Route ID is required.');
+  }
   return db.like.create({
     data: {
       userId,
       placeId,
+      routeId,
     },
   });
 }
 
-export async function removeLike(userId: string, placeId: string) {
+export async function removeLike(userId: string, { placeId, routeId }: LikeInput) {
+  if (!placeId && !routeId) {
+    throw new Error('Place ID or Route ID is required.');
+  }
   return db.like.deleteMany({
     where: {
       userId,
       placeId,
+      routeId,
     },
   });
 }
 
-export async function getLikeStatus(userId: string, placeId: string) {
-  const like = await db.like.findUnique({
+export async function getLikeStatus(userId: string, { placeId, routeId }: LikeInput) {
+  if (!placeId && !routeId) {
+    return false;
+  }
+  const like = await db.like.findFirst({
     where: {
-      userId_placeId: {
-        userId,
-        placeId,
-      },
+      userId,
+      ...(placeId && { placeId }),
+      ...(routeId && { routeId }),
     },
   });
   return !!like;
@@ -34,6 +49,14 @@ export async function getPlaceLikesCount(placeId: string) {
   return db.like.count({
     where: {
       placeId,
+    },
+  });
+}
+
+export async function getRouteLikesCount(routeId: string) {
+  return db.like.count({
+    where: {
+      routeId,
     },
   });
 }
@@ -66,4 +89,32 @@ export async function getLikedRoutesByUserId(userId: string) {
       createdAt: 'desc',
     },
   });
+}
+
+export async function getLikeInfo(
+  { placeId, routeId }: LikeInput,
+  userId?: string,
+) {
+  if (!placeId && !routeId) {
+    throw new Error('Place ID or Route ID is required.');
+  }
+
+  const where = placeId ? { placeId } : { routeId };
+
+  const countPromise = db.like.count({ where });
+
+  const likedPromise = userId
+    ? db.like
+        .findFirst({
+          where: {
+            userId,
+            ...where,
+          },
+        })
+        .then((like) => !!like)
+    : Promise.resolve(false);
+
+  const [count, liked] = await Promise.all([countPromise, likedPromise]);
+
+  return { count, liked };
 }
