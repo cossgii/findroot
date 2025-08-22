@@ -20,18 +20,20 @@ export async function GET(
 
   const { searchParams } = new URL(request.url);
   const districtId = searchParams.get('districtId');
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const limit = parseInt(searchParams.get('limit') || '5', 10);
 
   try {
-    let routes;
+    let result;
     if (districtId) {
-      routes = await getRoutesByCreatorIdAndDistrictId(
+      result = await getRoutesByCreatorIdAndDistrictId(
         userIdFromParams,
         districtId,
       );
     } else {
-      routes = await getRoutesByCreatorId(userIdFromParams);
+      result = await getRoutesByCreatorId(userIdFromParams, page, limit);
     }
-    return NextResponse.json(routes);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching user routes:', error);
     return NextResponse.json(

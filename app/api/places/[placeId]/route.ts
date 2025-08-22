@@ -27,9 +27,12 @@ export async function GET(
   context: { params: Promise<PlaceRouteParams> },
 ) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+
     const params = await context.params;
     const placeId = params.placeId;
-    const place = await getPlaceById(placeId);
+    const place = await getPlaceById(placeId, userId);
 
     if (!place) {
       return NextResponse.json({ error: 'Place not found' }, { status: 404 });

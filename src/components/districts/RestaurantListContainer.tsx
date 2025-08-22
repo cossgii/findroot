@@ -1,9 +1,10 @@
 import RestaurantCategorySection from '~/src/components/districts/restaurant-category-section';
 import { CATEGORIES } from '~/src/utils/categories';
-import { Place } from '@prisma/client';
+
+import { Restaurant } from '~/src/types/restaurant'; // Added this import
 
 interface RestaurantListContainerProps {
-  places: Place[];
+  places: Restaurant[]; // Changed type from Place[] to Restaurant[]
 }
 
 export default function RestaurantListContainer({ places }: RestaurantListContainerProps) {

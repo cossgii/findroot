@@ -1,12 +1,16 @@
-export interface Restaurant {
-  id: string;
-  name: string;
-  category: string;
-  address?: string | null;
-  district?: string | null;
-  imageUrl?: string;
-  description?: string | null;
-}
+import { Place, Route } from '@prisma/client'; // Import Route as well
+
+// This extends the Prisma Place model with our custom aggregated fields
+export type Restaurant = Place & {
+  likesCount: number;
+  isLiked: boolean;
+};
+
+// New type for Route with aggregated like data
+export type RouteWithLikeData = Route & {
+  likesCount: number;
+  isLiked: boolean;
+};
 
 export interface Category {
   id: string;

@@ -64,7 +64,7 @@ export const useEditRouteForm = ({
         setIsLoading(true);
         const [routeRes, placesRes] = await Promise.all([
           fetch(`/api/routes/${routeId}`),
-          fetch(`/api/users/${session.user.id}/places`),
+          fetch(`/api/users/${session.user.id}/places/all`),
         ]);
 
         if (!routeRes.ok) throw new Error('Failed to fetch route data');

@@ -8,6 +8,10 @@ export async function GET(
   { params }: { params: Promise<{ userId: string }> },
 ) {
   const resolvedParams = await params;
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const limit = parseInt(searchParams.get('limit') || '5', 10);
+
   const userId = resolvedParams.userId;
   const session = await getServerSession(authOptions);
 
@@ -16,8 +20,8 @@ export async function GET(
   }
 
   try {
-    const places = await getPlacesByCreatorId(userId);
-    return NextResponse.json(places);
+    const paginatedData = await getPlacesByCreatorId(userId, page, limit);
+    return NextResponse.json(paginatedData);
   } catch (error) {
     console.error('Error fetching user places:', error);
     return NextResponse.json(

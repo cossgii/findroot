@@ -1,27 +1,34 @@
 'use client';
 
 import { useState } from 'react';
-import { LikedPlace, MyLikedRoute } from '~/src/hooks/mypage/useMyPageData';
 import MyPageContentToolbar from '~/src/components/mypage/MyPageContentToolbar';
 import LikedContentList from '~/src/components/mypage/content/LikedContentList';
+import Pagination from '~/src/components/common/Pagination';
+import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
+import { PaginatedResponse } from '~/src/hooks/mypage/useMyPageData';
 
 interface LikesTabPanelProps {
-  likedPlaces: LikedPlace[];
-  likedRoutes: MyLikedRoute[];
-  selectedDistrict: string;
-  onDistrictChange: (districtId: string) => void;
-  // NEW: Add setters from useMyPageData
-  setLikedPlaces: React.Dispatch<React.SetStateAction<LikedPlace[]>>;
-  setLikedRoutes: React.Dispatch<React.SetStateAction<MyLikedRoute[]>>;
+  likedPlaces: Restaurant[];
+  likedRoutes: PaginatedResponse<RouteWithLikeData>; // Corrected type
+  // Pagination props for liked places
+  placesTotalPages: number;
+  placesCurrentPage: number;
+  onPlacePageChange: (page: number) => void;
+  // Pagination props for liked routes
+  routesTotalPages: number;
+  routesCurrentPage: number;
+  onRoutePageChange: (page: number) => void;
 }
 
 export default function LikesTabPanel({
   likedPlaces,
   likedRoutes,
-  selectedDistrict,
-  onDistrictChange,
-  setLikedPlaces, // NEW
-  setLikedRoutes, // NEW
+  placesTotalPages,
+  placesCurrentPage,
+  onPlacePageChange,
+  routesTotalPages,
+  routesCurrentPage,
+  onRoutePageChange,
 }: LikesTabPanelProps) {
   const [activeSubTab, setActiveSubTab] = useState<'places' | 'routes'>('places');
 
@@ -31,18 +38,31 @@ export default function LikesTabPanel({
         activeTab="likes"
         activeSubTab={activeSubTab}
         onSubTabClick={setActiveSubTab}
-        selectedDistrict={selectedDistrict}
-        onDistrictChange={onDistrictChange}
+        // Filtering is not yet implemented for likes, so pass dummy props
+        selectedDistrict={'all'}
+        onDistrictChange={() => {}}
         onAddPlace={() => {}}
         onAddRoute={() => {}}
       />
       <LikedContentList
         activeSubTab={activeSubTab}
         likedPlaces={likedPlaces}
-        likedRoutes={likedRoutes}
-        setLikedPlaces={setLikedPlaces} // NEW
-        setLikedRoutes={setLikedRoutes} // NEW
+        likedRoutes={likedRoutes} // Pass the whole object
       />
+      {activeSubTab === 'places' && (
+        <Pagination
+          currentPage={placesCurrentPage}
+          totalPages={placesTotalPages}
+          onPageChange={onPlacePageChange}
+        />
+      )}
+      {activeSubTab === 'routes' && (
+        <Pagination
+          currentPage={routesCurrentPage}
+          totalPages={routesTotalPages}
+          onPageChange={onRoutePageChange}
+        />
+      )}
     </div>
   );
 }

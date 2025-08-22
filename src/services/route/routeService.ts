@@ -88,11 +88,40 @@ const routeInclude = {
  * @param id - The ID of the route.
  * @returns The route with its places, or null if not found.
  */
-export async function getRouteById(id: string) {
-  return db.route.findUnique({
+export async function getRouteById(id: string, userId?: string) {
+  const routeWithLikes = await db.route.findUnique({
     where: { id },
-    include: routeInclude,
+    include: {
+      ...routeInclude, // Include creator and places
+      _count: {
+        select: { likes: true },
+      },
+      likes: userId
+        ? {
+            where: {
+              userId: userId,
+            },
+            select: {
+              userId: true,
+            },
+          }
+        : false, // Don't include likes if no userId
+    },
   });
+
+  if (!routeWithLikes) {
+    return null;
+  }
+
+  const isLiked = userId && routeWithLikes.likes && routeWithLikes.likes.length > 0;
+
+  const { _count, likes, ...route } = routeWithLikes;
+
+  return {
+    ...route,
+    likesCount: _count.likes,
+    isLiked: !!isLiked,
+  };
 }
 
 /**
@@ -100,12 +129,61 @@ export async function getRouteById(id: string) {
  * @param creatorId - The ID of the user.
  * @returns A list of routes created by the user.
  */
-export async function getRoutesByCreatorId(creatorId: string) {
-  return db.route.findMany({
-    where: { creatorId },
-    orderBy: { createdAt: 'desc' },
-    include: routeInclude,
-  });
+export async function getRoutesByCreatorId(
+  creatorId: string,
+  page: number = 1,
+  limit: number = 5,
+) {
+  const whereClause = { creatorId };
+
+  const [routesWithLikes, totalCount] = await db.$transaction([
+    db.route.findMany({
+      where: whereClause,
+      include: {
+        creator: {
+          select: { id: true, name: true, image: true },
+        },
+        _count: {
+          select: { likes: true },
+        },
+        likes: {
+          where: {
+            userId: creatorId,
+          },
+          select: {
+            userId: true,
+          },
+        },
+        places: { // <<< ADDED THIS INCLUDE
+          orderBy: {
+            order: 'asc',
+          },
+          include: {
+            place: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    db.route.count({ where: whereClause }),
+  ]);
+
+  const routes = routesWithLikes.map(({ _count, likes, ...route }) => ({
+    ...route,
+    likesCount: _count.likes,
+    isLiked: likes.length > 0,
+  }));
+
+  return {
+    routes,
+    totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+    currentPage: page,
+  };
 }
 
 /**
@@ -118,14 +196,45 @@ export async function getRoutesByCreatorIdAndDistrictId(
   creatorId: string,
   districtId: string,
 ) {
-  return db.route.findMany({
+  const routesWithLikes = await db.route.findMany({
     where: {
       creatorId,
-      districtId, // Assumes districtId is stored on the Route model
+      districtId,
+    },
+    include: {
+      creator: {
+        select: { id: true, name: true, image: true },
+      },
+      _count: {
+        select: { likes: true },
+      },
+      likes: {
+        where: {
+          userId: creatorId, // Assuming creator is the user whose likes we care about
+        },
+        select: {
+          userId: true,
+        },
+      },
+      places: { // <<< ADDED THIS INCLUDE
+        orderBy: {
+          order: 'asc',
+        },
+        include: {
+          place: true,
+        },
+      },
     },
     orderBy: { createdAt: 'desc' },
-    include: routeInclude,
   });
+
+  const routes = routesWithLikes.map(({ _count, likes, ...route }) => ({
+    ...route,
+    likesCount: _count.likes,
+    isLiked: likes.length > 0,
+  }));
+
+  return routes;
 }
 
 /**

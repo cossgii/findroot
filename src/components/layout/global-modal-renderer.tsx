@@ -11,7 +11,7 @@ import {
   EditPlaceModalProps,
   EditRouteModalProps,
 } from '~/src/stores/app-store';
-import { Place } from '@prisma/client';
+import { Restaurant } from '~/src/types/restaurant';
 
 // Import all modal components
 import Modal from '~/src/components/districts/modal';
@@ -29,7 +29,7 @@ const RestaurantDetailModal = ({
   restaurantId,
   onClose,
 }: RestaurantDetailModalProps & { onClose: () => void }) => {
-  const [restaurant, setRestaurant] = useState<Place | null>(null);
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,8 +43,8 @@ const RestaurantDetailModal = ({
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const place: Place = await response.json();
-        setRestaurant(place);
+        const restaurantData: Restaurant = await response.json();
+        setRestaurant(restaurantData);
       } catch (e) {
         console.error('Error fetching place data:', e);
         setError('맛집 정보를 불러오는 데 실패했습니다.');

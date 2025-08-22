@@ -59,24 +59,62 @@ export async function getPlacesForFeed(userId: string) {
  * @param districtName - The name of the district.
  * @returns A list of places in the specified district.
  */
-export async function getPlacesByDistrict(districtName: string) {
-  const places = await db.place.findMany({
-    where: {
-      address: {
-        contains: districtName,
-      },
+export async function getPlacesByDistrict(
+  districtName: string,
+  userId: string | undefined,
+  page: number = 1,
+  limit: number = 12,
+  sort: 'recent' | 'likes' = 'recent',
+) {
+  const whereClause = {
+    address: {
+      contains: districtName,
     },
-    include: {
-      creator: {
-        select: { id: true, name: true, image: true },
-      },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+  };
 
-  return places;
+  const orderByClause =
+    sort === 'likes'
+      ? { likes: { _count: 'desc' as const } }
+      : { createdAt: 'desc' as const };
+
+  const [placesWithLikes, totalCount] = await db.$transaction([
+    db.place.findMany({
+      where: whereClause,
+      include: {
+        creator: {
+          select: { id: true, name: true, image: true },
+        },
+        _count: {
+          select: { likes: true },
+        },
+        likes: {
+          where: {
+            userId: userId,
+          },
+          select: {
+            userId: true,
+          },
+        },
+      },
+      orderBy: orderByClause,
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    db.place.count({ where: whereClause }),
+  ]);
+
+  const places = placesWithLikes.map(({ _count, likes, ...place }) => ({
+    ...place,
+    likesCount: _count.likes,
+    isLiked: likes.length > 0,
+  }));
+
+  return {
+    places,
+    totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+    currentPage: page,
+  };
 }
 
 /**
@@ -84,17 +122,42 @@ export async function getPlacesByDistrict(districtName: string) {
  * @param id - The ID of the place.
  * @returns The place with the specified ID.
  */
-export async function getPlaceById(id: string) {
-  const place = await db.place.findUnique({
+export async function getPlaceById(id: string, userId?: string) {
+  const placeWithLikes = await db.place.findUnique({
     where: { id },
     include: {
       creator: {
         select: { id: true, name: true, image: true },
       },
+      _count: {
+        select: { likes: true },
+      },
+      likes: userId
+        ? {
+            where: {
+              userId: userId,
+            },
+            select: {
+              userId: true,
+            },
+          }
+        : false, // Don't include likes if no userId
     },
   });
 
-  return place;
+  if (!placeWithLikes) {
+    return null;
+  }
+
+  const isLiked = userId && placeWithLikes.likes && placeWithLikes.likes.length > 0;
+
+  const { _count, likes, ...place } = placeWithLikes;
+
+  return {
+    ...place,
+    likesCount: _count.likes,
+    isLiked: !!isLiked,
+  };
 }
 
 /**
@@ -102,20 +165,53 @@ export async function getPlaceById(id: string) {
  * @param creatorId - The ID of the user who created the places.
  * @returns A list of places created by the specified user.
  */
-export async function getPlacesByCreatorId(creatorId: string) {
-  return db.place.findMany({
-    where: {
-      creatorId,
-    },
-    include: {
-      creator: {
-        select: { id: true, name: true, image: true },
+export async function getPlacesByCreatorId(
+  creatorId: string,
+  page: number = 1,
+  limit: number = 5,
+) {
+  const whereClause = { creatorId };
+
+  const [placesWithLikes, totalCount] = await db.$transaction([
+    db.place.findMany({
+      where: whereClause,
+      include: {
+        creator: {
+          select: { id: true, name: true, image: true },
+        },
+        _count: {
+          select: { likes: true },
+        },
+        likes: {
+          where: {
+            userId: creatorId, // On MyPage, the creator is the user
+          },
+          select: {
+            userId: true,
+          },
+        },
       },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    db.place.count({ where: whereClause }),
+  ]);
+
+  const places = placesWithLikes.map(({ _count, likes, ...place }) => ({
+    ...place,
+    likesCount: _count.likes,
+    isLiked: likes.length > 0,
+  }));
+
+  return {
+    places,
+    totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+    currentPage: page,
+  };
 }
 
 /**
@@ -171,5 +267,35 @@ export async function updatePlace(
   return db.place.update({
     where: { id: placeId },
     data: data,
+  });
+}
+
+export async function getPlaceLocationsByDistrict(districtName: string) {
+  const whereClause =
+    districtName && districtName !== '전체'
+      ? {
+          address: {
+            contains: districtName,
+          },
+        }
+      : {};
+
+  return db.place.findMany({
+    where: whereClause,
+    select: {
+      id: true,
+      name: true,
+      latitude: true,
+      longitude: true,
+    },
+  });
+}
+
+export async function getAllPlacesByCreatorId(creatorId: string) {
+  return db.place.findMany({
+    where: { creatorId },
+    orderBy: {
+      createdAt: 'desc',
+    },
   });
 }

@@ -8,34 +8,36 @@ import {
   UpdateRouteApiSchema,
 } from '~/src/services/route/routeService';
 import { z } from 'zod';
-import { RouteStopLabel } from '@prisma/client';
 
-interface RouteRouteParams {
-  routeId: string;
-}
+ interface RouteRouteParams {
+   routeId: string;
+ }
 
-export async function GET(
-  request: Request,
-  context: { params: Promise<RouteRouteParams> },
-) {
-  try {
-    const params = await context.params;
-    const routeId = params.routeId;
-    const route = await getRouteById(routeId);
+ export async function GET(
+   request: Request,
+   context: { params: Promise<RouteRouteParams> },
+ ) {
+   try {
+     const session = await getServerSession(authOptions);
+     const userId = session?.user?.id;
 
-    if (!route) {
-      return NextResponse.json({ error: 'Route not found' }, { status: 404 });
-    }
+     const params = await context.params;
+     const routeId = params.routeId;
+     const route = await getRouteById(routeId, userId);
 
-    return NextResponse.json(route);
-  } catch (error) {
-    console.error('Error fetching route by ID:', error);
-    return NextResponse.json(
-      { error: 'An unexpected error occurred.' },
-      { status: 500 },
-    );
-  }
-}
+     if (!route) {
+       return NextResponse.json({ error: 'Route not found' }, { status: 404 });
+     }
+
+     return NextResponse.json(route);
+   } catch (error) {
+     console.error('Error fetching route by ID:', error);
+     return NextResponse.json(
+       { error: 'An unexpected error occurred.' },
+       { status: 500 },
+     );
+   }
+ }
 
 export async function DELETE(
   request: Request,

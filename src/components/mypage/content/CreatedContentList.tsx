@@ -1,13 +1,14 @@
 'use client';
 
-import { Place, Route } from '@prisma/client';
+
 import Button from '~/src/components/common/button';
 import { type MyPageSubTab } from '../MyPageTabs';
+import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant'; // Import new types
 
 interface CreatedContentListProps {
   activeSubTab: MyPageSubTab;
-  places: Place[];
-  routes: Route[];
+  places: Restaurant[]; // Use Restaurant type
+  routes: RouteWithLikeData[]; // Use RouteWithLikeData type
   onEditPlace: (id: string) => void;
   onDeletePlace: (id: string) => void;
   onEditRoute: (id: string) => void;

@@ -58,7 +58,7 @@ export const useAddRouteForm = ({
       }
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/users/${session.user.id}/places`);
+        const response = await fetch(`/api/users/${session.user.id}/places/all`);
         if (!response.ok) {
           throw new Error('Failed to fetch user places');
         }

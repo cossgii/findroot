@@ -1,9 +1,10 @@
 import React from 'react';
-import { Place } from '@prisma/client';
+
 import LikeButton from '~/src/components/common/LikeButton';
+import { Restaurant } from '~/src/types/restaurant'; // Added this import
 
 interface RestaurantDetailModalContentProps {
-  restaurant: Place;
+  restaurant: Restaurant; // Changed type from Place to Restaurant
 }
 
 export default function RestaurantDetailModalContent({
@@ -15,7 +16,11 @@ export default function RestaurantDetailModalContent({
     <div className="p-6">
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-2xl font-bold flex-grow pr-4">{restaurant.name}</h3>
-        <LikeButton placeId={restaurant.id} />
+        <LikeButton
+          placeId={restaurant.id}
+          initialIsLiked={restaurant.isLiked}
+          initialLikesCount={restaurant.likesCount}
+        />
       </div>
 
       <p className="text-gray-600 mb-2">주소: {restaurant.address}</p>

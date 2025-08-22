@@ -99,6 +99,8 @@ model Place {
   
   // Relation to the new RoutePlace model
   routes RoutePlace[]
+
+  @@index([district])
 }
 
 model Route {
@@ -116,6 +118,8 @@ model Route {
 
   // Relation to the new RoutePlace model
   places RoutePlace[]
+
+  @@index([districtId])
 }
 
 // New join table for the many-to-many relationship between Route and Place

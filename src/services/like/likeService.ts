@@ -61,34 +61,106 @@ export async function getRouteLikesCount(routeId: string) {
   });
 }
 
-export async function getLikedPlacesByUserId(userId: string) {
-  return db.like.findMany({
-    where: {
-      userId,
-      placeId: { not: null },
-    },
-    include: {
-      place: true, // 좋아요 누른 장소 정보 포함
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+export async function getLikedPlacesByUserId(
+  userId: string,
+  page: number = 1,
+  limit: number = 5,
+) {
+  const whereClause = {
+    userId,
+    placeId: { not: null },
+  };
+
+  const [likedItems, totalCount] = await db.$transaction([
+    db.like.findMany({
+      where: whereClause,
+      include: {
+        place: {
+          include: {
+            _count: {
+              select: { likes: true },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    db.like.count({ where: whereClause }),
+  ]);
+
+  const places = likedItems
+    .map((like) => {
+      if (!like.place) return null;
+      const { _count, ...placeDetails } = like.place;
+      return {
+        ...placeDetails,
+        likesCount: _count.likes,
+        isLiked: true,
+      };
+    })
+    .filter((p): p is NonNullable<typeof p> => p !== null);
+
+  return {
+    places,
+    totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+    currentPage: page,
+  };
 }
 
-export async function getLikedRoutesByUserId(userId: string) {
-  return db.like.findMany({
-    where: {
-      userId,
-      routeId: { not: null },
-    },
-    include: {
-      route: true, // 좋아요 누른 루트 정보 포함
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+export async function getLikedRoutesByUserId(
+  userId: string,
+  page: number = 1,
+  limit: number = 5,
+) {
+  const whereClause = {
+    userId,
+    routeId: { not: null },
+  };
+
+  const [likedItems, totalCount] = await db.$transaction([
+    db.like.findMany({
+      where: whereClause,
+      include: {
+        route: {
+          include: {
+            _count: {
+              select: { likes: true },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    db.like.count({ where: whereClause }),
+  ]);
+
+  const routes = likedItems
+    .map((like) => {
+      if (!like.route) return null;
+      const { _count, ...routeDetails } = like.route;
+      return {
+        ...routeDetails,
+        likesCount: _count.likes,
+        isLiked: true,
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null);
+
+  return {
+    routes,
+    totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+    currentPage: page,
+  };
 }
 
 export async function getLikeInfo(

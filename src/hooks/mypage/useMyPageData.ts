@@ -2,26 +2,30 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { User, Like, Place, Route } from '@prisma/client';
+import { User } from '@prisma/client';
 import { MyPageTab } from '~/src/components/mypage/MyPageTabs';
+import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 
-export interface LikedPlace extends Like {
-  place: Place;
-}
-
-export interface MyLikedRoute extends Like {
-  route: Route;
+// Define a generic paginated response type
+export interface PaginatedResponse<T> {
+  data: T[];
+  totalPages: number;
+  currentPage: number;
 }
 
 export function useMyPageData(activeTab: MyPageTab) {
   const { data: session, status } = useSession();
 
   const [user, setUser] = useState<User | null>(null);
-  const [likedPlaces, setLikedPlaces] = useState<LikedPlace[]>([]);
-  const [likedRoutes, setLikedRoutes] = useState<MyLikedRoute[]>([]);
-  const [myCreatedPlaces, setMyCreatedPlaces] = useState<Place[]>([]);
-  const [myCreatedRoutes, setMyCreatedRoutes] = useState<Route[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // State for 'content' tab
+  const [myCreatedPlaces, setMyCreatedPlaces] = useState<PaginatedResponse<Restaurant>>({ data: [], totalPages: 1, currentPage: 1 });
+  const [myCreatedRoutes, setMyCreatedRoutes] = useState<PaginatedResponse<RouteWithLikeData>>({ data: [], totalPages: 1, currentPage: 1 });
+
+  // State for 'likes' tab
+  const [likedPlaces, setLikedPlaces] = useState<PaginatedResponse<Restaurant>>({ data: [], totalPages: 1, currentPage: 1 });
+  const [likedRoutes, setLikedRoutes] = useState<PaginatedResponse<RouteWithLikeData>>({ data: [], totalPages: 1, currentPage: 1 });
 
   const fetchProfileData = useCallback(async () => {
     if (!session?.user?.id) return;
@@ -31,29 +35,50 @@ export function useMyPageData(activeTab: MyPageTab) {
     setIsLoading(false);
   }, [session]);
 
-  const fetchMyContent = useCallback(async () => {
+  const fetchMyCreatedPlaces = useCallback(async (page: number = 1) => {
     if (!session?.user?.id) return;
     setIsLoading(true);
-    const [placesRes, routesRes] = await Promise.all([
-      fetch(`/api/users/${session.user.id}/places`),
-      fetch(`/api/users/${session.user.id}/routes`),
-    ]);
-    if (placesRes.ok) setMyCreatedPlaces(await placesRes.json());
-    if (routesRes.ok) setMyCreatedRoutes(await routesRes.json());
+    const res = await fetch(`/api/users/${session.user.id}/places?page=${page}&limit=5`);
+    if (res.ok) {
+        const data = await res.json();
+        setMyCreatedPlaces({ data: data.places, totalPages: data.totalPages, currentPage: data.currentPage });
+    }
     setIsLoading(false);
   }, [session]);
 
-  const fetchLikedContent = useCallback(async () => {
+  const fetchMyCreatedRoutes = useCallback(async (page: number = 1) => {
     if (!session?.user?.id) return;
     setIsLoading(true);
-    const [placesRes, routesRes] = await Promise.all([
-      fetch('/api/users/me/liked-places'),
-      fetch('/api/users/me/liked-routes'),
-    ]);
-    if (placesRes.ok) setLikedPlaces(await placesRes.json());
-    if (routesRes.ok) setLikedRoutes(await routesRes.json());
+    const res = await fetch(`/api/users/${session.user.id}/routes?page=${page}&limit=5`);
+    if (res.ok) {
+        const data = await res.json();
+        setMyCreatedRoutes({ data: data.routes, totalPages: data.totalPages, currentPage: data.currentPage });
+    }
     setIsLoading(false);
   }, [session]);
+
+  const fetchLikedPlaces = useCallback(async (page: number = 1) => {
+    if (!session?.user?.id) return;
+    setIsLoading(true);
+    const res = await fetch(`/api/users/me/liked-places?page=${page}&limit=5`);
+    if (res.ok) {
+        const data = await res.json();
+        setLikedPlaces({ data: data.places, totalPages: data.totalPages, currentPage: data.currentPage });
+    }
+    setIsLoading(false);
+  }, [session]);
+
+  const fetchLikedRoutes = useCallback(async (page: number = 1) => {
+    if (!session?.user?.id) return;
+    setIsLoading(true);
+    const res = await fetch(`/api/users/me/liked-routes?page=${page}&limit=5`);
+    if (res.ok) {
+        const data = await res.json();
+        setLikedRoutes({ data: data.routes, totalPages: data.totalPages, currentPage: data.currentPage });
+    }
+    setIsLoading(false);
+  }, [session]);
+
 
   useEffect(() => {
     if (status !== 'authenticated') {
@@ -66,39 +91,47 @@ export function useMyPageData(activeTab: MyPageTab) {
         fetchProfileData();
         break;
       case 'content':
-        fetchMyContent();
+        fetchMyCreatedPlaces(1);
+        fetchMyCreatedRoutes(1);
         break;
       case 'likes':
-        fetchLikedContent();
+        fetchLikedPlaces(1);
+        fetchLikedRoutes(1); // Fetch initial page for routes
         break;
       default:
         setIsLoading(false);
         break;
     }
-  }, [status, activeTab, fetchProfileData, fetchMyContent, fetchLikedContent]);
+  }, [status, activeTab, fetchProfileData, fetchMyCreatedPlaces, fetchMyCreatedRoutes, fetchLikedPlaces, fetchLikedRoutes]);
 
   const refreshContent = useCallback(() => {
     if (activeTab === 'content') {
-      fetchMyContent();
+        fetchMyCreatedPlaces(myCreatedPlaces.currentPage);
+        fetchMyCreatedRoutes(myCreatedRoutes.currentPage);
+    } else if (activeTab === 'likes') {
+        fetchLikedPlaces(likedPlaces.currentPage);
+        fetchLikedRoutes(likedRoutes.currentPage);
     }
-  }, [activeTab, fetchMyContent]);
+  }, [activeTab, fetchMyCreatedPlaces, fetchMyCreatedRoutes, myCreatedPlaces.currentPage, myCreatedRoutes.currentPage, fetchLikedPlaces, fetchLikedRoutes, likedPlaces.currentPage, likedRoutes.currentPage]);
 
   return {
     session,
     status,
     user,
     setUser,
-    likedPlaces,
-    setLikedPlaces, // ADDED
-    likedRoutes,
-    setLikedRoutes, // ADDED
     myCreatedPlaces,
-    setMyCreatedPlaces,
     myCreatedRoutes,
-    setMyCreatedRoutes,
+    likedPlaces,
+    likedRoutes,
     isLoading,
+    setMyCreatedPlaces,
+    setMyCreatedRoutes,
+    setLikedPlaces,
+    setLikedRoutes,
     refreshContent,
-    fetchMyContent,
-    fetchLikedContent,
+    fetchMyCreatedPlaces,
+    fetchMyCreatedRoutes,
+    fetchLikedPlaces,
+    fetchLikedRoutes, // Expose for pagination controls
   };
 }

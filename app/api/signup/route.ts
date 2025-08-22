@@ -32,8 +32,12 @@ export async function POST(request: Request) {
 
       // 새로운 유저가 대표 계정을 자동으로 팔로우합니다.
       // 피드에 초기 콘텐츠가 보이도록 보장합니다.
-      if (createdUser.id !== MAIN_ACCOUNT_ID) {
-        // 대표 계정이 자기 자신을 팔로우하는 것을 방지합니다.
+      // MAIN_ACCOUNT_ID가 존재하고, 새로 생성된 유저가 대표 계정이 아닌 경우에만 팔로우
+      const mainAccountExists = await prisma.user.findUnique({
+        where: { id: MAIN_ACCOUNT_ID },
+      });
+
+      if (mainAccountExists && createdUser.id !== MAIN_ACCOUNT_ID) {
         await prisma.follow.create({
           data: {
             followerId: createdUser.id,
