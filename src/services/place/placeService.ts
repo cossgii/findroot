@@ -1,6 +1,7 @@
 import { db } from '~/lib/db';
 import { CreatePlaceInput } from './place-schema';
 import { Place } from '@prisma/client';
+import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
 /**
  * Creates a new place in the database.
@@ -169,8 +170,16 @@ export async function getPlacesByCreatorId(
   creatorId: string,
   page: number = 1,
   limit: number = 5,
+  district?: string | null,
 ) {
-  const whereClause = { creatorId };
+  const whereClause: any = { creatorId };
+
+  if (district && district !== 'all') {
+    const districtName = SEOUL_DISTRICTS.find((d) => d.id === district)?.name;
+    if (districtName) {
+      whereClause.district = districtName;
+    }
+  }
 
   const [placesWithLikes, totalCount] = await db.$transaction([
     db.place.findMany({

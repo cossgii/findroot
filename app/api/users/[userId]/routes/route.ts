@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
-import {
-  getRoutesByCreatorId,
-  getRoutesByCreatorIdAndDistrictId,
-} from '~/src/services/route/routeService';
+import { getRoutesByCreatorId } from '~/src/services/route/routeService';
 
 export async function GET(
   request: Request,
@@ -24,15 +21,12 @@ export async function GET(
   const limit = parseInt(searchParams.get('limit') || '5', 10);
 
   try {
-    let result;
-    if (districtId) {
-      result = await getRoutesByCreatorIdAndDistrictId(
-        userIdFromParams,
-        districtId,
-      );
-    } else {
-      result = await getRoutesByCreatorId(userIdFromParams, page, limit);
-    }
+    const result = await getRoutesByCreatorId(
+      userIdFromParams,
+      page,
+      limit,
+      districtId,
+    );
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching user routes:', error);

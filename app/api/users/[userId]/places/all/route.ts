@@ -5,16 +5,17 @@ import { getAllPlacesByCreatorId } from '~/src/services/place/placeService';
 
 export async function GET(
   request: Request,
-  { params }: { params: { userId: string } },
+  { params }: { params: Promise<{ userId: string }> },
 ) {
+  const resolvedParams = await params;
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.id || session.user.id !== params.userId) {
+  if (!session?.user?.id || session.user.id !== resolvedParams.userId) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const places = await getAllPlacesByCreatorId(params.userId);
+    const places = await getAllPlacesByCreatorId(resolvedParams.userId);
     return NextResponse.json(places);
   } catch (error) {
     console.error('Error fetching all user places:', error);

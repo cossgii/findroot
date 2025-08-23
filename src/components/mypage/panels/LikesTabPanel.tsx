@@ -9,26 +9,32 @@ import { PaginatedResponse } from '~/src/hooks/mypage/useMyPageData';
 
 interface LikesTabPanelProps {
   likedPlaces: Restaurant[];
-  likedRoutes: PaginatedResponse<RouteWithLikeData>; // Corrected type
-  // Pagination props for liked places
+  setLikedPlaces: React.Dispatch<React.SetStateAction<PaginatedResponse<Restaurant>>>;
+  likedRoutes: PaginatedResponse<RouteWithLikeData>;
+  setLikedRoutes: React.Dispatch<React.SetStateAction<PaginatedResponse<RouteWithLikeData>>>;
   placesTotalPages: number;
   placesCurrentPage: number;
   onPlacePageChange: (page: number) => void;
-  // Pagination props for liked routes
   routesTotalPages: number;
   routesCurrentPage: number;
   onRoutePageChange: (page: number) => void;
+  selectedDistrict: string;
+  onDistrictChange: (districtId: string) => void;
 }
 
 export default function LikesTabPanel({
   likedPlaces,
+  setLikedPlaces,
   likedRoutes,
+  setLikedRoutes,
   placesTotalPages,
   placesCurrentPage,
   onPlacePageChange,
   routesTotalPages,
   routesCurrentPage,
   onRoutePageChange,
+  selectedDistrict,
+  onDistrictChange,
 }: LikesTabPanelProps) {
   const [activeSubTab, setActiveSubTab] = useState<'places' | 'routes'>('places');
 
@@ -38,16 +44,17 @@ export default function LikesTabPanel({
         activeTab="likes"
         activeSubTab={activeSubTab}
         onSubTabClick={setActiveSubTab}
-        // Filtering is not yet implemented for likes, so pass dummy props
-        selectedDistrict={'all'}
-        onDistrictChange={() => {}}
+        selectedDistrict={selectedDistrict}
+        onDistrictChange={onDistrictChange}
         onAddPlace={() => {}}
         onAddRoute={() => {}}
       />
       <LikedContentList
         activeSubTab={activeSubTab}
         likedPlaces={likedPlaces}
-        likedRoutes={likedRoutes} // Pass the whole object
+        setLikedPlaces={setLikedPlaces}
+        likedRoutes={likedRoutes}
+        setLikedRoutes={setLikedRoutes}
       />
       {activeSubTab === 'places' && (
         <Pagination

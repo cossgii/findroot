@@ -89,23 +89,13 @@ const routeInclude = {
  * @returns The route with its places, or null if not found.
  */
 export async function getRouteById(id: string, userId?: string) {
+  // 1. Fetch the route with its places
   const routeWithLikes = await db.route.findUnique({
     where: { id },
     include: {
-      ...routeInclude, // Include creator and places
-      _count: {
-        select: { likes: true },
-      },
-      likes: userId
-        ? {
-            where: {
-              userId: userId,
-            },
-            select: {
-              userId: true,
-            },
-          }
-        : false, // Don't include likes if no userId
+      ...routeInclude, // Includes places
+      _count: { select: { likes: true } },
+      likes: userId ? { where: { userId }, select: { userId: true } } : false,
     },
   });
 
@@ -113,14 +103,46 @@ export async function getRouteById(id: string, userId?: string) {
     return null;
   }
 
-  const isLiked = userId && routeWithLikes.likes && routeWithLikes.likes.length > 0;
+  const placeIds = routeWithLikes.places.map(p => p.place.id);
 
-  const { _count, likes, ...route } = routeWithLikes;
+  // 2. Get like counts for all places in one query
+  const likeCounts = await db.like.groupBy({
+    by: ['placeId'],
+    where: { placeId: { in: placeIds } },
+    _count: { placeId: true },
+  });
+
+  // 3. Get liked status for all places for the current user in one query
+  const userLikes = userId ? await db.like.findMany({
+    where: { userId, placeId: { in: placeIds } },
+    select: { placeId: true },
+  }) : [];
+  
+  const userLikedPlaceIds = new Set(userLikes.map(like => like.placeId));
+  const placeIdToLikeCountMap = new Map(likeCounts.map(item => [item.placeId, item._count.placeId]));
+
+  // 4. Enrich the places data
+  const enrichedPlaces = routeWithLikes.places.map(routePlace => {
+    const place = routePlace.place;
+    return {
+      ...routePlace,
+      place: {
+        ...place,
+        likesCount: placeIdToLikeCountMap.get(place.id) || 0,
+        isLiked: userLikedPlaceIds.has(place.id),
+      },
+    };
+  });
+
+  // 5. Construct final object
+  const isRouteLiked = !!(routeWithLikes.likes && routeWithLikes.likes.length > 0);
+  const { _count, likes, ...routeData } = routeWithLikes;
 
   return {
-    ...route,
+    ...routeData,
+    places: enrichedPlaces,
     likesCount: _count.likes,
-    isLiked: !!isLiked,
+    isLiked: isRouteLiked,
   };
 }
 
@@ -133,8 +155,13 @@ export async function getRoutesByCreatorId(
   creatorId: string,
   page: number = 1,
   limit: number = 5,
+  districtId?: string | null,
 ) {
-  const whereClause = { creatorId };
+  const whereClause: any = { creatorId };
+
+  if (districtId && districtId !== 'all') {
+    whereClause.districtId = districtId;
+  }
 
   const [routesWithLikes, totalCount] = await db.$transaction([
     db.route.findMany({
@@ -184,57 +211,6 @@ export async function getRoutesByCreatorId(
     totalPages: Math.ceil(totalCount / limit),
     currentPage: page,
   };
-}
-
-/**
- * Fetches all routes created by a specific user within a given district.
- * @param creatorId - The ID of the user.
- * @param districtId - The ID of the district.
- * @returns A list of routes created by the user in the specified district.
- */
-export async function getRoutesByCreatorIdAndDistrictId(
-  creatorId: string,
-  districtId: string,
-) {
-  const routesWithLikes = await db.route.findMany({
-    where: {
-      creatorId,
-      districtId,
-    },
-    include: {
-      creator: {
-        select: { id: true, name: true, image: true },
-      },
-      _count: {
-        select: { likes: true },
-      },
-      likes: {
-        where: {
-          userId: creatorId, // Assuming creator is the user whose likes we care about
-        },
-        select: {
-          userId: true,
-        },
-      },
-      places: { // <<< ADDED THIS INCLUDE
-        orderBy: {
-          order: 'asc',
-        },
-        include: {
-          place: true,
-        },
-      },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  const routes = routesWithLikes.map(({ _count, likes, ...route }) => ({
-    ...route,
-    likesCount: _count.likes,
-    isLiked: likes.length > 0,
-  }));
-
-  return routes;
 }
 
 /**

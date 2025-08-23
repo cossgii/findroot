@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import React, { useState } from 'react';
+import { useLike } from '~/src/hooks/useLike';
 import { cn } from '~/src/utils/class-name';
 
 interface LikeButtonProps {
@@ -10,63 +10,34 @@ interface LikeButtonProps {
   className?: string;
   initialIsLiked: boolean;
   initialLikesCount: number;
+  onLikeToggle?: (handleLike: (forceLike?: boolean) => Promise<void>) => void;
 }
 
-export default function LikeButton({ 
+export default function LikeButton({
   placeId,
   routeId,
   className,
   initialIsLiked,
   initialLikesCount,
+  onLikeToggle,
 }: LikeButtonProps) {
-  const { data: session } = useSession();
-  const [isLiked, setIsLiked] = useState(initialIsLiked);
-  const [likesCount, setLikesCount] = useState(initialLikesCount);
+  const { isLiked, likesCount, handleLike } = useLike({
+    placeId,
+    routeId,
+    initialIsLiked,
+    initialLikesCount,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    setIsLiked(initialIsLiked);
-    setLikesCount(initialLikesCount);
-  }, [initialIsLiked, initialLikesCount]);
 
   const handleButtonClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!session?.user?.id) {
-      alert('로그인이 필요합니다.');
-      return;
-    }
-
     setIsSubmitting(true);
-
-    const originalIsLiked = isLiked;
-    const originalLikesCount = likesCount;
-
-    const newIsLiked = !isLiked;
-    const newLikesCount = newIsLiked ? likesCount + 1 : likesCount - 1;
-
-    // Optimistic update
-    setIsLiked(newIsLiked);
-    setLikesCount(newLikesCount);
-
     try {
-      const response = await fetch('/api/likes', {
-        method: newIsLiked ? 'POST' : 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ placeId, routeId }),
-      });
-
-      if (!response.ok) {
-        // Revert on failure
-        setIsLiked(originalIsLiked);
-        setLikesCount(originalLikesCount);
-        const errorData = await response.json();
-        alert(`오류: ${errorData.message}`);
+      if (onLikeToggle) {
+        await onLikeToggle(handleLike);
+      } else {
+        await handleLike();
       }
-    } catch (_error) {
-      // Revert on network error
-      setIsLiked(originalIsLiked);
-      setLikesCount(originalLikesCount);
-      alert('좋아요 처리 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
     }
@@ -90,9 +61,7 @@ export default function LikeButton({
       >
         ♥︎
       </span>
-      <span className="text-xs font-medium text-gray-600">
-        {likesCount}
-      </span>
+      <span className="text-xs font-medium text-gray-600">{likesCount}</span>
     </button>
   );
 }

@@ -13,7 +13,7 @@ export interface PaginatedResponse<T> {
   currentPage: number;
 }
 
-export function useMyPageData(activeTab: MyPageTab) {
+export function useMyPageData(activeTab: MyPageTab, districtId: string) {
   const { data: session, status } = useSession();
 
   const [user, setUser] = useState<User | null>(null);
@@ -35,10 +35,10 @@ export function useMyPageData(activeTab: MyPageTab) {
     setIsLoading(false);
   }, [session]);
 
-  const fetchMyCreatedPlaces = useCallback(async (page: number = 1) => {
+  const fetchMyCreatedPlaces = useCallback(async (page: number = 1, district: string = 'all') => {
     if (!session?.user?.id) return;
     setIsLoading(true);
-    const res = await fetch(`/api/users/${session.user.id}/places?page=${page}&limit=5`);
+    const res = await fetch(`/api/users/${session.user.id}/places?page=${page}&limit=5&districtId=${district}`);
     if (res.ok) {
         const data = await res.json();
         setMyCreatedPlaces({ data: data.places, totalPages: data.totalPages, currentPage: data.currentPage });
@@ -46,10 +46,10 @@ export function useMyPageData(activeTab: MyPageTab) {
     setIsLoading(false);
   }, [session]);
 
-  const fetchMyCreatedRoutes = useCallback(async (page: number = 1) => {
+  const fetchMyCreatedRoutes = useCallback(async (page: number = 1, district: string = 'all') => {
     if (!session?.user?.id) return;
     setIsLoading(true);
-    const res = await fetch(`/api/users/${session.user.id}/routes?page=${page}&limit=5`);
+    const res = await fetch(`/api/users/${session.user.id}/routes?page=${page}&limit=5&districtId=${district}`);
     if (res.ok) {
         const data = await res.json();
         setMyCreatedRoutes({ data: data.routes, totalPages: data.totalPages, currentPage: data.currentPage });
@@ -57,10 +57,10 @@ export function useMyPageData(activeTab: MyPageTab) {
     setIsLoading(false);
   }, [session]);
 
-  const fetchLikedPlaces = useCallback(async (page: number = 1) => {
+  const fetchLikedPlaces = useCallback(async (page: number = 1, district: string = 'all') => {
     if (!session?.user?.id) return;
     setIsLoading(true);
-    const res = await fetch(`/api/users/me/liked-places?page=${page}&limit=5`);
+    const res = await fetch(`/api/users/me/liked-places?page=${page}&limit=5&districtId=${district}`);
     if (res.ok) {
         const data = await res.json();
         setLikedPlaces({ data: data.places, totalPages: data.totalPages, currentPage: data.currentPage });
@@ -68,10 +68,10 @@ export function useMyPageData(activeTab: MyPageTab) {
     setIsLoading(false);
   }, [session]);
 
-  const fetchLikedRoutes = useCallback(async (page: number = 1) => {
+  const fetchLikedRoutes = useCallback(async (page: number = 1, district: string = 'all') => {
     if (!session?.user?.id) return;
     setIsLoading(true);
-    const res = await fetch(`/api/users/me/liked-routes?page=${page}&limit=5`);
+    const res = await fetch(`/api/users/me/liked-routes?page=${page}&limit=5&districtId=${district}`);
     if (res.ok) {
         const data = await res.json();
         setLikedRoutes({ data: data.routes, totalPages: data.totalPages, currentPage: data.currentPage });
@@ -91,28 +91,28 @@ export function useMyPageData(activeTab: MyPageTab) {
         fetchProfileData();
         break;
       case 'content':
-        fetchMyCreatedPlaces(1);
-        fetchMyCreatedRoutes(1);
+        fetchMyCreatedPlaces(1, districtId);
+        fetchMyCreatedRoutes(1, districtId);
         break;
       case 'likes':
-        fetchLikedPlaces(1);
-        fetchLikedRoutes(1); // Fetch initial page for routes
+        fetchLikedPlaces(1, districtId);
+        fetchLikedRoutes(1, districtId);
         break;
       default:
         setIsLoading(false);
         break;
     }
-  }, [status, activeTab, fetchProfileData, fetchMyCreatedPlaces, fetchMyCreatedRoutes, fetchLikedPlaces, fetchLikedRoutes]);
+  }, [status, activeTab, districtId, fetchProfileData, fetchMyCreatedPlaces, fetchMyCreatedRoutes, fetchLikedPlaces, fetchLikedRoutes]);
 
   const refreshContent = useCallback(() => {
     if (activeTab === 'content') {
-        fetchMyCreatedPlaces(myCreatedPlaces.currentPage);
-        fetchMyCreatedRoutes(myCreatedRoutes.currentPage);
+        fetchMyCreatedPlaces(myCreatedPlaces.currentPage, districtId);
+        fetchMyCreatedRoutes(myCreatedRoutes.currentPage, districtId);
     } else if (activeTab === 'likes') {
-        fetchLikedPlaces(likedPlaces.currentPage);
-        fetchLikedRoutes(likedRoutes.currentPage);
+        fetchLikedPlaces(likedPlaces.currentPage, districtId);
+        fetchLikedRoutes(likedRoutes.currentPage, districtId);
     }
-  }, [activeTab, fetchMyCreatedPlaces, fetchMyCreatedRoutes, myCreatedPlaces.currentPage, myCreatedRoutes.currentPage, fetchLikedPlaces, fetchLikedRoutes, likedPlaces.currentPage, likedRoutes.currentPage]);
+  }, [activeTab, districtId, fetchMyCreatedPlaces, fetchMyCreatedRoutes, myCreatedPlaces.currentPage, myCreatedRoutes.currentPage, fetchLikedPlaces, fetchLikedRoutes, likedPlaces.currentPage, likedRoutes.currentPage]);
 
   return {
     session,
@@ -132,6 +132,6 @@ export function useMyPageData(activeTab: MyPageTab) {
     fetchMyCreatedPlaces,
     fetchMyCreatedRoutes,
     fetchLikedPlaces,
-    fetchLikedRoutes, // Expose for pagination controls
+    fetchLikedRoutes,
   };
 }

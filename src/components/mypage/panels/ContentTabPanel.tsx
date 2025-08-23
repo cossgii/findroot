@@ -4,26 +4,26 @@ import { useState } from 'react';
 import { Route } from '@prisma/client';
 import MyPageContentToolbar from '~/src/components/mypage/MyPageContentToolbar';
 import CreatedContentList from '~/src/components/mypage/content/CreatedContentList';
-import Pagination from '~/src/components/common/Pagination'; // Import Pagination
+import Pagination from '~/src/components/common/Pagination';
 import { Restaurant } from '~/src/types/restaurant';
 
 interface ContentTabPanelProps {
   myCreatedPlaces: Restaurant[];
-  myCreatedRoutes: (Route & { likesCount: number; isLiked: boolean; })[]; // Updated Route type
+  myCreatedRoutes: (Route & { likesCount: number; isLiked: boolean; })[];
   onAddPlace: () => void;
   onAddRoute: () => void;
   onEditPlace: (id: string) => void;
   onDeletePlace: (id: string) => void;
   onEditRoute: (id: string) => void;
   onDeleteRoute: (id: string) => void;
-  // Pagination props for places
   placesTotalPages: number;
   placesCurrentPage: number;
   onPlacePageChange: (page: number) => void;
-  // Pagination props for routes
   routesTotalPages: number;
   routesCurrentPage: number;
   onRoutePageChange: (page: number) => void;
+  selectedDistrict: string;
+  onDistrictChange: (districtId: string) => void;
 }
 
 export default function ContentTabPanel({
@@ -35,6 +35,8 @@ export default function ContentTabPanel({
   routesTotalPages,
   routesCurrentPage,
   onRoutePageChange,
+  selectedDistrict,
+  onDistrictChange,
   ...handlers
 }: ContentTabPanelProps) {
   const [activeSubTab, setActiveSubTab] = useState<'places' | 'routes'>('places');
@@ -45,8 +47,8 @@ export default function ContentTabPanel({
         activeTab="content"
         activeSubTab={activeSubTab}
         onSubTabClick={setActiveSubTab}
-        selectedDistrict={'all'} // Filtering is disabled for now
-        onDistrictChange={() => {}}
+        selectedDistrict={selectedDistrict}
+        onDistrictChange={onDistrictChange}
         onAddPlace={handlers.onAddPlace}
         onAddRoute={handlers.onAddRoute}
       />

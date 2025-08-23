@@ -1,4 +1,5 @@
 import { db } from '~/lib/db';
+import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
 interface LikeInput {
   placeId?: string;
@@ -65,11 +66,21 @@ export async function getLikedPlacesByUserId(
   userId: string,
   page: number = 1,
   limit: number = 5,
+  districtId?: string | null,
 ) {
-  const whereClause = {
+  const whereClause: any = {
     userId,
     placeId: { not: null },
   };
+
+  if (districtId && districtId !== 'all') {
+    const districtName = SEOUL_DISTRICTS.find((d) => d.id === districtId)?.name;
+    if (districtName) {
+      whereClause.place = {
+        district: districtName,
+      };
+    }
+  }
 
   const [likedItems, totalCount] = await db.$transaction([
     db.like.findMany({
@@ -116,11 +127,18 @@ export async function getLikedRoutesByUserId(
   userId: string,
   page: number = 1,
   limit: number = 5,
+  districtId?: string | null,
 ) {
-  const whereClause = {
+  const whereClause: any = {
     userId,
     routeId: { not: null },
   };
+
+  if (districtId && districtId !== 'all') {
+    whereClause.route = {
+      districtId: districtId,
+    };
+  }
 
   const [likedItems, totalCount] = await db.$transaction([
     db.like.findMany({

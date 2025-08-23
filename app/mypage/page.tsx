@@ -14,6 +14,7 @@ import MessagesTabPanel from '~/src/components/mypage/panels/MessagesTabPanel';
 
 const MyPage = () => {
   const [activeTab, setActiveTab] = useState<MyPageTab>('profile');
+  const [selectedDistrict, setSelectedDistrict] = useState('all'); // Added
 
   const {
     session,
@@ -23,14 +24,16 @@ const MyPage = () => {
     myCreatedPlaces,
     myCreatedRoutes,
     likedPlaces,
+    setLikedPlaces,
     likedRoutes,
+    setLikedRoutes,
     isLoading,
     refreshContent,
     fetchMyCreatedPlaces,
     fetchLikedPlaces,
     fetchMyCreatedRoutes,
     fetchLikedRoutes,
-  } = useMyPageData(activeTab);
+  } = useMyPageData(activeTab, selectedDistrict); // Pass districtId
 
   const {
     openAddPlaceModal,
@@ -46,29 +49,27 @@ const MyPage = () => {
         const res = await fetch(`/api/places/${placeId}`, { method: 'DELETE' });
         if (!res.ok) throw new Error(await res.text());
         alert('장소가 삭제되었습니다.');
-        // Refetch the current page of places after deletion
-        fetchMyCreatedPlaces(myCreatedPlaces.currentPage);
+        fetchMyCreatedPlaces(myCreatedPlaces.currentPage, selectedDistrict);
       } catch (e) {
         alert(
-          `장소 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`,
+          `장소 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`
         );
       }
     },
-    [fetchMyCreatedPlaces, myCreatedPlaces.currentPage],
+    [fetchMyCreatedPlaces, myCreatedPlaces.currentPage, selectedDistrict],
   );
 
   const handleDeleteRoute = useCallback(
     async (routeId: string) => {
-      // This would also need to be updated if/when routes are paginated
       if (!confirm('정말로 이 루트를 삭제하시겠습니까?')) return;
       try {
         const res = await fetch(`/api/routes/${routeId}`, { method: 'DELETE' });
         if (!res.ok) throw new Error(await res.text());
         alert('루트가 삭제되었습니다.');
-        refreshContent(); // General refresh for now
+        refreshContent();
       } catch (e) {
         alert(
-          `루트 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`,
+          `루트 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`
         );
       }
     },
@@ -77,7 +78,6 @@ const MyPage = () => {
 
   const renderTabContent = () => {
     if (isLoading && activeTab !== 'profile') {
-      // Profile has its own loading state sometimes
       return <div className="text-center py-8">콘텐츠 로딩 중...</div>;
     }
 
@@ -99,27 +99,29 @@ const MyPage = () => {
             onDeleteRoute={handleDeleteRoute}
             placesTotalPages={myCreatedPlaces.totalPages}
             placesCurrentPage={myCreatedPlaces.currentPage}
-            onPlacePageChange={fetchMyCreatedPlaces}
+            onPlacePageChange={(page) => fetchMyCreatedPlaces(page, selectedDistrict)}
             routesTotalPages={myCreatedRoutes.totalPages}
             routesCurrentPage={myCreatedRoutes.currentPage}
-            onRoutePageChange={fetchMyCreatedRoutes}
+            onRoutePageChange={(page) => fetchMyCreatedRoutes(page, selectedDistrict)}
+            selectedDistrict={selectedDistrict}
+            onDistrictChange={setSelectedDistrict}
           />
         );
       case 'likes':
-        console.log(
-          'mypage/page.tsx: Passing likedRoutes to LikesTabPanel:',
-          likedRoutes,
-        );
         return (
           <LikesTabPanel
             likedPlaces={likedPlaces.data}
+            setLikedPlaces={setLikedPlaces}
             likedRoutes={likedRoutes}
+            setLikedRoutes={setLikedRoutes}
             placesTotalPages={likedPlaces.totalPages}
             placesCurrentPage={likedPlaces.currentPage}
-            onPlacePageChange={fetchLikedPlaces}
+            onPlacePageChange={(page) => fetchLikedPlaces(page, selectedDistrict)}
             routesTotalPages={likedRoutes.totalPages}
             routesCurrentPage={likedRoutes.currentPage}
-            onRoutePageChange={fetchLikedRoutes}
+            onRoutePageChange={(page) => fetchLikedRoutes(page, selectedDistrict)}
+            selectedDistrict={selectedDistrict}
+            onDistrictChange={setSelectedDistrict}
           />
         );
       case 'messages':

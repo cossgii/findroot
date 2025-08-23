@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { type MyPageSubTab } from '../MyPageTabs';
-
 import { Place, Route } from '@prisma/client';
 import RestaurantCard from '~/src/components/districts/restaurant-card';
 import LikeButton from '~/src/components/common/LikeButton';
-import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant'; // Import RouteWithLikeData
+import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 import { PaginatedResponse } from '~/src/hooks/mypage/useMyPageData';
+import { useSetAtom } from 'jotai';
+import { addToastAtom, removeToastAtom } from '~/src/stores/toast-store';
 
-// Define a type for Route with included Places (similar to DistrictClient)
 interface RouteWithPlaces extends Route {
   places: { place: Place }[];
 }
@@ -17,16 +17,21 @@ interface RouteWithPlaces extends Route {
 interface LikedContentListProps {
   activeSubTab: MyPageSubTab;
   likedPlaces: Restaurant[];
-  likedRoutes: PaginatedResponse<RouteWithLikeData>; // Updated prop type
+  setLikedPlaces: React.Dispatch<React.SetStateAction<PaginatedResponse<Restaurant>>>;
+  likedRoutes: PaginatedResponse<RouteWithLikeData>;
+  setLikedRoutes: React.Dispatch<React.SetStateAction<PaginatedResponse<RouteWithLikeData>>>;
 }
 
 export default function LikedContentList({
   activeSubTab,
   likedPlaces,
+  setLikedPlaces,
   likedRoutes,
+  setLikedRoutes,
 }: LikedContentListProps) {
+  const addToast = useSetAtom(addToastAtom);
+  const removeToast = useSetAtom(removeToastAtom);
 
-  
   const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null);
   const [routeDetails, setRouteDetails] = useState<RouteWithPlaces | null>(null);
   const [isLoadingRouteDetails, setIsLoadingRouteDetails] = useState(false);
@@ -56,11 +61,57 @@ export default function LikedContentList({
     }
   }, [expandedRouteId]);
 
+  const handleUnlikeWithUndo = (
+    originalHandleLike: (forceLike?: boolean) => Promise<void>,
+    item: Restaurant | RouteWithLikeData,
+    isPlace: boolean,
+  ) => {
+    if (isPlace) {
+        setLikedPlaces((prev) => ({
+            ...prev,
+            data: prev.data.filter((p) => p.id !== item.id),
+        }));
+    } else {
+      setLikedRoutes((prev) => ({
+        ...prev,
+        data: prev.data.filter((r) => r.id !== item.id),
+      }));
+    }
+
+    originalHandleLike(false);
+
+    const toastId = Date.now().toString();
+    addToast({
+      message: '좋아요가 취소되었습니다.',
+      actionLabel: '실행 취소',
+      onAction: () => {
+        if (isPlace) {
+            setLikedPlaces((prev) => ({
+                ...prev,
+                data: [...prev.data, item as Restaurant],
+            }));
+        } else {
+            setLikedRoutes((prev) => ({
+                ...prev,
+                data: [...prev.data, item as RouteWithLikeData],
+            }));
+        }
+        originalHandleLike(true);
+        removeToast(toastId);
+      },
+      duration: 5000,
+    });
+  };
+
   if (activeSubTab === 'places') {
     return likedPlaces.length > 0 ? (
       <ul className="space-y-3">
         {likedPlaces.map((place) => (
-          <RestaurantCard key={place.id} place={place} />
+          <RestaurantCard 
+            key={place.id} 
+            place={place} 
+            onLikeToggle={(handleLike) => handleUnlikeWithUndo(handleLike, place, true)}
+          />
         ))}
       </ul>
     ) : (
@@ -100,6 +151,7 @@ export default function LikedContentList({
               routeId={route.id}
               initialIsLiked={route.isLiked || false}
               initialLikesCount={route.likesCount || 0}
+              onLikeToggle={(handleLike) => handleUnlikeWithUndo(handleLike, route, false)}
             />
           </div>
           {expandedRouteId === route.id && (
