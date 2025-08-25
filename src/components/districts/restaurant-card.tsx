@@ -3,15 +3,10 @@
 import { useSetAtom } from 'jotai';
 import { modalAtom } from '~/src/stores/app-store';
 import LikeButton from '~/src/components/common/LikeButton';
-import { Place } from '@prisma/client';
-
-type PlaceWithLikeData = Place & {
-  likesCount: number;
-  isLiked: boolean;
-};
+import { Restaurant } from '~/src/types/restaurant';
 
 interface RestaurantCardProps {
-  place: PlaceWithLikeData;
+  place: Restaurant;
   onLikeToggle?: (handleLike: (forceLike?: boolean) => Promise<void>) => void;
 }
 

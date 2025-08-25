@@ -1,6 +1,15 @@
 import { db } from '~/lib/db';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
+// Helper function to convert Date objects to ISO strings
+function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(obj: T): Omit<T, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string } {
+  return {
+    ...obj,
+    createdAt: obj.createdAt.toISOString(),
+    updatedAt: obj.updatedAt.toISOString(),
+  };
+}
+
 interface LikeInput {
   placeId?: string;
   routeId?: string;
@@ -108,7 +117,7 @@ export async function getLikedPlacesByUserId(
       if (!like.place) return null;
       const { _count, ...placeDetails } = like.place;
       return {
-        ...placeDetails,
+        ...serializeDatesInPlace(placeDetails),
         likesCount: _count.likes,
         isLiked: true,
       };
@@ -166,7 +175,7 @@ export async function getLikedRoutesByUserId(
       if (!like.route) return null;
       const { _count, ...routeDetails } = like.route;
       return {
-        ...routeDetails,
+        ...serializeDatesInPlace(routeDetails),
         likesCount: _count.likes,
         isLiked: true,
       };

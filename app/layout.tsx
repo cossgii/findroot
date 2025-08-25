@@ -9,6 +9,8 @@ import '~/src/styles/globals.css';
 import KakaoMapApiLoader from '~/src/components/common/kakao-map-api-loader';
 import Toast from '~/src/components/common/Toast';
 
+import ReactQueryProvider from '~/src/providers/react-query-provider';
+
 export const metadata: Metadata = {
   title: 'My Awesome App',
   description: 'This is a description of my awesome app.',
@@ -27,15 +29,17 @@ export default function RootLayout({
       >
         <div id="root-content" className="h-screen flex flex-col">
           <Provider>
-            <AuthProvider>
-              <Header />
-              <main className="flex-grow pt-header overflow-y-auto">
-                {children}
-              </main>
-              <GlobalModalRenderer />
-              <KakaoMapApiLoader />
-              <Toast /> {/* <-- Toast 컴포넌트를 Provider 안으로 이동 */}
-            </AuthProvider>
+            <ReactQueryProvider>
+              <AuthProvider>
+                <Header />
+                <main className="flex-grow pt-header overflow-y-auto">
+                  {children}
+                </main>
+                <GlobalModalRenderer />
+                <KakaoMapApiLoader />
+                <Toast /> {/* <-- Toast 컴포넌트를 Provider 안으로 이동 */}
+              </AuthProvider>
+            </ReactQueryProvider>
           </Provider>
         </div>
         <div id="modal-root"></div>

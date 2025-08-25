@@ -22,17 +22,15 @@ const MyPage = () => {
     user,
     setUser,
     myCreatedPlaces,
+    setMyCreatedPlaces,
     myCreatedRoutes,
+    setMyCreatedRoutes,
     likedPlaces,
     setLikedPlaces,
     likedRoutes,
     setLikedRoutes,
     isLoading,
     refreshContent,
-    fetchMyCreatedPlaces,
-    fetchLikedPlaces,
-    fetchMyCreatedRoutes,
-    fetchLikedRoutes,
   } = useMyPageData(activeTab, selectedDistrict); // Pass districtId
 
   const {
@@ -49,14 +47,14 @@ const MyPage = () => {
         const res = await fetch(`/api/places/${placeId}`, { method: 'DELETE' });
         if (!res.ok) throw new Error(await res.text());
         alert('장소가 삭제되었습니다.');
-        fetchMyCreatedPlaces(myCreatedPlaces.currentPage, selectedDistrict);
+        refreshContent();
       } catch (e) {
         alert(
           `장소 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`
         );
       }
     },
-    [fetchMyCreatedPlaces, myCreatedPlaces.currentPage, selectedDistrict],
+    [refreshContent],
   );
 
   const handleDeleteRoute = useCallback(
@@ -89,20 +87,20 @@ const MyPage = () => {
       case 'content':
         return (
           <ContentTabPanel
-            myCreatedPlaces={myCreatedPlaces.data}
-            myCreatedRoutes={myCreatedRoutes.data}
+            myCreatedPlaces={myCreatedPlaces.data || []}
+            myCreatedRoutes={myCreatedRoutes.data || []}
             onAddPlace={openAddPlaceModal}
             onAddRoute={openAddRouteModal}
             onEditPlace={openEditPlaceModal}
             onEditRoute={openEditRouteModal}
             onDeletePlace={handleDeletePlace}
             onDeleteRoute={handleDeleteRoute}
-            placesTotalPages={myCreatedPlaces.totalPages}
-            placesCurrentPage={myCreatedPlaces.currentPage}
-            onPlacePageChange={(page) => fetchMyCreatedPlaces(page, selectedDistrict)}
-            routesTotalPages={myCreatedRoutes.totalPages}
-            routesCurrentPage={myCreatedRoutes.currentPage}
-            onRoutePageChange={(page) => fetchMyCreatedRoutes(page, selectedDistrict)}
+            placesTotalPages={myCreatedPlaces.totalPages || 1}
+            placesCurrentPage={myCreatedPlaces.currentPage || 1}
+            onPlacePageChange={(page) => setMyCreatedPlaces(prev => ({ ...prev, currentPage: page }))}
+            routesTotalPages={myCreatedRoutes.totalPages || 1}
+            routesCurrentPage={myCreatedRoutes.currentPage || 1}
+            onRoutePageChange={(page) => setMyCreatedRoutes(prev => ({ ...prev, currentPage: page }))}
             selectedDistrict={selectedDistrict}
             onDistrictChange={setSelectedDistrict}
           />
@@ -110,16 +108,16 @@ const MyPage = () => {
       case 'likes':
         return (
           <LikesTabPanel
-            likedPlaces={likedPlaces.data}
+            likedPlaces={likedPlaces.data || []}
             setLikedPlaces={setLikedPlaces}
-            likedRoutes={likedRoutes}
+            likedRoutes={likedRoutes || { data: [], totalPages: 1, currentPage: 1 }}
             setLikedRoutes={setLikedRoutes}
-            placesTotalPages={likedPlaces.totalPages}
-            placesCurrentPage={likedPlaces.currentPage}
-            onPlacePageChange={(page) => fetchLikedPlaces(page, selectedDistrict)}
-            routesTotalPages={likedRoutes.totalPages}
-            routesCurrentPage={likedRoutes.currentPage}
-            onRoutePageChange={(page) => fetchLikedRoutes(page, selectedDistrict)}
+            placesTotalPages={likedPlaces.totalPages || 1}
+            placesCurrentPage={likedPlaces.currentPage || 1}
+            onPlacePageChange={(page) => setLikedPlaces(prev => ({ ...prev, currentPage: page }))}
+            routesTotalPages={likedRoutes.totalPages || 1}
+            routesCurrentPage={likedRoutes.currentPage || 1}
+            onRoutePageChange={(page) => setLikedRoutes(prev => ({ ...prev, currentPage: page }))}
             selectedDistrict={selectedDistrict}
             onDistrictChange={setSelectedDistrict}
           />

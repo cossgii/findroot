@@ -2,17 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { type MyPageSubTab } from '../MyPageTabs';
-import { Place, Route } from '@prisma/client';
 import RestaurantCard from '~/src/components/districts/restaurant-card';
 import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 import { PaginatedResponse } from '~/src/hooks/mypage/useMyPageData';
 import { useSetAtom } from 'jotai';
 import { addToastAtom, removeToastAtom } from '~/src/stores/toast-store';
+import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer';
 
-interface RouteWithPlaces extends Route {
-  places: { place: Place }[];
-}
+
 
 interface LikedContentListProps {
   activeSubTab: MyPageSubTab;

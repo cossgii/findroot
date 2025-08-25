@@ -1,7 +1,16 @@
 import { db } from '~/lib/db';
 import { CreatePlaceInput } from './place-schema';
-import { Place } from '@prisma/client';
+import { Place, PlaceCategory } from '@prisma/client';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+
+// Helper function to convert Date objects to ISO strings
+function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(place: T): Omit<T, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string } {
+  return {
+    ...place,
+    createdAt: place.createdAt.toISOString(),
+    updatedAt: place.updatedAt.toISOString(),
+  };
+}
 
 /**
  * Creates a new place in the database.
@@ -16,7 +25,7 @@ export async function createPlace(data: CreatePlaceInput, creatorId: string) {
       creatorId,
     },
   });
-  return place;
+  return serializeDatesInPlace(place);
 }
 
 /**
@@ -52,7 +61,7 @@ export async function getPlacesForFeed(userId: string) {
     },
   });
 
-  return places;
+  return places.map(serializeDatesInPlace);
 }
 
 /**
@@ -67,11 +76,14 @@ export async function getPlacesByDistrict(
   limit: number = 12,
   sort: 'recent' | 'likes' = 'recent',
 ) {
-  const whereClause = {
-    address: {
-      contains: districtName,
-    },
-  };
+  const whereClause =
+    districtName === '전체'
+      ? {} // Return all places if districtName is '전체'
+      : {
+          address: {
+            contains: districtName,
+          },
+        };
 
   const orderByClause =
     sort === 'likes'
@@ -88,14 +100,16 @@ export async function getPlacesByDistrict(
         _count: {
           select: { likes: true },
         },
-        likes: {
-          where: {
-            userId: userId,
-          },
-          select: {
-            userId: true,
-          },
-        },
+        likes: userId
+          ? {
+              where: {
+                userId: userId,
+              },
+              select: {
+                userId: true,
+              },
+            }
+          : false,
       },
       orderBy: orderByClause,
       skip: (page - 1) * limit,
@@ -105,9 +119,9 @@ export async function getPlacesByDistrict(
   ]);
 
   const places = placesWithLikes.map(({ _count, likes, ...place }) => ({
-    ...place,
+    ...serializeDatesInPlace(place),
     likesCount: _count.likes,
-    isLiked: likes.length > 0,
+    isLiked: !!(likes && likes.length > 0),
   }));
 
   return {
@@ -155,7 +169,7 @@ export async function getPlaceById(id: string, userId?: string) {
   const { _count, likes, ...place } = placeWithLikes;
 
   return {
-    ...place,
+    ...serializeDatesInPlace(place),
     likesCount: _count.likes,
     isLiked: !!isLiked,
   };
@@ -171,6 +185,7 @@ export async function getPlacesByCreatorId(
   page: number = 1,
   limit: number = 5,
   district?: string | null,
+  currentUserId?: string,
 ) {
   const whereClause: any = { creatorId };
 
@@ -191,14 +206,16 @@ export async function getPlacesByCreatorId(
         _count: {
           select: { likes: true },
         },
-        likes: {
-          where: {
-            userId: creatorId, // On MyPage, the creator is the user
-          },
-          select: {
-            userId: true,
-          },
-        },
+        likes: currentUserId
+          ? {
+              where: {
+                userId: currentUserId,
+              },
+              select: {
+                userId: true,
+              },
+            }
+          : false,
       },
       orderBy: {
         createdAt: 'desc',
@@ -210,9 +227,9 @@ export async function getPlacesByCreatorId(
   ]);
 
   const places = placesWithLikes.map(({ _count, likes, ...place }) => ({
-    ...place,
+    ...serializeDatesInPlace(place),
     likesCount: _count.likes,
-    isLiked: likes.length > 0,
+    isLiked: !!(likes && likes.length > 0),
   }));
 
   return {
@@ -306,5 +323,5 @@ export async function getAllPlacesByCreatorId(creatorId: string) {
     orderBy: {
       createdAt: 'desc',
     },
-  });
+  }).then(places => places.map(serializeDatesInPlace));
 }

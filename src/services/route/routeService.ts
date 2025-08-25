@@ -2,6 +2,15 @@ import { db } from '~/lib/db';
 import { z } from 'zod';
 import { RouteStopLabel } from '@prisma/client';
 
+// Helper function to convert Date objects to ISO strings
+function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(place: T): Omit<T, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string } {
+  return {
+    ...place,
+    createdAt: place.createdAt.toISOString(),
+    updatedAt: place.updatedAt.toISOString(),
+  };
+}
+
 // Schema for creating a new route, used for validating client data
 export const NewRouteApiSchema = z.object({
   name: z.string().min(1),
@@ -127,7 +136,7 @@ export async function getRouteById(id: string, userId?: string) {
     return {
       ...routePlace,
       place: {
-        ...place,
+        ...serializeDatesInPlace(place),
         likesCount: placeIdToLikeCountMap.get(place.id) || 0,
         isLiked: userLikedPlaceIds.has(place.id),
       },
@@ -139,7 +148,7 @@ export async function getRouteById(id: string, userId?: string) {
   const { _count, likes, ...routeData } = routeWithLikes;
 
   return {
-    ...routeData,
+    ...serializeDatesInPlace(routeData),
     places: enrichedPlaces,
     likesCount: _count.likes,
     isLiked: isRouteLiked,
@@ -167,9 +176,7 @@ export async function getRoutesByCreatorId(
     db.route.findMany({
       where: whereClause,
       include: {
-        creator: {
-          select: { id: true, name: true, image: true },
-        },
+        ...routeInclude,
         _count: {
           select: { likes: true },
         },
@@ -179,14 +186,6 @@ export async function getRoutesByCreatorId(
           },
           select: {
             userId: true,
-          },
-        },
-        places: { // <<< ADDED THIS INCLUDE
-          orderBy: {
-            order: 'asc',
-          },
-          include: {
-            place: true,
           },
         },
       },
@@ -199,11 +198,39 @@ export async function getRoutesByCreatorId(
     db.route.count({ where: whereClause }),
   ]);
 
-  const routes = routesWithLikes.map(({ _count, likes, ...route }) => ({
-    ...route,
-    likesCount: _count.likes,
-    isLiked: likes.length > 0,
-  }));
+  const allPlaceIds = routesWithLikes.flatMap(route => route.places.map(rp => rp.place.id));
+
+  const likeCounts = await db.like.groupBy({
+    by: ['placeId'],
+    where: { placeId: { in: allPlaceIds } },
+    _count: { placeId: true },
+  });
+
+  const userLikes = creatorId ? await db.like.findMany({
+    where: { userId: creatorId, placeId: { in: allPlaceIds } },
+    select: { placeId: true },
+  }) : [];
+
+  const userLikedPlaceIds = new Set(userLikes.map(like => like.placeId));
+  const placeIdToLikeCountMap = new Map(likeCounts.map(item => [item.placeId, item._count.placeId]));
+
+  const routes = routesWithLikes.map(({ _count, likes, ...route }) => {
+    const serializedRoute = serializeDatesInPlace(route);
+    const serializedPlaces = route.places.map(rp => ({
+      ...rp,
+      place: {
+        ...serializeDatesInPlace(rp.place),
+        likesCount: placeIdToLikeCountMap.get(rp.place.id) || 0,
+        isLiked: userLikedPlaceIds.has(rp.place.id),
+      }
+    }));
+    return {
+      ...serializedRoute,
+      likesCount: _count.likes,
+      isLiked: likes.length > 0,
+      places: serializedPlaces,
+    };
+  });
 
   return {
     routes,

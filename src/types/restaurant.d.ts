@@ -1,7 +1,9 @@
 import { Place, Route } from '@prisma/client'; // Import Route as well
 
 // This extends the Prisma Place model with our custom aggregated fields
-export type Restaurant = Place & {
+export type Restaurant = Omit<Place, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
   likesCount: number;
   isLiked: boolean;
 };

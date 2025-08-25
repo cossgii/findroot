@@ -13,15 +13,18 @@ export async function GET(
   const limit = parseInt(searchParams.get('limit') || '5', 10);
   const districtId = searchParams.get('districtId');
 
-  const userId = resolvedParams.userId;
+  const creatorId = resolvedParams.userId;
   const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id || session.user.id !== userId) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
+  const currentUserId = session?.user?.id;
 
   try {
-    const paginatedData = await getPlacesByCreatorId(userId, page, limit, districtId);
+    const paginatedData = await getPlacesByCreatorId(
+      creatorId,
+      page,
+      limit,
+      districtId,
+      currentUserId,
+    );
     return NextResponse.json(paginatedData);
   } catch (error) {
     console.error('Error fetching user places:', error);

@@ -3,8 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
 import { createPlaceSchema } from '~/src/services/place/place-schema';
-import { useEffect } from 'react';
 import { Place } from '@prisma/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 type EditPlaceFormValues = z.infer<typeof createPlaceSchema>;
 
@@ -14,74 +15,95 @@ interface UseEditPlaceFormProps {
   onPlaceUpdated: () => void;
 }
 
+// Query Function for initial data fetching
+const fetchPlaceById = async (id: string): Promise<Place> => {
+  const response = await fetch(`/api/places/${id}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch place data');
+  }
+  return response.json();
+};
+
+// Mutation Function for updating place
+const updatePlaceApi = async (payload: { placeId: string; values: EditPlaceFormValues }) => {
+  const response = await fetch(`/api/places/${payload.placeId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload.values),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to update place');
+  }
+  return response.json();
+};
+
 export const useEditPlaceForm = ({
   placeId,
   onClose,
   onPlaceUpdated,
 }: UseEditPlaceFormProps) => {
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
   const form = useForm<EditPlaceFormValues>({
     resolver: zodResolver(createPlaceSchema),
     mode: 'onTouched',
   });
 
+  const { data: placeData, isLoading, isError, error } = useQuery<Place, Error>({
+    queryKey: ['place', placeId],
+    queryFn: () => fetchPlaceById(placeId),
+    enabled: !!placeId, // Only fetch if placeId is available
+  });
+
+  // Effect to reset form when placeData is loaded
   useEffect(() => {
-    const fetchPlaceData = async () => {
-      try {
-        const response = await fetch(`/api/places/${placeId}`);
-        if (response.ok) {
-          const place: Place = await response.json();
-          form.reset({
-            name: place.name,
-            address: place.address || '',
-            latitude: place.latitude,
-            longitude: place.longitude,
-            district: place.district || '',
-            description: place.description || '',
-            category: place.category,
-          });
-        } else {
-          console.error('Failed to fetch place data');
-          alert('장소 정보를 불러오는 데 실패했습니다.');
-          onClose();
-        }
-      } catch (error) {
-        console.error('Error fetching place data:', error);
-        alert('장소 정보를 불러오는 중 오류가 발생했습니다.');
-        onClose();
-      }
-    };
-    fetchPlaceData();
-  }, [placeId, form, onClose]);
+    if (placeData) {
+      form.reset({
+        name: placeData.name,
+        address: placeData.address || '',
+        latitude: placeData.latitude,
+        longitude: placeData.longitude,
+        district: placeData.district || '',
+        description: placeData.description || '',
+        category: placeData.category,
+      });
+    }
+  }, [placeData, form]);
+
+  // Effect to handle error when fetching placeData
+  useEffect(() => {
+    if (isError && error) {
+      console.error('Error fetching place data:', error);
+      alert(`장소 정보를 불러오는 중 오류가 발생했습니다: ${error.message}`);
+      onClose();
+    }
+  }, [isError, error, onClose]);
+
+  const { mutate: updatePlaceMutation } = useMutation<Place, Error, { placeId: string; values: EditPlaceFormValues }>({
+    mutationFn: updatePlaceApi,
+    onSuccess: () => {
+      alert('장소가 성공적으로 수정되었습니다.');
+      onPlaceUpdated();
+      onClose();
+      // Invalidate relevant queries after successful update
+      queryClient.invalidateQueries({ queryKey: ['place', placeId] });
+      queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id, 'places', 'created'] });
+      queryClient.invalidateQueries({ queryKey: ['placeLocations'] }); // Invalidate all place locations for map
+    },
+    onError: (err) => {
+      console.error('Error updating place:', err);
+      alert(`장소 수정 실패: ${err.message}`);
+    },
+  });
 
   const onSubmit = async (values: EditPlaceFormValues) => {
     if (!session?.user?.id) {
       alert('로그인 후 장소를 수정할 수 있습니다.');
       return;
     }
-
-    try {
-      const response = await fetch(`/api/places/${placeId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (response.ok) {
-        alert('장소가 성공적으로 수정되었습니다.');
-        onPlaceUpdated();
-        onClose();
-      } else {
-        const errorData = await response.json();
-        alert(`장소 수정 실패: ${errorData.message}`);
-      }
-    } catch (error) {
-      console.error('Error updating place:', error);
-      alert('장소 수정 중 오류가 발생했습니다.');
-    }
+    updatePlaceMutation({ placeId, values });
   };
 
-  return { form, onSubmit };
+  return { form, onSubmit, isLoading, isError, error, placeData };
 };

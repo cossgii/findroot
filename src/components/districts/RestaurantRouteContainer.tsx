@@ -1,11 +1,10 @@
 'use client';
 import RestaurantCard from '~/src/components/districts/restaurant-card';
-import { Place } from '@prisma/client';
 import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant'; // Added this import
 
 export interface RouteWithPlaces extends RouteWithLikeData { // Changed from Route to RouteWithLikeData
-  places: { place: Place }[];
+  places: { place: Restaurant }[];
 }
 
 interface RestaurantRouteContainerProps {

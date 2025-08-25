@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import KakaoMap from '~/src/components/common/kakao-map';
@@ -13,8 +13,9 @@ import { useSetAtom } from 'jotai';
 import { modalAtom } from '~/src/stores/app-store';
 import SortDropdown from '~/src/components/common/SortDropdown';
 import Pagination from '~/src/components/common/Pagination';
-import { Restaurant } from '~/src/types/restaurant'; // Added this import
-import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer'; // Added this import
+import { Restaurant } from '~/src/types/restaurant';
+import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer';
+import { useQuery } from '@tanstack/react-query';
 
 // Type for the lightweight location data
 interface PlaceLocation {
@@ -23,6 +24,26 @@ interface PlaceLocation {
     latitude: number;
     longitude: number;
 }
+
+// Query Functions
+const fetchAllPlaceLocations = async (districtName: string | undefined): Promise<PlaceLocation[]> => {
+    if (!districtName) return [];
+    const response = await fetch(`/api/places/locations?district=${districtName}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch all place locations');
+    }
+    return response.json();
+};
+
+const fetchUserRoutesByDistrict = async (userId: string | undefined, districtId: string): Promise<RouteWithPlaces[]> => {
+    if (!userId) return [];
+    const response = await fetch(`/api/users/${userId}/routes?districtId=${districtId}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch routes');
+    }
+    const data = await response.json();
+    return data.routes;
+};
 
 interface DistrictClientProps {
   districtId: string;
@@ -43,39 +64,27 @@ export default function DistrictClient({
   currentPage,
   currentSort,
 }: DistrictClientProps) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
 
-  const [places, setPlaces] = useState(initialPlaces);
-  const [allPlaceLocations, setAllPlaceLocations] = useState<PlaceLocation[]>([]);
   const [isRouteView, setIsRouteView] = useState(false);
-  const [routes, setRoutes] = useState<RouteWithPlaces[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
-  const [isLoadingRoutes, setIsLoadingRoutes] = useState(false);
   const setModal = useSetAtom(modalAtom);
 
-  // Effect to update paginated list when server-fetched props change
-  useEffect(() => {
-    setPlaces(initialPlaces);
-  }, [initialPlaces]);
+  // Use useQuery for allPlaceLocations
+  const { data: allPlaceLocations = [] } = useQuery<PlaceLocation[], Error>({
+      queryKey: ['placeLocations', districtInfo?.name],
+      queryFn: () => fetchAllPlaceLocations(districtInfo?.name),
+      enabled: !!districtInfo?.name, // Only run query if districtInfo.name exists
+  });
 
-  // Effect to fetch all place locations for the map
-  useEffect(() => {
-    const fetchAllLocations = async () => {
-        if (!districtInfo?.name) return;
-        try {
-            const response = await fetch(`/api/places/locations?district=${districtInfo.name}`);
-            if (response.ok) {
-                const data: PlaceLocation[] = await response.json();
-                setAllPlaceLocations(data);
-            }
-        } catch (error) {
-            console.error('Failed to fetch all place locations:', error);
-        }
-    };
-    fetchAllLocations();
-  }, [districtInfo?.name]);
+  // Use useQuery for routes
+  const { data: routes = [], isLoading: isLoadingRoutes } = useQuery<RouteWithPlaces[], Error>({
+      queryKey: ['userRoutes', session?.user?.id, districtId],
+      queryFn: () => fetchUserRoutesByDistrict(session?.user?.id, districtId),
+      enabled: isRouteView && status === 'authenticated',
+  });
 
   const handleSortChange = (sortOption: string) => {
     router.push(`${pathname}?sort=${sortOption}&page=1`);
@@ -88,25 +97,6 @@ export default function DistrictClient({
   const handleMarkerClick = (markerId: string) => {
     setModal({ type: 'RESTAURANT_DETAIL', props: { restaurantId: markerId } });
   };
-
-  useEffect(() => {
-    if (isRouteView && session?.user?.id) {
-      const fetchRoutes = async () => {
-        setIsLoadingRoutes(true);
-        try {
-          const response = await fetch(`/api/users/${session.user.id}/routes?districtId=${districtId}`);
-          if (response.ok) {
-            const data = await response.json();
-            setRoutes(data);
-          }
-        } catch (error) {
-          console.error('Failed to fetch routes:', error);
-        }
-        setIsLoadingRoutes(false);
-      };
-      fetchRoutes();
-    }
-  }, [isRouteView, districtId, session]);
 
   const selectedRoute = routes.find((r) => r.id === selectedRouteId);
 
@@ -178,7 +168,7 @@ export default function DistrictClient({
               currentSort={currentSort}
               onSortChange={handleSortChange}
             />
-            <RestaurantListContainer places={places} />
+            <RestaurantListContainer places={initialPlaces} />
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
