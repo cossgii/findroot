@@ -1,6 +1,6 @@
 import { db } from '~/lib/db';
 import { CreatePlaceInput } from './place-schema';
-import { Place, PlaceCategory } from '@prisma/client';
+import { Place, PlaceCategory, Prisma } from '@prisma/client';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
 // Helper function to convert Date objects to ISO strings
@@ -71,19 +71,32 @@ export async function getPlacesForFeed(userId: string) {
  */
 export async function getPlacesByDistrict(
   districtName: string,
-  userId: string | undefined,
+  userId: string | undefined, // 현재 로그인한 사용자 ID
   page: number = 1,
   limit: number = 12,
   sort: 'recent' | 'likes' = 'recent',
+  category?: PlaceCategory,
 ) {
-  const whereClause =
-    districtName === '전체'
-      ? {} // Return all places if districtName is '전체'
-      : {
-          address: {
-            contains: districtName,
-          },
-        };
+  const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
+  if (!MAIN_ACCOUNT_ID) {
+    console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
+    return { places: [], totalCount: 0, totalPages: 0, currentPage: page };
+  }
+
+  const whereClause: Prisma.PlaceWhereInput = {
+    OR: [
+      { creatorId: MAIN_ACCOUNT_ID }, // 대표 유저의 장소
+      ...(userId ? [{ creatorId: userId }] : []), // 로그인한 본인의 장소
+    ],
+  };
+
+  if (districtName !== '전체') {
+    whereClause.address = { contains: districtName };
+  }
+
+  if (category) {
+    whereClause.category = category;
+  }
 
   const orderByClause =
     sort === 'likes'
@@ -296,15 +309,23 @@ export async function updatePlace(
   });
 }
 
-export async function getPlaceLocationsByDistrict(districtName: string) {
-  const whereClause =
-    districtName && districtName !== '전체'
-      ? {
-          address: {
-            contains: districtName,
-          },
-        }
-      : {};
+export async function getPlaceLocationsByDistrict(districtName: string, currentUserId?: string) {
+  const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
+  if (!MAIN_ACCOUNT_ID) {
+    console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
+    return []; // Return empty array if not defined
+  }
+
+  const whereClause: Prisma.PlaceWhereInput = {
+    OR: [
+      { creatorId: MAIN_ACCOUNT_ID },
+      ...(currentUserId ? [{ creatorId: currentUserId }] : []),
+    ],
+  };
+
+  if (districtName && districtName !== '전체') {
+    whereClause.address = { contains: districtName };
+  }
 
   return db.place.findMany({
     where: whereClause,
@@ -313,6 +334,7 @@ export async function getPlaceLocationsByDistrict(districtName: string) {
       name: true,
       latitude: true,
       longitude: true,
+      category: true,
     },
   });
 }

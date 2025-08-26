@@ -32,9 +32,7 @@ export default function RootLayout({
             <ReactQueryProvider>
               <AuthProvider>
                 <Header />
-                <main className="flex-grow pt-header overflow-y-auto">
-                  {children}
-                </main>
+                <main className="flex-grow pt-header">{children}</main>
                 <GlobalModalRenderer />
                 <KakaoMapApiLoader />
                 <Toast /> {/* <-- Toast 컴포넌트를 Provider 안으로 이동 */}

@@ -1,25 +1,31 @@
-import RestaurantCategorySection from '~/src/components/districts/restaurant-category-section';
-import { CATEGORIES } from '~/src/utils/categories';
-
-import { Restaurant } from '~/src/types/restaurant'; // Added this import
+import RestaurantCard from '~/src/components/districts/restaurant-card';
+import { Restaurant } from '~/src/types/restaurant';
 
 interface RestaurantListContainerProps {
-  places: Restaurant[]; // Changed type from Place[] to Restaurant[]
+  places: Restaurant[];
+  districtName: string;
+  categoryName: string;
 }
 
-export default function RestaurantListContainer({ places }: RestaurantListContainerProps) {
-  const restaurantsToShow = places;
+export default function RestaurantListContainer({ 
+  places,
+  districtName,
+  categoryName,
+}: RestaurantListContainerProps) {
+  if (places.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-40 rounded-lg bg-gray-50">
+        <p className="text-gray-500">
+          {`${districtName}에 등록된 ${categoryName} 장소가 없습니다.`}
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {CATEGORIES.map((category) => (
-        <RestaurantCategorySection
-          key={category.id}
-          category={category}
-          restaurants={restaurantsToShow.filter(
-            (r) => r.category === category.id,
-          )}
-        />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {places.map((place) => (
+        <RestaurantCard key={place.id} place={place} />
       ))}
     </div>
   );

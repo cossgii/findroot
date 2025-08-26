@@ -1,6 +1,6 @@
 import { db } from '~/lib/db';
 import { z } from 'zod';
-import { RouteStopLabel } from '@prisma/client';
+import { RouteStopLabel, Prisma } from '@prisma/client';
 
 // Helper function to convert Date objects to ISO strings
 function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(place: T): Omit<T, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string } {
@@ -238,6 +238,93 @@ export async function getRoutesByCreatorId(
     totalPages: Math.ceil(totalCount / limit),
     currentPage: page,
   };
+}
+
+/**
+ * Fetches all public routes for a given district.
+ * @param districtId - The ID of the district.
+ * @param currentUserId - The ID of the current user (optional, for checking likes).
+ * @returns A list of routes in the district.
+ */
+export async function getPublicRoutesByDistrict(
+  districtId: string,
+  currentUserId?: string,
+) {
+  const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
+  if (!MAIN_ACCOUNT_ID) {
+    console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
+    return []; // Return empty array if not defined
+  }
+
+  const whereClause: Prisma.RouteWhereInput = {
+    OR: [
+      { creatorId: MAIN_ACCOUNT_ID },
+      ...(currentUserId ? [{ creatorId: currentUserId }] : []),
+    ],
+  };
+
+  if (districtId && districtId !== 'all') {
+    whereClause.districtId = districtId;
+  }
+
+  const routesWithLikes = await db.route.findMany({
+    where: whereClause,
+    include: {
+      ...routeInclude,
+      _count: {
+        select: { likes: true },
+      },
+      likes: currentUserId
+        ? {
+            where: {
+              userId: currentUserId,
+            },
+            select: {
+              userId: true,
+            },
+          }
+        : false,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  const allPlaceIds = routesWithLikes.flatMap(route => route.places.map(rp => rp.place.id));
+
+  const likeCounts = await db.like.groupBy({
+    by: ['placeId'],
+    where: { placeId: { in: allPlaceIds } },
+    _count: { placeId: true },
+  });
+
+  const userLikes = currentUserId ? await db.like.findMany({
+    where: { userId: currentUserId, placeId: { in: allPlaceIds } },
+    select: { placeId: true },
+  }) : [];
+
+  const userLikedPlaceIds = new Set(userLikes.map(like => like.placeId));
+  const placeIdToLikeCountMap = new Map(likeCounts.map(item => [item.placeId, item._count.placeId]));
+
+  const routes = routesWithLikes.map(({ _count, likes, ...route }) => {
+    const serializedRoute = serializeDatesInPlace(route);
+    const serializedPlaces = route.places.map(rp => ({
+      ...rp,
+      place: {
+        ...serializeDatesInPlace(rp.place),
+        likesCount: placeIdToLikeCountMap.get(rp.place.id) || 0,
+        isLiked: userLikedPlaceIds.has(rp.place.id),
+      }
+    }));
+    return {
+      ...serializedRoute,
+      likesCount: _count.likes,
+      isLiked: likes.length > 0,
+      places: serializedPlaces,
+    };
+  });
+
+  return routes;
 }
 
 /**

@@ -28,11 +28,51 @@ declare namespace kakao.maps {
     getCenter(): LatLng;
     relayout(): void;
     setBounds(bounds: LatLngBounds): void;
+    getLevel(): number; // Add this
+    setLevel(level: number, options?: { animate?: boolean; anchor?: LatLng }): void; // Add this
   }
 
   interface MapOptions {
     center: LatLng;
     level: number;
+  }
+
+  class MarkerClusterer {
+    constructor(options: MarkerClustererOptions);
+    addMarkers(markers: Marker[]): void;
+    removeMarkers(markers: Marker[]): void;
+    clear(): void;
+    getMarkers(): Marker[];
+    getClusters(): Cluster[];
+    // Add other methods/properties as needed, based on usage in kakao-map.tsx
+  }
+
+  interface MarkerClustererOptions {
+    map?: Map;
+    averageCenter?: boolean;
+    minLevel?: number;
+    disableClickZoom?: boolean;
+    calculator?: [number, number[]];
+    styles?: ClusterStyle[];
+    gridSize?: number;
+    minClusterSize?: number;
+  }
+
+  interface Cluster {
+    getCenter(): LatLng;
+    getSize(): number;
+    getMarkers(): Marker[];
+    getClusterMarker(): Marker;
+  }
+
+  interface ClusterStyle {
+    width: string;
+    height: string;
+    background: string;
+    color: string;
+    textAlign: string;
+    lineHeight: string;
+    borderRadius: string;
   }
 
   class Marker {
@@ -98,9 +138,16 @@ declare namespace kakao.maps {
       callback: (e: MouseEvent) => void,
     ): void;
 
-    // 3. 그 외 모든 경우
+    // 3. MarkerClusterer 클릭 이벤트
     function addListener(
-      target: Map | Marker | Polyline,
+      target: MarkerClusterer,
+      type: 'clusterclick',
+      callback: (cluster: Cluster) => void,
+    ): void;
+
+    // 4. 그 외 모든 경우
+    function addListener(
+      target: Map | Marker | Polyline | MarkerClusterer,
       type: string,
       callback: (...args: unknown[]) => void,
     ): void;
