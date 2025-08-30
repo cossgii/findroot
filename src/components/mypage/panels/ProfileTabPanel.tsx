@@ -5,6 +5,7 @@ import { User } from '@prisma/client';
 import Button from '~/src/components/common/button';
 import UserProfileDisplay from '~/src/components/mypage/profile/UserProfileDisplay';
 import UserProfileEditForm from '~/src/components/mypage/profile/UserProfileEditForm';
+import ChangePasswordForm from '~/src/components/mypage/profile/ChangePasswordForm';
 
 interface ProfileTabPanelProps {
   user: User;
@@ -16,11 +17,26 @@ export default function ProfileTabPanel({
   onProfileUpdated,
 }: ProfileTabPanelProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const handleSave = (updatedUser: User) => {
     onProfileUpdated(updatedUser);
     setIsEditing(false);
   };
+
+  // Show password change button only for users with a password (not social login)
+  const isCredentialsUser = user.password !== null;
+
+  if (isChangingPassword) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <ChangePasswordForm 
+          onSuccess={() => setIsChangingPassword(false)}
+          onCancel={() => setIsChangingPassword(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -33,10 +49,15 @@ export default function ProfileTabPanel({
       ) : (
         <>
           <UserProfileDisplay user={user} />
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex justify-center space-x-4">
             <Button onClick={() => setIsEditing(true)} className="w-auto px-6">
               프로필 수정
             </Button>
+            {isCredentialsUser && (
+              <Button onClick={() => setIsChangingPassword(true)} variant="outlined" className="w-auto px-6">
+                비밀번호 변경
+              </Button>
+            )}
           </div>
         </>
       )}

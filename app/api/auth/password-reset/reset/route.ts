@@ -1,0 +1,84 @@
+
+import { NextResponse } from 'next/server';
+import { db } from '~/lib/db';
+import { z } from 'zod';
+import bcrypt from 'bcryptjs';
+
+const passwordRegex =
+  /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$&*?!%])[A-Za-z\d!@$%&*?]{8,15}$/;
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1, { message: '토큰이 필요합니다.' }),
+  password: z
+    .string()
+    .min(8, { message: '비밀번호는 8자리 이상이어야 합니다' })
+    .regex(passwordRegex, {
+      message: '영문, 숫자, 특수문자(~!@#$%^&*)를 모두 조합해 주세요',
+    }),
+});
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { token, password } = resetPasswordSchema.parse(body);
+
+    // Find a token that is not expired.
+    const resetTokens = await db.passwordResetToken.findMany({
+        where: {
+            expires: {
+                gt: new Date(),
+            }
+        }
+    });
+
+    let matchedToken = null;
+    for (const dbToken of resetTokens) {
+        const isMatch = await bcrypt.compare(token, dbToken.token);
+        if (isMatch) {
+            matchedToken = dbToken;
+            break;
+        }
+    }
+
+    if (!matchedToken) {
+      return NextResponse.json(
+        { message: '유효하지 않거나 만료된 토큰입니다.' },
+        { status: 400 },
+      );
+    }
+
+    const user = await db.user.findUnique({ where: { email: matchedToken.email } });
+    if (!user) {
+      // This should theoretically not happen if a token exists
+      return NextResponse.json({ message: '사용자를 찾을 수 없습니다.' }, { status: 404 });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update user's password and delete all reset tokens for this user
+    await db.$transaction([
+      db.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword },
+      }),
+      db.passwordResetToken.deleteMany({
+        where: { email: user.email },
+      }),
+    ]);
+
+    return NextResponse.json({ message: '비밀번호가 성공적으로 재설정되었습니다.' });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: 'Validation error', errors: error.issues },
+        { status: 400 },
+      );
+    }
+    console.error('Password reset error:', error);
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 },
+    );
+  }
+}

@@ -28,6 +28,9 @@ export default defineConfig([
       "src/stores/**",
       "src/utils/**",
       "src/components/styles/**",
+      "__mocks__/fileMock.js",
+      "jest.config.js",
+      "jest.setup.js",
     ],
   },
 

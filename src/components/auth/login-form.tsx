@@ -105,11 +105,16 @@ export default function LoginForm() {
           Kakao 로그인
         </Button>
       </div>
-      <div className="text-center text-sm mt-4">
-        계정이 없으신가요?{' '}
-        <Link href="/signup" className="text-blue-500 hover:underline">
-          회원가입
+      <div className="flex justify-between text-sm mt-4">
+        <Link href="/forgot-password" className="text-blue-500 hover:underline">
+          비밀번호를 잊으셨나요?
         </Link>
+        <span>
+          계정이 없으신가요?{' '}
+          <Link href="/signup" className="text-blue-500 hover:underline">
+            회원가입
+          </Link>
+        </span>
       </div>
     </Form>
   );

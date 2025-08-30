@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,39 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enum for simple Place categorization
-enum PlaceCategory {
-  MEAL
-  DRINK
-}
-
-// Enum for labeling stops in a route
-enum RouteStopLabel {
-  MEAL
-  CAFE
-  BAR
-}
-
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  password      String
-  accounts      Account[]
-  sessions      Session[]
-
-  // User's created content
-  places    Place[]
-  routes    Route[]
-
-  // Social features
-  followers Follow[] @relation("Following")
-  following Follow[] @relation("Follower")
-  likes     Like[]
-  sentMessages    Message[] @relation("SentMessages")
+  id               String    @id @default(cuid())
+  name             String
+  email            String    @unique
+  emailVerified    DateTime?
+  image            String?
+  password         String?
+  accounts         Account[]
+  following        Follow[]  @relation("Follower")
+  followers        Follow[]  @relation("Following")
+  likes            Like[]
   receivedMessages Message[] @relation("ReceivedMessages")
+  sentMessages     Message[] @relation("SentMessages")
+  places           Place[]
+  routes           Route[]
+  sessions         Session[]
 }
 
 model Account {
@@ -51,15 +31,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -81,24 +60,20 @@ model VerificationToken {
 }
 
 model Place {
-  id          String    @id @default(cuid())
+  id          String        @id @default(cuid())
   name        String
   latitude    Float
   longitude   Float
   address     String?
-  district    String?
   description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  creatorId   String
+  district    String?
   category    PlaceCategory
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  creatorId String
-
-  likes    Like[]
-  
-  // Relation to the new RoutePlace model
-  routes RoutePlace[]
+  likes       Like[]
+  creator     User          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  routes      RoutePlace[]
 
   @@index([district])
 }
@@ -107,43 +82,35 @@ model Route {
   id          String       @id @default(cuid())
   name        String
   description String?
-  districtId  String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-
-  creator   User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  creatorId String
-
-  likes    Like[]
-
-  // Relation to the new RoutePlace model
-  places RoutePlace[]
+  creatorId   String
+  districtId  String?
+  likes       Like[]
+  creator     User         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  places      RoutePlace[]
 
   @@index([districtId])
 }
 
-// New join table for the many-to-many relationship between Route and Place
 model RoutePlace {
-  id      String @id @default(cuid())
+  id      String         @id @default(cuid())
   routeId String
   placeId String
-  order   Int             // The order of the place within the route
-  label   RouteStopLabel  // The user-defined label for this stop
-
-  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  order   Int
+  label   RouteStopLabel
+  place   Place          @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  route   Route          @relation(fields: [routeId], references: [id], onDelete: Cascade)
 
   @@index([routeId])
   @@index([placeId])
 }
 
-
 model Follow {
   followerId  String
   followingId String
-
-  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
-  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  follower    User   @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User   @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
 }
@@ -151,34 +118,50 @@ model Follow {
 model Like {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-
-  place   Place?  @relation(fields: [placeId], references: [id], onDelete: Cascade)
-  placeId String?
-
-  route   Route?  @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  routeId String?
+  userId    String
+  placeId   String?
+  routeId   String?
+  place     Place?   @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  route     Route?   @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, placeId])
   @@unique([userId, routeId])
-
   @@index([placeId])
   @@index([routeId])
 }
 
 model Message {
-  id          String    @id @default(cuid())
-  senderId    String
-  receiverId  String
-  content     String
-  createdAt   DateTime  @default(now())
-  isRead      Boolean   @default(false)
-
-  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String
+  createdAt  DateTime @default(now())
+  isRead     Boolean  @default(false)
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([senderId])
   @@index([receiverId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([email, token])
+}
+
+enum PlaceCategory {
+  MEAL
+  DRINK
+}
+
+enum RouteStopLabel {
+  MEAL
+  CAFE
+  BAR
 }
