@@ -91,6 +91,7 @@ export function useLike({
     onSettled: (data, error, variables) => {
       const queryKey = variables.placeId ? ['placeLikes', variables.placeId] : ['routeLikes', variables.routeId];
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ['place', variables.placeId] });
       queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id, 'places', 'liked'] });
       queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id, 'routes', 'liked'] });
     },
@@ -122,6 +123,7 @@ export function useLike({
     onSettled: (data, error, variables) => {
       const queryKey = variables.placeId ? ['placeLikes', variables.placeId] : ['routeLikes', variables.routeId];
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ['place', variables.placeId] });
       queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id, 'places', 'liked'] });
       queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id, 'routes', 'liked'] });
     },

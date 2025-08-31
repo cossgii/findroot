@@ -1,7 +1,6 @@
 'use client';
 
 import { useAtom } from 'jotai';
-import { useEffect, useState } from 'react';
 import {
   modalAtom,
   InfoMessageModalProps,
@@ -20,6 +19,7 @@ import AddPlaceModal from '~/src/components/mypage/places/AddPlaceModal';
 import AddRouteModal from '~/src/components/mypage/routes/AddRouteModal';
 import EditPlaceModal from '~/src/components/mypage/places/EditPlaceModal';
 import EditRouteModal from '~/src/components/mypage/routes/EditRouteModal';
+import { useQuery } from '@tanstack/react-query';
 
 /**
  * A helper component to fetch data for the restaurant detail modal.
@@ -29,37 +29,22 @@ const RestaurantDetailModal = ({
   restaurantId,
   onClose,
 }: RestaurantDetailModalProps & { onClose: () => void }) => {
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchData() {
-      if (!restaurantId) return;
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`/api/places/${restaurantId}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const restaurantData: Restaurant = await response.json();
-        setRestaurant(restaurantData);
-      } catch (e) {
-        console.error('Error fetching place data:', e);
-        setError('맛집 정보를 불러오는 데 실패했습니다.');
-      } finally {
-        setIsLoading(false);
+  const { data: restaurant, isLoading, error } = useQuery<Restaurant, Error>({
+    queryKey: ['place', restaurantId],
+    queryFn: async () => {
+      const response = await fetch(`/api/places/${restaurantId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    }
-
-    fetchData();
-  }, [restaurantId]);
+      return response.json();
+    },
+    enabled: !!restaurantId,
+  });
 
   return (
     <Modal isOpen={true} onClose={onClose}>
       {isLoading && <div className="p-6">로딩 중...</div>}
-      {error && <div className="p-6">{error}</div>}
+      {error && <div className="p-6">{error.message}</div>}
       {restaurant && <RestaurantDetailModalContent restaurant={restaurant} />}
     </Modal>
   );

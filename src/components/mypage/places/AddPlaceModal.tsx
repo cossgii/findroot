@@ -16,13 +16,18 @@ export default function AddPlaceModal({
   onClose,
   onPlaceAdded,
 }: AddPlaceModalProps) {
-  const { form, onSubmit } = useAddPlaceForm({ onClose, onPlaceAdded });
+  const { form, onSubmit, isPending } = useAddPlaceForm({ onClose, onPlaceAdded });
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-4">새 장소 등록</h2>
-        <AddPlaceForm form={form} onSubmit={onSubmit} onClose={onClose} />
+        <AddPlaceForm
+          form={form}
+          onSubmit={onSubmit}
+          onClose={onClose}
+          isPending={isPending}
+        />
       </div>
     </Modal>
   );

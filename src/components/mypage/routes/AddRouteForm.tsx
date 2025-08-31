@@ -17,6 +17,7 @@ import {
 import Input from '~/src/components/common/input';
 import Button from '~/src/components/common/button';
 import RouteMap from './RouteMap';
+import ConfirmationDialog from '~/src/components/common/ConfirmationDialog';
 
 // Helper to map enum to display names
 const routeStopLabelMap: Record<RouteStopLabel, string> = {
@@ -38,6 +39,10 @@ interface AddRouteFormProps {
   selectedDistrict: string | null;
   mapCenter: { lat: number; lng: number };
   handleDistrictChange: (districtId: string) => void;
+  isPending: boolean;
+  isConfirmationDialogOpen: boolean;
+  handleConfirmDistrictChange: () => void;
+  handleCancelDistrictChange: () => void;
 }
 
 export default function AddRouteForm({
@@ -53,6 +58,10 @@ export default function AddRouteForm({
   selectedDistrict,
   mapCenter,
   handleDistrictChange,
+  isPending,
+  isConfirmationDialogOpen,
+  handleConfirmDistrictChange,
+  handleCancelDistrictChange,
 }: AddRouteFormProps) {
   const [placeToAdd, setPlaceToAdd] = useState<Place | null>(null);
   const [labelForNewStop, setLabelForNewStop] = useState<RouteStopLabel>(
@@ -68,7 +77,7 @@ export default function AddRouteForm({
 
   const placesForMap = useMemo(() => {
     if (!selectedDistrict) {
-      return stops.map(s => s.place); // If no district, show only places in the route
+      return stops.map((s) => s.place); // If no district, show only places in the route
     }
     const districtName = SEOUL_DISTRICTS.find((d) => d.id === selectedDistrict)?.name;
     return userPlaces.filter((place) => place.district === districtName);
@@ -78,8 +87,8 @@ export default function AddRouteForm({
     if (!selectedDistrict) {
       return [];
     }
-    const districtName = SEOUL_DISTRICTS.find(d => d.id === selectedDistrict)?.name;
-    return userPlaces.filter(place => place.district === districtName);
+    const districtName = SEOUL_DISTRICTS.find((d) => d.id === selectedDistrict)?.name;
+    return userPlaces.filter((place) => place.district === districtName);
   }, [userPlaces, selectedDistrict]);
 
   if (isLoading) {
@@ -93,40 +102,11 @@ export default function AddRouteForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* 1. Route Details */}
-        <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>루트 이름</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="예: 강남역 불금 루트" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>설명</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="이 루트에 대한 설명을 적어주세요" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* 2. District Selector */}
+        {/* 1. District Selector */}
         <div>
-          <FormLabel>지도에서 장소 확인</FormLabel>
+          <FormLabel>자치구 선택</FormLabel>
           <select
+            value={selectedDistrict || ''}
             onChange={(e) => handleDistrictChange(e.target.value)}
             className="w-full mt-1 rounded-xl border-2 border-secondary-50 bg-white px-4 py-2 shadow-sm text-sm"
           >
@@ -139,9 +119,10 @@ export default function AddRouteForm({
           </select>
         </div>
 
+        {/* Render the rest of the form only when a district is selected */}
         {selectedDistrict && (
           <>
-            {/* 3. Map View */}
+            {/* 2. Map View */}
             <div className="my-6 h-[300px] w-full rounded-md overflow-hidden">
               <RouteMap
                 stops={stops}
@@ -150,7 +131,7 @@ export default function AddRouteForm({
               />
             </div>
 
-            {/* 4. Current Stops List */}
+            {/* 3. Current Stops List */}
             <div className="space-y-2">
               <FormLabel>경유지 목록 (최대 5개)</FormLabel>
               {stops.length > 0 ? (
@@ -190,7 +171,7 @@ export default function AddRouteForm({
               )}
             </div>
 
-            {/* 5. Add New Stop Section */}
+            {/* 4. Add New Stop Section */}
             {stops.length < 5 && (
               <div className="p-4 space-y-3 border rounded-md bg-gray-50">
                 <h3 className="font-semibold">새 경유지 추가</h3>
@@ -235,6 +216,39 @@ export default function AddRouteForm({
                 </Button>
               </div>
             )}
+
+            {/* 5. Route Details */}
+            <div className="space-y-4 pt-4 border-t">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>루트 이름</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="예: 강남역 불금 루트" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>설명</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="이 루트에 대한 설명을 적어주세요"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </>
         )}
 
@@ -243,11 +257,20 @@ export default function AddRouteForm({
           <Button type="button" variant="outlined" onClick={onClose}>
             취소
           </Button>
-          <Button type="submit" disabled={stops.length === 0}>
-            루트 등록
+          <Button type="submit" disabled={isPending || !form.formState.isValid}>
+            {isPending ? '등록 중...' : '루트 등록'}
           </Button>
         </div>
       </form>
+
+      <ConfirmationDialog
+        isOpen={isConfirmationDialogOpen}
+        onClose={handleCancelDistrictChange}
+        title="자치구 변경 확인"
+        message="자치구를 변경하면 현재 추가된 모든 경유지가 삭제됩니다. 계속하시겠습니까?"
+        onConfirm={handleConfirmDistrictChange}
+        onCancel={handleCancelDistrictChange}
+      />
     </Form>
   );
 }

@@ -13,6 +13,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from '~/src/components/common/form';
 import Input from '~/src/components/common/input';
 
@@ -36,15 +37,18 @@ export default function LoginForm() {
       });
 
       if (result?.error) {
-        console.error(result.error);
-        alert('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+        form.setError('root.serverError', {
+          message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        });
         return;
       }
 
       router.push('/');
     } catch (error) {
       console.error(error);
-      alert('로그인 중 오류가 발생했습니다.');
+      form.setError('root.serverError', {
+        message: '로그인 중 알 수 없는 오류가 발생했습니다.',
+      });
     }
   }
 
@@ -66,6 +70,7 @@ export default function LoginForm() {
                 placeholder="이메일을 입력해주세요"
                 {...field}
               />
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -81,9 +86,15 @@ export default function LoginForm() {
                 placeholder="비밀번호를 입력해주세요"
                 {...field}
               />
+              <FormMessage />
             </FormItem>
           )}
         />
+        {form.formState.errors.root?.serverError && (
+          <FormMessage className="text-center">
+            {form.formState.errors.root.serverError.message}
+          </FormMessage>
+        )}
         <Button
           type="submit"
           disabled={!form.formState.isDirty || form.formState.isSubmitting}

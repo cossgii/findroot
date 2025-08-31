@@ -23,16 +23,18 @@ export default function PlaceSearchInput({
 
   return (
     <div>
-      <div className="flex space-x-2">
-        <Input
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          placeholder="장소 이름 또는 주소를 검색하세요"
-        />
+      <div className="flex items-center space-x-2">
+        <div className="flex-grow">
+          <Input
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            placeholder="장소 이름 또는 주소를 검색하세요"
+          />
+        </div>
         <Button
           type="button"
           onClick={handleSearch}
-          className="w-auto px-4"
+          className="w-auto flex-shrink-0 px-4"
           disabled={!isKakaoPlacesServiceReady}
         >
           검색

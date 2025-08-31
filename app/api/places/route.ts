@@ -5,6 +5,7 @@ import { createPlaceSchema } from '~/src/services/place/place-schema';
 import {
   createPlace,
   getPlacesForFeed,
+  DuplicatePlaceError,
 } from '~/src/services/place/placeService';
 
 // GET /api/places - 피드를 위한 장소 목록 조회
@@ -45,6 +46,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newPlace, { status: 201 });
   } catch (error) {
+    // Handle DuplicatePlaceError
+    if (error instanceof DuplicatePlaceError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 409 } // 409 Conflict
+      );
+    }
     // Zod validation errors are handled here
     if (error instanceof Error && 'issues' in error) {
       return NextResponse.json(

@@ -5,15 +5,31 @@ import { Place, RouteStopLabel } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 import { z } from 'zod';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSetAtom } from 'jotai';
+import { addToastAtom } from '~/src/stores/toast-store';
 
-// Define the shape of a stop in the route creation UI
+const _apiPayloadSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  districtId: z.string().nullable(),
+  places: z.array(
+    z.object({
+      placeId: z.string(),
+      order: z.number().int(),
+      label: z.enum(['MEAL', 'CAFE', 'BAR']),
+    }),
+  ),
+});
+
+type ApiPayload = z.infer<typeof _apiPayloadSchema>;
+
 export interface RouteStop {
-  listId: string; // Unique ID for React list operations
+  listId: string;
   place: Place;
   label: RouteStopLabel;
 }
 
-// Define the Zod schema for the form itself (name and description)
 const routeDetailsSchema = z.object({
   name: z.string().min(1, { message: '루트 이름을 입력해주세요.' }),
   description: z.string().optional(),
@@ -29,13 +45,31 @@ interface UseAddRouteFormProps {
 const MAX_STOPS = 5;
 const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 };
 
+const createRouteApi = async (payload: ApiPayload) => {
+  const response = await fetch('/api/routes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to create route');
+  }
+  return response.json();
+};
+
 export const useAddRouteForm = ({
   onClose,
   onRouteAdded,
 }: UseAddRouteFormProps) => {
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
+  const addToast = useSetAtom(addToastAtom);
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
+    useState(false);
   const form = useForm<RouteDetails>({
     resolver: zodResolver(routeDetailsSchema),
+    mode: 'onTouched',
     defaultValues: {
       name: '',
       description: '',
@@ -47,9 +81,9 @@ export const useAddRouteForm = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  const [pendingDistrictId, setPendingDistrictId] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState(SEOUL_CENTER);
 
-  // Fetch all places created by the user
   useEffect(() => {
     const fetchUserPlaces = async () => {
       if (!session?.user?.id) {
@@ -58,7 +92,9 @@ export const useAddRouteForm = ({
       }
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/users/${session.user.id}/places/all`);
+        const response = await fetch(
+          `/api/users/${session.user.id}/places/all`,
+        );
         if (!response.ok) {
           throw new Error('Failed to fetch user places');
         }
@@ -75,16 +111,38 @@ export const useAddRouteForm = ({
     fetchUserPlaces();
   }, [session]);
 
-  // --- Stop Management Functions ---
+  const { mutate: addRouteMutation, isPending } = useMutation({
+    mutationFn: createRouteApi,
+    onSuccess: () => {
+      addToast({
+        message: '루트가 성공적으로 등록되었습니다.',
+        duration: 3000,
+      });
+      onRouteAdded();
+      onClose();
+      queryClient.invalidateQueries({
+        queryKey: ['user', session?.user?.id, 'routes', 'created'],
+      });
+    },
+    onError: (error) => {
+      addToast({ message: `루트 등록 실패: ${error.message}`, duration: 5000 });
+      console.error('Error adding route:', error);
+    },
+  });
 
   const addStop = (place: Place, label: RouteStopLabel) => {
     if (stops.length >= MAX_STOPS) {
-      alert(`경유지는 최대 ${MAX_STOPS}개까지 추가할 수 있습니다.`);
+      addToast({
+        message: `경유지는 최대 ${MAX_STOPS}개까지 추가할 수 있습니다.`,
+      });
       return;
     }
     setStops((prev) => {
-      const newStops = [...prev, { listId: Date.now().toString(), place, label }];
-      setMapCenter({ lat: place.latitude, lng: place.longitude }); // Update map center
+      const newStops = [
+        ...prev,
+        { listId: Date.now().toString(), place, label },
+      ];
+      setMapCenter({ lat: place.latitude, lng: place.longitude });
       return newStops;
     });
   };
@@ -94,7 +152,19 @@ export const useAddRouteForm = ({
       const newStops = prev.filter((stop) => stop.listId !== listId);
       if (newStops.length > 0) {
         const lastStop = newStops[newStops.length - 1];
-        setMapCenter({ lat: lastStop.place.latitude, lng: lastStop.place.longitude });
+        setMapCenter({
+          lat: lastStop.place.latitude,
+          lng: lastStop.place.longitude,
+        });
+      } else if (selectedDistrict) {
+        const districtInfo = SEOUL_DISTRICTS.find(
+          (d) => d.id === selectedDistrict,
+        );
+        setMapCenter(
+          districtInfo
+            ? { lat: districtInfo.lat, lng: districtInfo.lng }
+            : SEOUL_CENTER,
+        );
       } else {
         setMapCenter(SEOUL_CENTER);
       }
@@ -102,73 +172,52 @@ export const useAddRouteForm = ({
     });
   };
 
-  const updateStopLabel = (listId: string, newLabel: RouteStopLabel) => {
-    setStops((prev) =>
-      prev.map((stop) =>
-        stop.listId === listId ? { ...stop, label: newLabel } : stop,
-      ),
-    );
-  };
-
-  const reorderStops = (sourceIndex: number, destinationIndex: number) => {
-    setStops((prev) => {
-      const result = Array.from(prev);
-      const [removed] = result.splice(sourceIndex, 1);
-      result.splice(destinationIndex, 0, removed);
-      return result;
-    });
-  };
-
-  // --- District and Map Functions ---
-  const handleDistrictChange = (districtId: string) => {
-    setSelectedDistrict(districtId);
-    const districtInfo = SEOUL_DISTRICTS.find((d) => d.id === districtId);
+  const handleConfirmDistrictChange = () => {
+    setStops([]);
+    setSelectedDistrict(pendingDistrictId);
+    const districtInfo = SEOUL_DISTRICTS.find((d) => d.id === pendingDistrictId);
     if (districtInfo) {
       setMapCenter({ lat: districtInfo.lat, lng: districtInfo.lng });
+    }
+    setPendingDistrictId(null);
+    setIsConfirmationDialogOpen(false);
+  };
+
+  const handleCancelDistrictChange = () => {
+    setPendingDistrictId(null);
+    setIsConfirmationDialogOpen(false);
+  };
+
+  const handleDistrictChange = (newDistrictId: string) => {
+    if (stops.length > 0 && newDistrictId !== selectedDistrict) {
+      setPendingDistrictId(newDistrictId);
+      setIsConfirmationDialogOpen(true);
     } else {
-      setMapCenter(SEOUL_CENTER);
+      setSelectedDistrict(newDistrictId);
+      const districtInfo = SEOUL_DISTRICTS.find((d) => d.id === newDistrictId);
+      if (districtInfo) {
+        setMapCenter({ lat: districtInfo.lat, lng: districtInfo.lng });
+      }
     }
   };
 
-  // --- Form Submission ---
-
-  const onSubmit = async (data: RouteDetails) => {
+  const onSubmit = (data: RouteDetails) => {
     if (stops.length === 0) {
-      alert('경유지를 하나 이상 추가해주세요.');
+      addToast({ message: '경유지를 하나 이상 추가해주세요.' });
       return;
     }
 
-    const placesForApi = stops.map((stop, index) => ({
-      placeId: stop.place.id,
-      order: index + 1,
-      label: stop.label,
-    }));
-
     const payload = {
       ...data,
-      places: placesForApi,
-      // Add districtId to the payload if a district is selected
       districtId: selectedDistrict,
+      places: stops.map((stop, index) => ({
+        placeId: stop.place.id,
+        order: index + 1,
+        label: stop.label,
+      })),
     };
 
-    try {
-      const response = await fetch('/api/routes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create route');
-      }
-
-      alert('루트가 성공적으로 생성되었습니다.');
-      onRouteAdded();
-      onClose();
-    } catch (err) {
-      alert('루트 생성에 실패했습니다.');
-      console.error(err);
-    }
+    addRouteMutation(payload);
   };
 
   return {
@@ -179,11 +228,14 @@ export const useAddRouteForm = ({
     error,
     addStop,
     removeStop,
-    updateStopLabel,
-    reorderStops,
     onSubmit,
     selectedDistrict,
     mapCenter,
     handleDistrictChange,
+    isPending,
+    isConfirmationDialogOpen,
+    handleConfirmDistrictChange,
+    handleCancelDistrictChange,
+    pendingDistrictId,
   };
 };

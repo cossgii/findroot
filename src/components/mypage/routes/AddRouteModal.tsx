@@ -28,6 +28,10 @@ export default function AddRouteModal({
     selectedDistrict,
     mapCenter,
     handleDistrictChange,
+    isPending,
+    isConfirmationDialogOpen,
+    handleConfirmDistrictChange,
+    handleCancelDistrictChange,
   } = useAddRouteForm({ onClose, onRouteAdded });
 
   return (
@@ -47,6 +51,10 @@ export default function AddRouteModal({
           selectedDistrict={selectedDistrict}
           mapCenter={mapCenter}
           handleDistrictChange={handleDistrictChange}
+          isPending={isPending}
+          isConfirmationDialogOpen={isConfirmationDialogOpen}
+          handleConfirmDistrictChange={handleConfirmDistrictChange}
+          handleCancelDistrictChange={handleCancelDistrictChange}
         />
       </div>
     </Modal>

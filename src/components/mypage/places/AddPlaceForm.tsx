@@ -23,12 +23,14 @@ interface AddPlaceFormProps {
   form: UseFormReturn<AddPlaceFormValues>;
   onSubmit: (values: AddPlaceFormValues) => void;
   onClose: () => void;
+  isPending: boolean;
 }
 
 export default function AddPlaceForm({
   form,
   onSubmit,
   onClose,
+  isPending,
 }: AddPlaceFormProps) {
   const {
     searchKeyword,
@@ -171,7 +173,7 @@ export default function AddPlaceForm({
                 <FormItem>
                   <FormLabel>설명</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="이 장소에 대한 설명을 적어주세요" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -200,10 +202,17 @@ export default function AddPlaceForm({
           </>
         )}
         <div className="flex justify-end space-x-2 mt-6">
-          <Button type="button" variant="outlined" onClick={onClose}>
+          <Button
+            type="button"
+            variant="outlined"
+            onClick={onClose}
+            disabled={isPending}
+          >
             취소
           </Button>
-          <Button type="submit">등록</Button>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? '등록 중...' : '등록'}
+          </Button>
         </div>
       </form>
     </Form>
