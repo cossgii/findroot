@@ -14,7 +14,7 @@ function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(p
 // Schema for creating a new route, used for validating client data
 export const NewRouteApiSchema = z.object({
   name: z.string().min(1),
-  description: z.string().optional(),
+  description: z.string().min(1, { message: '설명을 입력해주세요.' }),
   districtId: z.string().optional(), // districtId is now optional on the route itself
   places: z.array(
     z.object({
@@ -30,7 +30,7 @@ type NewRouteInput = z.infer<typeof NewRouteApiSchema>;
 // Schema for updating an existing route
 export const UpdateRouteApiSchema = z.object({
   name: z.string().min(1).optional(),
-  description: z.string().optional(),
+  description: z.string().min(1, { message: '설명을 입력해주세요.' }).optional(),
   districtId: z.string().optional(),
   // For updating places, we'll expect a full new list of stops
   // The client will send the complete desired state of places for the route

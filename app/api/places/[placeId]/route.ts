@@ -19,6 +19,7 @@ const updatePlaceSchema = z.object({
   address: z.string().optional(),
   district: z.string().optional(),
   description: z.string().optional(),
+  link: z.string().optional().nullable().transform(e => e === '' ? null : e), // Add link field, transform empty string to null
   category: z.nativeEnum(PlaceCategory).optional(),
 });
 

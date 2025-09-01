@@ -10,8 +10,6 @@ interface RestaurantDetailModalContentProps {
 export default function RestaurantDetailModalContent({
   restaurant,
 }: RestaurantDetailModalContentProps) {
-  const mockLink = `https://search.naver.com/search.naver?query=${restaurant.name} ${restaurant.address}`;
-
   return (
     <div className="p-6">
       <div className="flex justify-between items-start mb-4">
@@ -37,14 +35,29 @@ export default function RestaurantDetailModalContent({
 
       <div>
         <h4 className="text-xl font-semibold mb-2">참고 링크</h4>
-        <a
-          href={mockLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:underline"
-        >
-          네이버 검색 결과 보기
-        </a>
+        {restaurant.link ? (
+          <a
+            href={
+              restaurant.link.startsWith('http://') || restaurant.link.startsWith('https://')
+                ? restaurant.link
+                : `https://${restaurant.link}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            유저 공유 링크
+          </a>
+        ) : (
+          <a
+            href={`https://map.kakao.com/?q=${restaurant.name}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            카카오맵에서 보기
+          </a>
+        )}
       </div>
     </div>
   );

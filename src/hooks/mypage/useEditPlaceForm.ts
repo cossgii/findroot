@@ -66,6 +66,7 @@ export const useEditPlaceForm = ({
         longitude: placeData.longitude,
         district: placeData.district || '',
         description: placeData.description || '',
+        link: placeData.link || '', // Add the link field
         category: placeData.category,
       });
     }

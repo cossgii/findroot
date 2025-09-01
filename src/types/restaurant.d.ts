@@ -6,6 +6,7 @@ export type Restaurant = Omit<Place, 'createdAt' | 'updatedAt'> & {
   updatedAt: string;
   likesCount: number;
   isLiked: boolean;
+  link?: string | null; // Allow null for the link field
 };
 
 // New type for Route with aggregated like data

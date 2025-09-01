@@ -181,6 +181,19 @@ export default function AddPlaceForm({
             />
             <FormField
               control={form.control}
+              name="link"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>링크 (선택 사항)</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="관련 웹사이트 링크를 입력하세요 (예: https://example.com)" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="category"
               render={({ field }) => (
                 <FormItem>

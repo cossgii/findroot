@@ -27,6 +27,7 @@ export default function RouteMap({ stops, center, districtPlaces }: RouteMapProp
       longitude: place.longitude,
       title: place.name,
       id: place.id,
+      category: place.category,
     }));
   }, [districtPlaces, routePlaces]);
 

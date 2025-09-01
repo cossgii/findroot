@@ -71,7 +71,6 @@ export default function CreatedContentList({
         >
           <div>
             <p className="font-semibold">{route.name}</p>
-            <p className="text-sm text-gray-500">{route.description}</p>
           </div>
           <div className="flex space-x-2 flex-shrink-0">
             <Button
