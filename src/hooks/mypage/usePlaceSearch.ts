@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
+import { useSetAtom } from 'jotai';
 import { addToastAtom } from '~/src/stores/toast-store';
+import { useKakaoMapLoader } from '~/src/hooks/useKakaoMapLoader';
 
 export const usePlaceSearch = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -16,7 +16,7 @@ export const usePlaceSearch = () => {
     id: string;
     district: string | null; // Added district field
   } | null>(null);
-  const isKakaoPlacesServiceReady = useAtomValue(isKakaoMapApiLoadedAtom);
+  const isKakaoPlacesServiceReady = useKakaoMapLoader();
   const addToast = useSetAtom(addToastAtom);
 
   const handleSearch = () => {

@@ -3,8 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
 import {
   createRoute,
-  NewRouteApiSchema,
 } from '~/src/services/route/routeService';
+import { NewRouteApiSchema } from '~/src/services/route/route-schema';
 import { z } from 'zod';
 
 export async function POST(request: Request) {

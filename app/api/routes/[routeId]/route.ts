@@ -5,8 +5,8 @@ import {
   deleteRoute,
   getRouteById,
   updateRoute,
-  UpdateRouteApiSchema,
 } from '~/src/services/route/routeService';
+import { UpdateRouteApiSchema } from '~/src/services/route/route-schema';
 import { z } from 'zod';
 
  interface RouteRouteParams {

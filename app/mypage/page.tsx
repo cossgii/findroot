@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import MainContainer from '~/src/components/layout/main-container';
 import MyPageTabs, { type MyPageTab } from '~/src/components/mypage/MyPageTabs';
+import { PlaceCategory } from '@prisma/client';
 
 import { useMyPageData } from '~/src/hooks/mypage/useMyPageData';
 import { useMyPageModals } from '~/src/hooks/mypage/useMyPageModals';
@@ -14,7 +15,8 @@ import MessagesTabPanel from '~/src/components/mypage/panels/MessagesTabPanel';
 
 const MyPage = () => {
   const [activeTab, setActiveTab] = useState<MyPageTab>('profile');
-  const [selectedDistrict, setSelectedDistrict] = useState('all'); // Added
+  const [selectedDistrict, setSelectedDistrict] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<PlaceCategory | undefined>();
 
   const {
     session,
@@ -31,7 +33,12 @@ const MyPage = () => {
     setLikedRoutes,
     isLoading,
     refreshContent,
-  } = useMyPageData(activeTab, selectedDistrict); // Pass districtId
+  } = useMyPageData(activeTab, selectedDistrict, selectedCategory);
+
+  useEffect(() => {
+    setSelectedCategory(undefined);
+    setSelectedDistrict('all');
+  }, [activeTab]);
 
   const {
     openAddPlaceModal,
@@ -103,6 +110,8 @@ const MyPage = () => {
             onRoutePageChange={(page) => setMyCreatedRoutes(prev => ({ ...prev, currentPage: page }))}
             selectedDistrict={selectedDistrict}
             onDistrictChange={setSelectedDistrict}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
           />
         );
       case 'likes':
@@ -120,6 +129,8 @@ const MyPage = () => {
             onRoutePageChange={(page) => setLikedRoutes(prev => ({ ...prev, currentPage: page }))}
             selectedDistrict={selectedDistrict}
             onDistrictChange={setSelectedDistrict}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
           />
         );
       case 'messages':

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { getLikedPlacesByUserId } from '~/src/services/like/likeService';
+import { PlaceCategory } from '@prisma/client';
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -13,6 +14,7 @@ export async function GET(request: Request) {
   const page = parseInt(searchParams.get('page') || '1', 10);
   const limit = parseInt(searchParams.get('limit') || '5', 10);
   const districtId = searchParams.get('districtId');
+  const category = searchParams.get('category') as PlaceCategory | null;
 
   try {
     const paginatedData = await getLikedPlacesByUserId(
@@ -20,6 +22,7 @@ export async function GET(request: Request) {
       page,
       limit,
       districtId,
+      category,
     );
     return NextResponse.json(paginatedData);
   } catch (error) {

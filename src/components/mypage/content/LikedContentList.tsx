@@ -9,8 +9,7 @@ import { PaginatedResponse } from '~/src/hooks/mypage/useMyPageData';
 import { useSetAtom } from 'jotai';
 import { addToastAtom, removeToastAtom } from '~/src/stores/toast-store';
 import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer';
-
-
+import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
 interface LikedContentListProps {
   activeSubTab: MyPageSubTab;
@@ -129,46 +128,55 @@ export default function LikedContentList({
 
   return likedRoutes.data.length > 0 ? (
     <ul className="space-y-3">
-      {likedRoutes.data.map((route: RouteWithLikeData) => (
-        <li
-          key={route.id}
-          className={`bg-white rounded-lg shadow-md p-4 cursor-pointer transition-all hover:shadow-lg ${
-            expandedRouteId === route.id
-              ? 'bg-blue-100 ring-2 ring-blue-500'
-              : 'hover:bg-gray-50'
-          }`}
-          onClick={() =>
-            setExpandedRouteId((prev) =>
-              prev === route.id ? null : route.id || null,
-            )
-          }
-        >
-          <div className="flex justify-between items-start">
-            <h3 className="text-lg font-bold">{route.name}</h3>
-            <LikeButton
-              routeId={route.id}
-              initialIsLiked={route.isLiked || false}
-              initialLikesCount={route.likesCount || 0}
-              onLikeToggle={(handleLike) => handleUnlikeWithUndo(handleLike, route, false)}
-            />
-          </div>
-          {expandedRouteId === route.id && (
-            <div className="mt-4 pt-4 border-t">
-              {isLoadingRouteDetails ? (
-                <p className="text-gray-500">루트 상세 정보 불러오는 중...</p>
-              ) : routeDetails ? (
-                <div className="flex flex-col space-y-4">
-                  {routeDetails.places.map(({ place }) => (
-                    <RestaurantCard key={place.id} place={place as Restaurant} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-red-500">루트 정보를 불러오지 못했습니다.</p>
-              )}
+      {likedRoutes.data.map((route: RouteWithLikeData) => {
+        const districtName = route.districtId
+          ? SEOUL_DISTRICTS.find(d => d.id === route.districtId)?.name
+          : null;
+
+        return (
+          <li
+            key={route.id}
+            className={`bg-white rounded-lg shadow-md p-4 cursor-pointer transition-all hover:shadow-lg ${
+              expandedRouteId === route.id
+                ? 'bg-blue-100 ring-2 ring-blue-500'
+                : 'hover:bg-gray-50'
+            }`}
+            onClick={() =>
+              setExpandedRouteId((prev) =>
+                prev === route.id ? null : route.id || null,
+              )
+            }
+          >
+            <div className="flex justify-between items-start">
+              <div className="flex-grow pr-2">
+                <h3 className="text-lg font-bold">{route.name}</h3>
+                {districtName && <p className="text-sm text-gray-500 mt-1">{districtName}</p>}
+              </div>
+              <LikeButton
+                routeId={route.id}
+                initialIsLiked={route.isLiked || false}
+                initialLikesCount={route.likesCount || 0}
+                onLikeToggle={(handleLike) => handleUnlikeWithUndo(handleLike, route, false)}
+              />
             </div>
-          )}
-        </li>
-      ))}
+            {expandedRouteId === route.id && (
+              <div className="mt-4 pt-4 border-t">
+                {isLoadingRouteDetails ? (
+                  <p className="text-gray-500">루트 상세 정보 불러오는 중...</p>
+                ) : routeDetails ? (
+                  <div className="flex flex-col space-y-4">
+                    {routeDetails.places.map(({ place, label }) => (
+                      <RestaurantCard key={place.id} place={place as Restaurant} label={label} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-red-500">루트 정보를 불러오지 못했습니다.</p>
+                )}
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   ) : (
     <p className="text-gray-500 text-center py-10">

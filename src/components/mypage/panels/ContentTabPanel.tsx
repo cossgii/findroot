@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { Route } from '@prisma/client';
+import { useState, useEffect } from 'react';
+import { PlaceCategory, Route } from '@prisma/client';
 import MyPageContentToolbar from '~/src/components/mypage/MyPageContentToolbar';
 import CreatedContentList from '~/src/components/mypage/content/CreatedContentList';
 import Pagination from '~/src/components/common/Pagination';
 import { Restaurant } from '~/src/types/restaurant';
+import CategoryFilter from '~/src/components/mypage/CategoryFilter';
 
 interface ContentTabPanelProps {
   myCreatedPlaces: Restaurant[];
@@ -24,6 +25,8 @@ interface ContentTabPanelProps {
   onRoutePageChange: (page: number) => void;
   selectedDistrict: string;
   onDistrictChange: (districtId: string) => void;
+  selectedCategory: PlaceCategory | undefined;
+  onCategoryChange: (category: PlaceCategory | undefined) => void;
 }
 
 export default function ContentTabPanel({
@@ -37,9 +40,21 @@ export default function ContentTabPanel({
   onRoutePageChange,
   selectedDistrict,
   onDistrictChange,
+  selectedCategory,
+  onCategoryChange,
   ...handlers
 }: ContentTabPanelProps) {
   const [activeSubTab, setActiveSubTab] = useState<'places' | 'routes'>('places');
+
+  useEffect(() => {
+    onPlacePageChange(1);
+    onRoutePageChange(1);
+  }, [activeSubTab, onPlacePageChange, onRoutePageChange]);
+
+  const handleCategoryChange = (category: PlaceCategory | undefined) => {
+    onPlacePageChange(1);
+    onCategoryChange(category);
+  };
 
   return (
     <div>
@@ -52,6 +67,12 @@ export default function ContentTabPanel({
         onAddPlace={handlers.onAddPlace}
         onAddRoute={handlers.onAddRoute}
       />
+      {activeSubTab === 'places' && (
+        <CategoryFilter
+          selectedCategory={selectedCategory}
+          onCategoryChange={handleCategoryChange}
+        />
+      )}
       <CreatedContentList
         activeSubTab={activeSubTab}
         places={myCreatedPlaces}

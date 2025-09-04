@@ -22,7 +22,7 @@ const createPlaceApi = async (payload: AddPlaceFormValues) => {
   });
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to create place');
+    throw new Error(errorData.error || 'Failed to create place');
   }
   return response.json();
 };

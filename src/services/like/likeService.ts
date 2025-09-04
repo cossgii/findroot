@@ -1,8 +1,13 @@
+import { PlaceCategory } from '@prisma/client';
 import { db } from '~/lib/db';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
-// Helper function to convert Date objects to ISO strings
-function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(obj: T): Omit<T, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string } {
+function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
+  obj: T,
+): Omit<T, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
+} {
   return {
     ...obj,
     createdAt: obj.createdAt.toISOString(),
@@ -28,7 +33,10 @@ export async function addLike(userId: string, { placeId, routeId }: LikeInput) {
   });
 }
 
-export async function removeLike(userId: string, { placeId, routeId }: LikeInput) {
+export async function removeLike(
+  userId: string,
+  { placeId, routeId }: LikeInput,
+) {
   if (!placeId && !routeId) {
     throw new Error('Place ID or Route ID is required.');
   }
@@ -41,7 +49,10 @@ export async function removeLike(userId: string, { placeId, routeId }: LikeInput
   });
 }
 
-export async function getLikeStatus(userId: string, { placeId, routeId }: LikeInput) {
+export async function getLikeStatus(
+  userId: string,
+  { placeId, routeId }: LikeInput,
+) {
   if (!placeId && !routeId) {
     return false;
   }
@@ -76,19 +87,23 @@ export async function getLikedPlacesByUserId(
   page: number = 1,
   limit: number = 5,
   districtId?: string | null,
+  category?: PlaceCategory | null,
 ) {
   const whereClause: any = {
     userId,
     placeId: { not: null },
+    place: {},
   };
 
   if (districtId && districtId !== 'all') {
     const districtName = SEOUL_DISTRICTS.find((d) => d.id === districtId)?.name;
     if (districtName) {
-      whereClause.place = {
-        district: districtName,
-      };
+      whereClause.place.district = districtName;
     }
+  }
+
+  if (category) {
+    whereClause.place.category = category;
   }
 
   const [likedItems, totalCount] = await db.$transaction([

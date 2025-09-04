@@ -219,6 +219,7 @@ export async function getPlacesByCreatorId(
   limit: number = 5,
   district?: string | null,
   currentUserId?: string,
+  category?: PlaceCategory | null,
 ) {
   const whereClause: any = { creatorId };
 
@@ -227,6 +228,10 @@ export async function getPlacesByCreatorId(
     if (districtName) {
       whereClause.district = districtName;
     }
+  }
+
+  if (category) {
+    whereClause.category = category;
   }
 
   const [placesWithLikes, totalCount] = await db.$transaction([

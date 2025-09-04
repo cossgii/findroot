@@ -1,6 +1,9 @@
 'use client';
 
 import { useAtom } from 'jotai';
+import dynamic from 'next/dynamic';
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   modalAtom,
   InfoMessageModalProps,
@@ -12,24 +15,46 @@ import {
 } from '~/src/stores/app-store';
 import { Restaurant } from '~/src/types/restaurant';
 
-// Import all modal components
+// Import non-dynamic components
 import Modal from '~/src/components/districts/modal';
 import RestaurantDetailModalContent from '~/src/components/districts/restaurant-detail-modal-content';
-import AddPlaceModal from '~/src/components/mypage/places/AddPlaceModal';
-import AddRouteModal from '~/src/components/mypage/routes/AddRouteModal';
-import EditPlaceModal from '~/src/components/mypage/places/EditPlaceModal';
-import EditRouteModal from '~/src/components/mypage/routes/EditRouteModal';
 import { useQuery } from '@tanstack/react-query';
 
-/**
- * A helper component to fetch data for the restaurant detail modal.
- * This keeps the data fetching logic isolated to when it's needed.
- */
+// Dynamically import heavy modal components
+const AddPlaceModal = dynamic(
+  () => import('~/src/components/mypage/places/AddPlaceModal'),
+  {
+    loading: () => <div className="p-6">로딩 중...</div>,
+  },
+);
+const AddRouteModal = dynamic(
+  () => import('~/src/components/mypage/routes/AddRouteModal'),
+  {
+    loading: () => <div className="p-6">로딩 중...</div>,
+  },
+);
+const EditPlaceModal = dynamic(
+  () => import('~/src/components/mypage/places/EditPlaceModal'),
+  {
+    loading: () => <div className="p-6">로딩 중...</div>,
+  },
+);
+const EditRouteModal = dynamic(
+  () => import('~/src/components/mypage/routes/EditRouteModal'),
+  {
+    loading: () => <div className="p-6">로딩 중...</div>,
+  },
+);
+
 const RestaurantDetailModal = ({
   restaurantId,
   onClose,
 }: RestaurantDetailModalProps & { onClose: () => void }) => {
-  const { data: restaurant, isLoading, error } = useQuery<Restaurant, Error>({
+  const {
+    data: restaurant,
+    isLoading,
+    error,
+  } = useQuery<Restaurant, Error>({
     queryKey: ['place', restaurantId],
     queryFn: async () => {
       const response = await fetch(`/api/places/${restaurantId}`);
@@ -76,14 +101,21 @@ const InfoMessageModal = ({
 
 export default function GlobalModalRenderer() {
   const [modal, setModal] = useAtom(modalAtom);
-
-  if (!modal.type) {
-    return null;
-  }
+  const pathname = usePathname();
 
   const closeModal = () => {
     setModal({ type: null, props: {} });
   };
+
+  useEffect(() => {
+    if (modal.type) {
+      closeModal();
+    }
+  }, [pathname]);
+
+  if (!modal.type) {
+    return null;
+  }
 
   switch (modal.type) {
     case 'RESTAURANT_DETAIL':

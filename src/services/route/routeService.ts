@@ -1,49 +1,26 @@
 import { db } from '~/lib/db';
 import { z } from 'zod';
 import { RouteStopLabel, Prisma } from '@prisma/client';
+import {
+  NewRouteApiSchema,
+  UpdateRouteApiSchema,
+  NewRouteInput,
+  UpdateRouteInput,
+} from './route-schema';
 
 // Helper function to convert Date objects to ISO strings
-function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(place: T): Omit<T, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string } {
+function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
+  place: T,
+): Omit<T, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
+} {
   return {
     ...place,
     createdAt: place.createdAt.toISOString(),
     updatedAt: place.updatedAt.toISOString(),
   };
 }
-
-// Schema for creating a new route, used for validating client data
-export const NewRouteApiSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().min(1, { message: '설명을 입력해주세요.' }),
-  districtId: z.string().optional(), // districtId is now optional on the route itself
-  places: z.array(
-    z.object({
-      placeId: z.string(),
-      order: z.number().int(),
-      label: z.enum(['MEAL', 'CAFE', 'BAR']),
-    }),
-  ),
-});
-
-type NewRouteInput = z.infer<typeof NewRouteApiSchema>;
-
-// Schema for updating an existing route
-export const UpdateRouteApiSchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().min(1, { message: '설명을 입력해주세요.' }).optional(),
-  districtId: z.string().optional(),
-  // For updating places, we'll expect a full new list of stops
-  // The client will send the complete desired state of places for the route
-  places: z.array(
-    z.object({
-      placeId: z.string(),
-      order: z.number().int(),
-      label: z.enum(['MEAL', 'CAFE', 'BAR']),
-    }),
-  ).optional(), // Places array itself is optional for update
-});
-
-type UpdateRouteInput = z.infer<typeof UpdateRouteApiSchema>;
 
 /**
  * Creates a new route with a flexible number of stops.
@@ -112,26 +89,30 @@ export async function getRouteById(id: string, userId?: string) {
     return null;
   }
 
-  const placeIds = routeWithLikes.places.map(p => p.place.id);
+  const allPlaceIds = (routeWithLikes.places || []).map((p) => p.place.id);
 
   // 2. Get like counts for all places in one query
   const likeCounts = await db.like.groupBy({
     by: ['placeId'],
-    where: { placeId: { in: placeIds } },
+    where: { placeId: { in: allPlaceIds } },
     _count: { placeId: true },
   });
 
   // 3. Get liked status for all places for the current user in one query
-  const userLikes = userId ? await db.like.findMany({
-    where: { userId, placeId: { in: placeIds } },
-    select: { placeId: true },
-  }) : [];
-  
-  const userLikedPlaceIds = new Set(userLikes.map(like => like.placeId));
-  const placeIdToLikeCountMap = new Map(likeCounts.map(item => [item.placeId, item._count.placeId]));
+  const userLikes = userId
+    ? await db.like.findMany({
+        where: { userId, placeId: { in: allPlaceIds } },
+        select: { placeId: true },
+      })
+    : [];
+
+  const userLikedPlaceIds = new Set(userLikes.map((like) => like.placeId));
+  const placeIdToLikeCountMap = new Map(
+    likeCounts.map((item) => [item.placeId, item._count.placeId]),
+  );
 
   // 4. Enrich the places data
-  const enrichedPlaces = routeWithLikes.places.map(routePlace => {
+  const enrichedPlaces = routeWithLikes.places.map((routePlace) => {
     const place = routePlace.place;
     return {
       ...routePlace,
@@ -144,7 +125,9 @@ export async function getRouteById(id: string, userId?: string) {
   });
 
   // 5. Construct final object
-  const isRouteLiked = !!(routeWithLikes.likes && routeWithLikes.likes.length > 0);
+  const isRouteLiked = !!(
+    routeWithLikes.likes && routeWithLikes.likes.length > 0
+  );
   const { _count, likes, ...routeData } = routeWithLikes;
 
   return {
@@ -198,7 +181,9 @@ export async function getRoutesByCreatorId(
     db.route.count({ where: whereClause }),
   ]);
 
-  const allPlaceIds = routesWithLikes.flatMap(route => route.places.map(rp => rp.place.id));
+  const allPlaceIds = routesWithLikes.flatMap((route) =>
+    (route.places || []).map((rp) => rp.place.id),
+  );
 
   const likeCounts = await db.like.groupBy({
     by: ['placeId'],
@@ -206,28 +191,32 @@ export async function getRoutesByCreatorId(
     _count: { placeId: true },
   });
 
-  const userLikes = creatorId ? await db.like.findMany({
-    where: { userId: creatorId, placeId: { in: allPlaceIds } },
-    select: { placeId: true },
-  }) : [];
+  const userLikes = creatorId
+    ? await db.like.findMany({
+        where: { userId: creatorId, placeId: { in: allPlaceIds } },
+        select: { placeId: true },
+      })
+    : [];
 
-  const userLikedPlaceIds = new Set(userLikes.map(like => like.placeId));
-  const placeIdToLikeCountMap = new Map(likeCounts.map(item => [item.placeId, item._count.placeId]));
+  const userLikedPlaceIds = new Set(userLikes.map((like) => like.placeId));
+  const placeIdToLikeCountMap = new Map(
+    likeCounts.map((item) => [item.placeId, item._count.placeId]),
+  );
 
   const routes = routesWithLikes.map(({ _count, likes, ...route }) => {
     const serializedRoute = serializeDatesInPlace(route);
-    const serializedPlaces = route.places.map(rp => ({
+    const serializedPlaces = route.places.map((rp) => ({
       ...rp,
       place: {
         ...serializeDatesInPlace(rp.place),
         likesCount: placeIdToLikeCountMap.get(rp.place.id) || 0,
         isLiked: userLikedPlaceIds.has(rp.place.id),
-      }
+      },
     }));
     return {
       ...serializedRoute,
       likesCount: _count.likes,
-      isLiked: likes.length > 0,
+      isLiked: (likes || []).length > 0,
       places: serializedPlaces,
     };
   });
@@ -249,11 +238,13 @@ export async function getRoutesByCreatorId(
 export async function getPublicRoutesByDistrict(
   districtId: string,
   currentUserId?: string,
+  page: number = 1,
+  limit: number = 5,
 ) {
   const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
   if (!MAIN_ACCOUNT_ID) {
     console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
-    return []; // Return empty array if not defined
+    return { routes: [], totalCount: 0, totalPages: 0, currentPage: page };
   }
 
   const whereClause: Prisma.RouteWhereInput = {
@@ -267,30 +258,37 @@ export async function getPublicRoutesByDistrict(
     whereClause.districtId = districtId;
   }
 
-  const routesWithLikes = await db.route.findMany({
-    where: whereClause,
-    include: {
-      ...routeInclude,
-      _count: {
-        select: { likes: true },
+  const [routesWithLikes, totalCount] = await db.$transaction([
+    db.route.findMany({
+      where: whereClause,
+      include: {
+        ...routeInclude,
+        _count: {
+          select: { likes: true },
+        },
+        likes: currentUserId
+          ? {
+              where: {
+                userId: currentUserId,
+              },
+              select: {
+                userId: true,
+              },
+            }
+          : undefined,
       },
-      likes: currentUserId
-        ? {
-            where: {
-              userId: currentUserId,
-            },
-            select: {
-              userId: true,
-            },
-          }
-        : false,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    db.route.count({ where: whereClause }),
+  ]);
 
-  const allPlaceIds = routesWithLikes.flatMap(route => route.places.map(rp => rp.place.id));
+  const allPlaceIds = routesWithLikes.flatMap((route) =>
+    (route.places || []).map((rp) => rp.place.id),
+  );
 
   const likeCounts = await db.like.groupBy({
     by: ['placeId'],
@@ -298,33 +296,42 @@ export async function getPublicRoutesByDistrict(
     _count: { placeId: true },
   });
 
-  const userLikes = currentUserId ? await db.like.findMany({
-    where: { userId: currentUserId, placeId: { in: allPlaceIds } },
-    select: { placeId: true },
-  }) : [];
+  const userLikes = currentUserId
+    ? await db.like.findMany({
+        where: { userId: currentUserId, placeId: { in: allPlaceIds } },
+        select: { placeId: true },
+      })
+    : [];
 
-  const userLikedPlaceIds = new Set(userLikes.map(like => like.placeId));
-  const placeIdToLikeCountMap = new Map(likeCounts.map(item => [item.placeId, item._count.placeId]));
+  const userLikedPlaceIds = new Set(userLikes.map((like) => like.placeId));
+  const placeIdToLikeCountMap = new Map(
+    likeCounts.map((item) => [item.placeId, item._count.placeId]),
+  );
 
   const routes = routesWithLikes.map(({ _count, likes, ...route }) => {
     const serializedRoute = serializeDatesInPlace(route);
-    const serializedPlaces = route.places.map(rp => ({
+    const serializedPlaces = route.places.map((rp) => ({
       ...rp,
       place: {
         ...serializeDatesInPlace(rp.place),
         likesCount: placeIdToLikeCountMap.get(rp.place.id) || 0,
         isLiked: userLikedPlaceIds.has(rp.place.id),
-      }
+      },
     }));
     return {
       ...serializedRoute,
       likesCount: _count.likes,
-      isLiked: likes.length > 0,
+      isLiked: (likes || []).length > 0,
       places: serializedPlaces,
     };
   });
 
-  return routes;
+  return {
+    routes,
+    totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+    currentPage: page,
+  };
 }
 
 /**
@@ -334,10 +341,7 @@ export async function getPublicRoutesByDistrict(
  * @returns The deleted route.
  * @throws Error if the route is not found or the user is not authorized.
  */
-export async function deleteRoute(
-  routeId: string,
-  userId: string,
-) {
+export async function deleteRoute(routeId: string, userId: string) {
   const routeToDelete = await db.route.findUnique({
     where: { id: routeId },
   });

@@ -1,10 +1,11 @@
 'use client';
 import RestaurantCard from '~/src/components/districts/restaurant-card';
 import LikeButton from '~/src/components/common/LikeButton';
-import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant'; // Added this import
+import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
+import { RouteStopLabel } from '@prisma/client';
 
-export interface RouteWithPlaces extends RouteWithLikeData { // Changed from Route to RouteWithLikeData
-  places: { place: Restaurant }[];
+export interface RouteWithPlaces extends RouteWithLikeData {
+  places: { place: Restaurant; label: RouteStopLabel }[];
 }
 
 interface RestaurantRouteContainerProps {
@@ -53,7 +54,6 @@ export default function RestaurantRouteContainer({
             />
           </div>
 
-          {/* Accordion Content: Show only if selected */}
           {selectedRouteId === route.id && (
             <div className="mt-4 pt-4 border-t">
               {route.description && (
@@ -61,12 +61,15 @@ export default function RestaurantRouteContainer({
                   {route.description}
                 </p>
               )}
-              <h4 className="text-lg font-semibold mt-2 mb-2">루트 상세 장소</h4>
+              <h4 className="text-lg font-semibold mt-2 mb-2">
+                루트 상세 장소
+              </h4>
               <div className="flex flex-col space-y-4">
-                {route.places.map(({ place }) => (
+                {route.places.map(({ place, label }) => (
                   <RestaurantCard
                     key={place.id}
                     place={place as Restaurant}
+                    label={label}
                   />
                 ))}
               </div>

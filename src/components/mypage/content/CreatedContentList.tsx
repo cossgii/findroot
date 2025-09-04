@@ -1,14 +1,14 @@
 'use client';
 
-
 import Button from '~/src/components/common/button';
 import { type MyPageSubTab } from '../MyPageTabs';
-import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant'; // Import new types
+import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
+import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
 interface CreatedContentListProps {
   activeSubTab: MyPageSubTab;
-  places: Restaurant[]; // Use Restaurant type
-  routes: RouteWithLikeData[]; // Use RouteWithLikeData type
+  places: Restaurant[];
+  routes: RouteWithLikeData[];
   onEditPlace: (id: string) => void;
   onDeletePlace: (id: string) => void;
   onEditRoute: (id: string) => void;
@@ -24,6 +24,7 @@ export default function CreatedContentList({
   onEditRoute,
   onDeleteRoute,
 }: CreatedContentListProps) {
+
   if (activeSubTab === 'places') {
     return places.length > 0 ? (
       <ul className="space-y-3">
@@ -34,7 +35,7 @@ export default function CreatedContentList({
           >
             <div>
               <p className="font-semibold">{place.name}</p>
-              <p className="text-sm text-gray-500">{place.address}</p>
+              {place.district && <p className="text-sm text-gray-500">{place.district}</p>}
             </div>
             <div className="flex space-x-2 flex-shrink-0">
               <Button
@@ -64,34 +65,41 @@ export default function CreatedContentList({
 
   return routes.length > 0 ? (
     <ul className="space-y-3">
-      {routes.map((route) => (
-        <li
-          key={route.id}
-          className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between"
-        >
-          <div>
-            <p className="font-semibold">{route.name}</p>
-          </div>
-          <div className="flex space-x-2 flex-shrink-0">
-            <Button
-              onClick={() => onEditRoute(route.id)}
-              variant="outlined"
-              size="small"
-              className="w-auto px-3 py-1 text-xs"
-            >
-              수정
-            </Button>
-            <Button
-              onClick={() => onDeleteRoute(route.id)}
-              variant="outlined"
-              size="small"
-              className="w-auto px-3 py-1 text-xs"
-            >
-              삭제
-            </Button>
-          </div>
-        </li>
-      ))}
+      {routes.map((route) => {
+        const districtName = route.districtId
+          ? SEOUL_DISTRICTS.find(d => d.id === route.districtId)?.name
+          : null;
+
+        return (
+          <li
+            key={route.id}
+            className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between"
+          >
+            <div>
+              <p className="font-semibold">{route.name}</p>
+              {districtName && <p className="text-sm text-gray-500">{districtName}</p>}
+            </div>
+            <div className="flex space-x-2 flex-shrink-0">
+              <Button
+                onClick={() => onEditRoute(route.id)}
+                variant="outlined"
+                size="small"
+                className="w-auto px-3 py-1 text-xs"
+              >
+                수정
+              </Button>
+              <Button
+                onClick={() => onDeleteRoute(route.id)}
+                variant="outlined"
+                size="small"
+                className="w-auto px-3 py-1 text-xs"
+              >
+                삭제
+              </Button>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   ) : (
     <p className="text-gray-500 text-center py-10">등록한 루트가 없습니다.</p>

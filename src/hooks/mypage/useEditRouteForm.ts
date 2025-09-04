@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
-import { UpdateRouteApiSchema } from '~/src/services/route/routeService';
+import { UpdateRouteApiSchema } from '~/src/services/route/route-schema';
 
 // Define the shape of a stop in the route creation UI
 export interface RouteStop {

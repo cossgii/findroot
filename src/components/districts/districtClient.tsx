@@ -17,8 +17,8 @@ import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteConta
 import { useQuery } from '@tanstack/react-query';
 import { PlaceCategory } from '@prisma/client';
 import { cn } from '~/src/utils/class-name';
+import { PaginatedResponse } from '~/src/hooks/mypage/useMyPageData';
 
-// Type for the lightweight location data
 interface PlaceLocation {
   id: string;
   name: string;
@@ -27,7 +27,6 @@ interface PlaceLocation {
   category: PlaceCategory;
 }
 
-// Query Functions
 const fetchAllPlaceLocations = async (
   districtName: string | undefined,
 ): Promise<PlaceLocation[]> => {
@@ -43,17 +42,23 @@ const fetchAllPlaceLocations = async (
 
 const fetchAllRoutesByDistrict = async (
   districtId: string,
-  _userId: string | undefined, // currentUserId for like status
-): Promise<RouteWithPlaces[]> => {
-  if (!districtId) return [];
+  userId: string | undefined,
+  page: number,
+  limit: number,
+): Promise<PaginatedResponse<RouteWithPlaces>> => {
+  if (!districtId) return { data: [], totalPages: 0, currentPage: 1 };
   const response = await fetch(
-    `/api/routes/locations?districtId=${districtId}`,
+    `/api/routes/locations?districtId=${districtId}&page=${page}&limit=${limit}`,
   );
   if (!response.ok) {
     throw new Error('Failed to fetch routes');
   }
-  const data = await response.json();
-  return data.routes;
+  const rawData = await response.json();
+  return {
+    data: rawData.routes,
+    totalPages: rawData.totalPages,
+    currentPage: rawData.currentPage,
+  };
 };
 
 interface DistrictClientProps {
@@ -89,6 +94,7 @@ export default function DistrictClient({
 
   const [isRouteView, setIsRouteView] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+  const [currentRoutePage, setCurrentRoutePage] = useState(1);
   const setModal = useSetAtom(modalAtom);
 
   const { data: allPlaceLocations = [] } = useQuery<PlaceLocation[], Error>({
@@ -97,13 +103,20 @@ export default function DistrictClient({
     enabled: !!districtInfo?.name,
   });
 
-  const { data: routes = [], isLoading: isLoadingRoutes } = useQuery<
-    RouteWithPlaces[],
+  const { data: paginatedRoutesData, isLoading: isLoadingRoutes } = useQuery<
+    PaginatedResponse<RouteWithPlaces>,
     Error
   >({
-    queryKey: ['allRoutes', districtId], // Query key changed to reflect all routes
-    queryFn: () => fetchAllRoutesByDistrict(districtId, session?.user?.id), // Pass session.user.id for like status
-    enabled: isRouteView, // No longer requires authentication
+    queryKey: ['allRoutes', districtId, currentRoutePage],
+    queryFn: () =>
+      fetchAllRoutesByDistrict(
+        districtId,
+        session?.user?.id,
+        currentRoutePage,
+        5,
+      ),
+    enabled: isRouteView,
+    placeholderData: (prev) => prev,
   });
 
   const handleUrlChange = (newParams: Record<string, string | number>) => {
@@ -136,7 +149,9 @@ export default function DistrictClient({
     setModal({ type: 'RESTAURANT_DETAIL', props: { restaurantId: markerId } });
   };
 
-  const selectedRoute = routes.find((r) => r.id === selectedRouteId);
+  const selectedRoute = paginatedRoutesData?.data.find(
+    (r) => r.id === selectedRouteId,
+  );
 
   const mapMarkers = useMemo(() => {
     if (isRouteView) {
@@ -150,7 +165,6 @@ export default function DistrictClient({
         })) ?? []
       );
     }
-    // Filter locations based on the current category
     const filteredLocations = currentCategory
       ? allPlaceLocations.filter((p) => p.category === currentCategory)
       : allPlaceLocations;
@@ -205,14 +219,23 @@ export default function DistrictClient({
           />
         </div>
         {isRouteView ? (
-          <RestaurantRouteContainer
-            routes={routes}
-            isLoading={isLoadingRoutes}
-            selectedRouteId={selectedRouteId}
-            onSelectRoute={(routeId) => {
-              setSelectedRouteId((prev) => (prev === routeId ? null : routeId));
-            }}
-          />
+          <div>
+            <RestaurantRouteContainer
+              routes={paginatedRoutesData?.data || []}
+              isLoading={isLoadingRoutes}
+              selectedRouteId={selectedRouteId}
+              onSelectRoute={(routeId) => {
+                setSelectedRouteId((prev) =>
+                  prev === routeId ? null : routeId,
+                );
+              }}
+            />
+            <Pagination
+              currentPage={paginatedRoutesData?.currentPage || 1}
+              totalPages={paginatedRoutesData?.totalPages || 1}
+              onPageChange={setCurrentRoutePage}
+            />
+          </div>
         ) : (
           <div>
             <div className="border-b border-gray-200 mb-4">
