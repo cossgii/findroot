@@ -15,9 +15,9 @@ import Pagination from '~/src/components/common/Pagination';
 import { Restaurant } from '~/src/types/restaurant';
 import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer';
 import { useQuery } from '@tanstack/react-query';
-import { PlaceCategory } from '@prisma/client';
+import { PlaceCategory } from '~/src/types/shared';
 import { cn } from '~/src/utils/class-name';
-import { PaginatedResponse } from '~/src/hooks/mypage/useMyPageData';
+import { PaginatedResponse } from '~/src/hooks/usePaginatedQuery';
 
 interface PlaceLocation {
   id: string;
@@ -74,8 +74,8 @@ interface DistrictClientProps {
 
 const TABS: { label: string; value?: PlaceCategory }[] = [
   { label: '전체', value: undefined },
-  { label: '식사', value: 'MEAL' },
-  { label: '음료', value: 'DRINK' },
+  { label: '식사', value: PlaceCategory.MEAL },
+  { label: '음료', value: PlaceCategory.DRINK },
 ];
 
 export default function DistrictClient({

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { RouteStopLabel } from '@prisma/client';
+import { RouteStopLabel } from '~/src/types/shared';
 
 // Schema for creating a new route, used for validating client data
 export const NewRouteApiSchema = z.object({

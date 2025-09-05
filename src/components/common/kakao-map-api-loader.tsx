@@ -8,16 +8,8 @@ export default function KakaoMapApiLoader() {
   const setIsKakaoMapApiLoaded = useSetAtom(isKakaoMapApiLoadedAtom);
 
   const handleApiLoaded = () => {
-    console.log(
-      'Kakao Map Script Loaded. Checking window.kakao:',
-      window.kakao,
-    );
-
     if (window.kakao && window.kakao.maps) {
-      // ✅ 중요: kakao.maps.load()를 사용해서 실제 API 로드 대기
       window.kakao.maps.load(() => {
-        console.log('Kakao Maps load() completed. Checking services...');
-
         if (window.kakao.maps.services && window.kakao.maps.services.Places) {
           setIsKakaoMapApiLoaded(true);
           console.log('✅ Kakao Map API and services loaded successfully.');
@@ -34,7 +26,7 @@ export default function KakaoMapApiLoader() {
 
   return (
     <Script
-      src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_APP_KEY}&libraries=services,clusterer&autoload=false`}
+      src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_APP_KEY}&libraries=services,clusterer&autoload=false`}
       strategy="afterInteractive"
       onLoad={handleApiLoaded}
     />

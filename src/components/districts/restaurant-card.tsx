@@ -4,7 +4,7 @@ import { useSetAtom } from 'jotai';
 import { modalAtom } from '~/src/stores/app-store';
 import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant } from '~/src/types/restaurant';
-import { RouteStopLabel } from '@prisma/client';
+import { RouteStopLabel } from '~/src/types/shared';
 import { cn } from '~/src/utils/class-name';
 
 interface RestaurantCardProps {

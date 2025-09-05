@@ -1,6 +1,6 @@
 'use client';
 
-import { PlaceCategory } from '@prisma/client';
+import { PlaceCategory } from '~/src/types/shared';
 import { cn } from '~/src/utils/class-name';
 
 interface CategoryFilterProps {
@@ -10,8 +10,8 @@ interface CategoryFilterProps {
 
 const TABS: { label: string; value: PlaceCategory | undefined }[] = [
   { label: '전체', value: undefined },
-  { label: '식사', value: 'MEAL' },
-  { label: '음료', value: 'DRINK' },
+  { label: '식사', value: PlaceCategory.MEAL },
+  { label: '음료', value: PlaceCategory.DRINK },
 ];
 
 export default function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryFilterProps) {

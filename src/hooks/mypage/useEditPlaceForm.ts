@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
 import { createPlaceSchema } from '~/src/services/place/place-schema';
-import { Place } from '@prisma/client';
+import { ClientPlace as Place } from '~/src/types/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 

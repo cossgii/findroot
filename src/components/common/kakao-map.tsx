@@ -1,8 +1,9 @@
 'use client';
 
 import { HTMLAttributes, useEffect, useRef, memo } from 'react';
-import { PlaceCategory } from '@prisma/client';
-import { useKakaoMapLoader } from '~/src/hooks/useKakaoMapLoader';
+import { PlaceCategory } from '~/src/types/shared';
+import { useAtomValue } from 'jotai';
+import { isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
 
 interface MarkerData {
   latitude: number;
@@ -44,7 +45,15 @@ const KakaoMap = ({
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
   const polylineInstancesRef = useRef<kakao.maps.Polyline[]>([]);
   const clustererRef = useRef<kakao.maps.MarkerClusterer | null>(null); // Add ref for clusterer
-  const isApiLoaded = useKakaoMapLoader();
+  const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
+
+  if (!isApiLoaded) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-200">
+        <p>지도를 불러오는 중입니다...</p>
+      </div>
+    );
+  }
 
   // Effect 1: Map and Clusterer Initialization
   useEffect(() => {

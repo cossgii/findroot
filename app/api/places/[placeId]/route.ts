@@ -7,7 +7,7 @@ import {
   updatePlace,
 } from '~/src/services/place/placeService';
 import { z } from 'zod';
-import { PlaceCategory } from '@prisma/client';
+import { PlaceCategory } from '~/src/types/shared';
 
 interface PlaceRouteParams {
   placeId: string;
@@ -19,7 +19,11 @@ const updatePlaceSchema = z.object({
   address: z.string().optional(),
   district: z.string().optional(),
   description: z.string().optional(),
-  link: z.string().optional().nullable().transform(e => e === '' ? null : e), // Add link field, transform empty string to null
+  link: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((e) => (e === '' ? null : e)), // Add link field, transform empty string to null
   category: z.nativeEnum(PlaceCategory).optional(),
 });
 

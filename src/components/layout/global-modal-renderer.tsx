@@ -20,28 +20,32 @@ import Modal from '~/src/components/districts/modal';
 import RestaurantDetailModalContent from '~/src/components/districts/restaurant-detail-modal-content';
 import { useQuery } from '@tanstack/react-query';
 
-// Dynamically import heavy modal components
+// Dynamically import heavy, client-side only modal components
 const AddPlaceModal = dynamic(
   () => import('~/src/components/mypage/places/AddPlaceModal'),
   {
+    ssr: false, // This component is not safe for server-side rendering
     loading: () => <div className="p-6">로딩 중...</div>,
   },
 );
 const AddRouteModal = dynamic(
   () => import('~/src/components/mypage/routes/AddRouteModal'),
   {
+    ssr: false,
     loading: () => <div className="p-6">로딩 중...</div>,
   },
 );
 const EditPlaceModal = dynamic(
   () => import('~/src/components/mypage/places/EditPlaceModal'),
   {
+    ssr: false,
     loading: () => <div className="p-6">로딩 중...</div>,
   },
 );
 const EditRouteModal = dynamic(
   () => import('~/src/components/mypage/routes/EditRouteModal'),
   {
+    ssr: false,
     loading: () => <div className="p-6">로딩 중...</div>,
   },
 );

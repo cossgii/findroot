@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PlaceCategory } from '@prisma/client';
+import { PlaceCategory } from '~/src/types/shared';
 
 const placeCategoryValues = Object.values(PlaceCategory) as [
   string,

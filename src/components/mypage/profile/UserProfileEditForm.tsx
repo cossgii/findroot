@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User } from '@prisma/client';
+import { ClientUser as User } from '~/src/types/shared';
 import { useSession } from 'next-auth/react';
 
 import {

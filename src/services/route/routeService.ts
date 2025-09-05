@@ -1,6 +1,7 @@
 import { db } from '~/lib/db';
 import { z } from 'zod';
-import { RouteStopLabel, Prisma } from '@prisma/client';
+import { RouteStopLabel } from '~/src/types/shared';
+import { Prisma } from '@prisma/client';
 import {
   NewRouteApiSchema,
   UpdateRouteApiSchema,

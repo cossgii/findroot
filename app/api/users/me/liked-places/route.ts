@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { getLikedPlacesByUserId } from '~/src/services/like/likeService';
-import { PlaceCategory } from '@prisma/client';
+import { PlaceCategory } from '~/src/types/shared';
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);

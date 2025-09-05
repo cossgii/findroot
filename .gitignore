@@ -6,3 +6,4 @@ node_modules
 /.env.production
 
 /generated/prisma
+/.env.production.local

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { User } from '@prisma/client';
+import { ClientUser as User } from '~/src/types/shared';
 import {
   Avatar,
   AvatarFallback,

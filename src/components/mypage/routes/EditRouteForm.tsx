@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { Place, RouteStopLabel } from '@prisma/client';
+import { ClientPlace, ClientRoute as Route, RouteStopLabel } from '~/src/types/shared';
 import { RouteStop } from '~/src/hooks/mypage/useEditRouteForm';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
@@ -30,10 +30,10 @@ interface EditRouteFormProps {
   onSubmit: (values: { name: string; description?: string | undefined }) => void;
   onClose: () => void;
   stops: RouteStop[];
-  userPlaces: Place[];
+  userPlaces: ClientPlace[];
   isLoading: boolean;
   error: string | null;
-  addStop: (place: Place, label: RouteStopLabel) => void;
+  addStop: (place: ClientPlace, label: RouteStopLabel) => void;
   removeStop: (listId: string) => void;
   selectedDistrict: string | null;
   mapCenter: { lat: number; lng: number };
@@ -54,7 +54,7 @@ export default function EditRouteForm({
   mapCenter,
   handleDistrictChange,
 }: EditRouteFormProps) {
-  const [placeToAdd, setPlaceToAdd] = useState<Place | null>(null);
+  const [placeToAdd, setPlaceToAdd] = useState<ClientPlace | null>(null);
   const [labelForNewStop, setLabelForNewStop] = useState<RouteStopLabel>(
     RouteStopLabel.MEAL,
   );

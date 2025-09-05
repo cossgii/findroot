@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { Place, Route } from '@prisma/client';
+import { ClientPlace as Place, ClientRoute as Route } from '~/src/types/shared';
 
 interface ActionProps {
   setMyCreatedPlaces: React.Dispatch<React.SetStateAction<Place[]>>;

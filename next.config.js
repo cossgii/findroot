@@ -1,24 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack(config, { isServer }) {
-    if (!isServer) {
-      config.externals.push({
-        '@prisma/client': 'commonjs @prisma/client',
-      });
-    }
+  serverExternalPackages: ['@prisma/client'],
+  // Next.js가 알아서 처리하게 두기
+  experimental: {
+  },
+
+  webpack(config) {
+    // SVG만 처리
     config.module.rules.push({
       test: /\.svg$/,
       use: [
         {
           loader: '@svgr/webpack',
-          options: {
-            ref: true,
-            svgo: false,
-          },
+          options: { ref: true, svgo: false },
         },
       ],
     });
-
     return config;
   },
 };

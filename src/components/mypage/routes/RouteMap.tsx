@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import KakaoMap from '~/src/components/common/kakao-map';
-import { Place } from '@prisma/client';
+import { ClientPlace as Place } from '~/src/types/shared';
 import { RouteStop } from '~/src/hooks/mypage/useAddRouteForm';
 
 interface RouteMapProps {

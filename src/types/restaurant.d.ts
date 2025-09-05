@@ -1,16 +1,14 @@
-import { Place, Route } from '@prisma/client'; // Import Route as well
+import { ClientPlace, ClientRoute } from '~/src/types/shared';
 
-// This extends the Prisma Place model with our custom aggregated fields
-export type Restaurant = Omit<Place, 'createdAt' | 'updatedAt'> & {
+export type Restaurant = Omit<ClientPlace, 'createdAt' | 'updatedAt'> & {
   createdAt: string;
   updatedAt: string;
   likesCount: number;
   isLiked: boolean;
-  link?: string | null; // Allow null for the link field
+  link?: string | null;
 };
 
-// New type for Route with aggregated like data
-export type RouteWithLikeData = Route & {
+export type RouteWithLikeData = ClientRoute & {
   likesCount: number;
   isLiked: boolean;
 };

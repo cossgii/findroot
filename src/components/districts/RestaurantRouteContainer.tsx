@@ -2,7 +2,7 @@
 import RestaurantCard from '~/src/components/districts/restaurant-card';
 import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
-import { RouteStopLabel } from '@prisma/client';
+import { RouteStopLabel } from '~/src/types/shared';
 
 export interface RouteWithPlaces extends RouteWithLikeData {
   places: { place: Restaurant; label: RouteStopLabel }[];

@@ -5,7 +5,6 @@ import { type MyPageSubTab } from '../MyPageTabs';
 import RestaurantCard from '~/src/components/districts/restaurant-card';
 import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
-import { PaginatedResponse } from '~/src/hooks/mypage/useMyPageData';
 import { useSetAtom } from 'jotai';
 import { addToastAtom, removeToastAtom } from '~/src/stores/toast-store';
 import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer';
@@ -14,17 +13,15 @@ import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 interface LikedContentListProps {
   activeSubTab: MyPageSubTab;
   likedPlaces: Restaurant[];
-  setLikedPlaces: React.Dispatch<React.SetStateAction<PaginatedResponse<Restaurant>>>;
-  likedRoutes: PaginatedResponse<RouteWithLikeData>;
-  setLikedRoutes: React.Dispatch<React.SetStateAction<PaginatedResponse<RouteWithLikeData>>>;
+  likedRoutes: RouteWithLikeData[];
+  onContentUpdate: () => void; // Replaced setters with a single callback
 }
 
 export default function LikedContentList({
   activeSubTab,
   likedPlaces,
-  setLikedPlaces,
   likedRoutes,
-  setLikedRoutes,
+  onContentUpdate,
 }: LikedContentListProps) {
   const addToast = useSetAtom(addToastAtom);
   const removeToast = useSetAtom(removeToastAtom);
@@ -58,42 +55,20 @@ export default function LikedContentList({
     }
   }, [expandedRouteId]);
 
-  const handleUnlikeWithUndo = (
+  const handleUnlikeWithUndo = async (
     originalHandleLike: (forceLike?: boolean) => Promise<void>,
-    item: Restaurant | RouteWithLikeData,
-    isPlace: boolean,
   ) => {
-    if (isPlace) {
-        setLikedPlaces((prev) => ({
-            ...prev,
-            data: prev.data.filter((p) => p.id !== item.id),
-        }));
-    } else {
-      setLikedRoutes((prev) => ({
-        ...prev,
-        data: prev.data.filter((r) => r.id !== item.id),
-      }));
-    }
-
-    originalHandleLike(false);
+    // Optimistically remove the item by re-fetching the list
+    await originalHandleLike(false);
+    onContentUpdate(); // Instead of local state update, just refetch.
 
     const toastId = Date.now().toString();
     addToast({
       message: '좋아요가 취소되었습니다.',
       actionLabel: '실행 취소',
-      onAction: () => {
-        if (isPlace) {
-            setLikedPlaces((prev) => ({
-                ...prev,
-                data: [...prev.data, item as Restaurant],
-            }));
-        } else {
-            setLikedRoutes((prev) => ({
-                ...prev,
-                data: [...prev.data, item as RouteWithLikeData],
-            }));
-        }
-        originalHandleLike(true);
+      onAction: async () => {
+        await originalHandleLike(true); // Re-like the item
+        onContentUpdate(); // Re-fetch the list again to show the restored item
         removeToast(toastId);
       },
       duration: 5000,
@@ -107,7 +82,7 @@ export default function LikedContentList({
           <RestaurantCard 
             key={place.id} 
             place={place} 
-            onLikeToggle={(handleLike) => handleUnlikeWithUndo(handleLike, place, true)}
+            onLikeToggle={(handleLike) => handleUnlikeWithUndo(handleLike)}
           />
         ))}
       </ul>
@@ -118,7 +93,7 @@ export default function LikedContentList({
     );
   }
 
-  if (!likedRoutes || !likedRoutes.data) {
+  if (!likedRoutes) {
     return (
       <p className="text-gray-500 text-center py-10">
         루트 정보를 불러오는 중이거나, 좋아요를 누른 루트가 없습니다.
@@ -126,9 +101,9 @@ export default function LikedContentList({
     );
   }
 
-  return likedRoutes.data.length > 0 ? (
+  return likedRoutes.length > 0 ? (
     <ul className="space-y-3">
-      {likedRoutes.data.map((route: RouteWithLikeData) => {
+      {likedRoutes.map((route: RouteWithLikeData) => {
         const districtName = route.districtId
           ? SEOUL_DISTRICTS.find(d => d.id === route.districtId)?.name
           : null;
@@ -156,7 +131,7 @@ export default function LikedContentList({
                 routeId={route.id}
                 initialIsLiked={route.isLiked || false}
                 initialLikesCount={route.likesCount || 0}
-                onLikeToggle={(handleLike) => handleUnlikeWithUndo(handleLike, route, false)}
+                onLikeToggle={(handleLike) => handleUnlikeWithUndo(handleLike)}
               />
             </div>
             {expandedRouteId === route.id && (

@@ -6,6 +6,7 @@ import Header from '~/src/components/layout/header';
 import { dongle, notoSansKR } from '~/src/fonts/fonts';
 import '~/src/styles/globals.css';
 
+import KakaoMapApiLoader from '~/src/components/common/kakao-map-api-loader';
 import Toast from '~/src/components/common/Toast';
 
 import ReactQueryProvider from '~/src/providers/react-query-provider';
@@ -34,6 +35,7 @@ export default function RootLayout({
                 <main className="flex-grow pt-header">{children}</main>
                 <GlobalModalRenderer />
                 <Toast />
+                <KakaoMapApiLoader />
               </AuthProvider>
             </ReactQueryProvider>
           </Provider>

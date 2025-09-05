@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Place, RouteStopLabel } from '@prisma/client';
+import { ClientPlace as Place, RouteStopLabel } from '~/src/types/shared';
 import { useSession } from 'next-auth/react';
 import { z } from 'zod';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSetAtom } from 'jotai';
 import { addToastAtom } from '~/src/stores/toast-store';
 
@@ -58,6 +60,15 @@ const createRouteApi = async (payload: ApiPayload) => {
   return response.json();
 };
 
+const fetchAllUserPlaces = async (userId: string): Promise<Place[]> => {
+  if (!userId) return [];
+  const response = await fetch(`/api/users/${userId}/places/all`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch user places');
+  }
+  return response.json();
+};
+
 export const useAddRouteForm = ({
   onClose,
   onRouteAdded,
@@ -77,39 +88,18 @@ export const useAddRouteForm = ({
   });
 
   const [stops, setStops] = useState<RouteStop[]>([]);
-  const [userPlaces, setUserPlaces] = useState<Place[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [pendingDistrictId, setPendingDistrictId] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState(SEOUL_CENTER);
 
-  useEffect(() => {
-    const fetchUserPlaces = async () => {
-      if (!session?.user?.id) {
-        setIsLoading(false);
-        return;
-      }
-      try {
-        setIsLoading(true);
-        const response = await fetch(
-          `/api/users/${session.user.id}/places/all`,
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch user places');
-        }
-        const places: Place[] = await response.json();
-        setUserPlaces(places);
-      } catch (err) {
-        setError('장소 목록을 불러오는 데 실패했습니다.');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const userId = session?.user?.id || '';
 
-    fetchUserPlaces();
-  }, [session]);
+  // Refactored to use useQuery instead of useEffect and useState
+  const { data: userPlaces = [], isLoading, error } = useQuery<Place[], Error>({
+    queryKey: ['user', userId, 'places', 'all'],
+    queryFn: () => fetchAllUserPlaces(userId),
+    enabled: !!userId, // Only run query if userId is available
+  });
 
   const { mutate: addRouteMutation, isPending } = useMutation({
     mutationFn: createRouteApi,
@@ -121,7 +111,7 @@ export const useAddRouteForm = ({
       onRouteAdded();
       onClose();
       queryClient.invalidateQueries({
-        queryKey: ['user', session?.user?.id, 'routes', 'created'],
+        queryKey: ['user', userId, 'routes', 'created'],
       });
     },
     onError: (error) => {
@@ -225,7 +215,7 @@ export const useAddRouteForm = ({
     stops,
     userPlaces,
     isLoading,
-    error,
+    error: error ? error.message : null, // Return error message string
     addStop,
     removeStop,
     onSubmit,

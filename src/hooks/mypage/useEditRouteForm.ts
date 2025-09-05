@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Place, Route, RoutePlace, RouteStopLabel } from '@prisma/client';
+import { ClientPlace, ClientRoute as Route, RouteStopLabel, ClientRoutePlace } from '~/src/types/shared';
 import { useSession } from 'next-auth/react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,7 +10,7 @@ import { UpdateRouteApiSchema } from '~/src/services/route/route-schema';
 // Define the shape of a stop in the route creation UI
 export interface RouteStop {
   listId: string; // Unique ID for React list operations
-  place: Place;
+  place: ClientPlace;
   label: RouteStopLabel;
 }
 
@@ -33,7 +33,7 @@ const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 };
 
 // Define the type for a route with its places included
 type RouteWithPlaces = Route & {
-  places: (RoutePlace & { place: Place })[];
+  places: ClientRoutePlace[];
 };
 
 export const useEditRouteForm = ({
@@ -47,7 +47,7 @@ export const useEditRouteForm = ({
   });
 
   const [stops, setStops] = useState<RouteStop[]>([]);
-  const [userPlaces, setUserPlaces] = useState<Place[]>([]);
+  const [userPlaces, setUserPlaces] = useState<ClientPlace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export const useEditRouteForm = ({
         if (!placesRes.ok) throw new Error('Failed to fetch user places');
 
         const routeData: RouteWithPlaces = await routeRes.json();
-        const placesData: Place[] = await placesRes.json();
+        const placesData: ClientPlace[] = await placesRes.json();
 
         // Populate form
         form.reset({
@@ -114,7 +114,7 @@ export const useEditRouteForm = ({
   }, [session, routeId, form]);
 
   // --- Stop Management Functions (same as in useAddRouteForm) ---
-  const addStop = (place: Place, label: RouteStopLabel) => {
+  const addStop = (place: ClientPlace, label: RouteStopLabel) => {
     if (stops.length >= MAX_STOPS) {
       alert(`경유지는 최대 ${MAX_STOPS}개까지 추가할 수 있습니다.`);
       return;

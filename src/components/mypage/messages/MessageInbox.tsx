@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { Message, User } from '@prisma/client';
+import { ClientMessage as Message, ClientUser as User } from '~/src/types/shared';
 
 // Message 모델에 sender와 receiver 관계가 포함된 타입 정의
 interface MessageWithRelations extends Message {

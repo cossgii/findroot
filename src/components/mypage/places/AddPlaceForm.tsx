@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'; // Import useMemo
 import { UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
 import { createPlaceSchema } from '~/src/services/place/place-schema';
-import { PlaceCategory } from '@prisma/client';
+import { PlaceCategory } from '~/src/types/shared';
 import {
   Form,
   FormField,

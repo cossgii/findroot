@@ -1,6 +1,7 @@
 import { db } from '~/lib/db';
 import { CreatePlaceInput } from './place-schema';
-import { Place, PlaceCategory, Prisma } from '@prisma/client';
+import { Place, Prisma } from '@prisma/client';
+import { PlaceCategory } from '~/src/types/shared';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
 export class DuplicatePlaceError extends Error {
@@ -155,6 +156,7 @@ export async function getPlacesByDistrict(
     ...serializeDatesInPlace(place),
     likesCount: _count.likes,
     isLiked: !!(likes && likes.length > 0),
+    category: place.category as PlaceCategory,
   }));
 
   return {
@@ -205,6 +207,7 @@ export async function getPlaceById(id: string, userId?: string) {
     ...serializeDatesInPlace(place),
     likesCount: _count.likes,
     isLiked: !!isLiked,
+    category: place.category as PlaceCategory,
   };
 }
 
@@ -268,6 +271,7 @@ export async function getPlacesByCreatorId(
     ...serializeDatesInPlace(place),
     likesCount: _count.likes,
     isLiked: !!(likes && likes.length > 0),
+    category: place.category as PlaceCategory,
   }));
 
   return {

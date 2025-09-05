@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { User } from '@prisma/client';
+import { ClientUser as User } from '~/src/types/shared';
 import Button from '~/src/components/common/button';
 import UserProfileDisplay from '~/src/components/mypage/profile/UserProfileDisplay';
 import UserProfileEditForm from '~/src/components/mypage/profile/UserProfileEditForm';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PlaceCategory, Route } from '@prisma/client';
+import { PlaceCategory, ClientRoute as Route } from '~/src/types/shared';
 import MyPageContentToolbar from '~/src/components/mypage/MyPageContentToolbar';
 import CreatedContentList from '~/src/components/mypage/content/CreatedContentList';
 import Pagination from '~/src/components/common/Pagination';

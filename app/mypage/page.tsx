@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import MainContainer from '~/src/components/layout/main-container';
 import MyPageTabs, { type MyPageTab } from '~/src/components/mypage/MyPageTabs';
-import { PlaceCategory } from '@prisma/client';
+import { PlaceCategory } from '~/src/types/shared';
 
 import { useMyPageData } from '~/src/hooks/mypage/useMyPageData';
 import { useMyPageModals } from '~/src/hooks/mypage/useMyPageModals';
@@ -24,28 +24,23 @@ const MyPage = () => {
     user,
     setUser,
     myCreatedPlaces,
-    setMyCreatedPlaces,
     myCreatedRoutes,
-    setMyCreatedRoutes,
     likedPlaces,
-    setLikedPlaces,
     likedRoutes,
-    setLikedRoutes,
-    isLoading,
     refreshContent,
   } = useMyPageData(activeTab, selectedDistrict, selectedCategory);
 
   useEffect(() => {
     setSelectedCategory(undefined);
     setSelectedDistrict('all');
+    myCreatedPlaces.setPage(1);
+    myCreatedRoutes.setPage(1);
+    likedPlaces.setPage(1);
+    likedRoutes.setPage(1);
   }, [activeTab]);
 
-  const {
-    openAddPlaceModal,
-    openAddRouteModal,
-    openEditPlaceModal,
-    openEditRouteModal,
-  } = useMyPageModals(refreshContent);
+  const { openAddPlaceModal, openAddRouteModal, openEditPlaceModal, openEditRouteModal } =
+    useMyPageModals(refreshContent);
 
   const handleDeletePlace = useCallback(
     async (placeId: string) => {
@@ -57,7 +52,7 @@ const MyPage = () => {
         refreshContent();
       } catch (e) {
         alert(
-          `장소 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`
+          `장소 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`,
         );
       }
     },
@@ -74,7 +69,7 @@ const MyPage = () => {
         refreshContent();
       } catch (e) {
         alert(
-          `루트 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`
+          `루트 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`,
         );
       }
     },
@@ -82,32 +77,26 @@ const MyPage = () => {
   );
 
   const renderTabContent = () => {
-    if (isLoading && activeTab !== 'profile') {
-      return <div className="text-center py-8">콘텐츠 로딩 중...</div>;
-    }
-
     switch (activeTab) {
       case 'profile':
-        return user ? (
-          <ProfileTabPanel user={user} onProfileUpdated={setUser} />
-        ) : null;
+        return user ? <ProfileTabPanel user={user} onProfileUpdated={setUser} /> : null;
       case 'content':
         return (
           <ContentTabPanel
-            myCreatedPlaces={myCreatedPlaces.data || []}
-            myCreatedRoutes={myCreatedRoutes.data || []}
+            myCreatedPlaces={myCreatedPlaces.data?.data || []}
+            myCreatedRoutes={myCreatedRoutes.data?.data || []}
             onAddPlace={openAddPlaceModal}
             onAddRoute={openAddRouteModal}
             onEditPlace={openEditPlaceModal}
             onEditRoute={openEditRouteModal}
             onDeletePlace={handleDeletePlace}
             onDeleteRoute={handleDeleteRoute}
-            placesTotalPages={myCreatedPlaces.totalPages || 1}
-            placesCurrentPage={myCreatedPlaces.currentPage || 1}
-            onPlacePageChange={(page) => setMyCreatedPlaces(prev => ({ ...prev, currentPage: page }))}
-            routesTotalPages={myCreatedRoutes.totalPages || 1}
-            routesCurrentPage={myCreatedRoutes.currentPage || 1}
-            onRoutePageChange={(page) => setMyCreatedRoutes(prev => ({ ...prev, currentPage: page }))}
+            placesTotalPages={myCreatedPlaces.data?.totalPages || 1}
+            placesCurrentPage={myCreatedPlaces.page}
+            onPlacePageChange={myCreatedPlaces.setPage}
+            routesTotalPages={myCreatedRoutes.data?.totalPages || 1}
+            routesCurrentPage={myCreatedRoutes.page}
+            onRoutePageChange={myCreatedRoutes.setPage}
             selectedDistrict={selectedDistrict}
             onDistrictChange={setSelectedDistrict}
             selectedCategory={selectedCategory}
@@ -117,16 +106,15 @@ const MyPage = () => {
       case 'likes':
         return (
           <LikesTabPanel
-            likedPlaces={likedPlaces.data || []}
-            setLikedPlaces={setLikedPlaces}
-            likedRoutes={likedRoutes || { data: [], totalPages: 1, currentPage: 1 }}
-            setLikedRoutes={setLikedRoutes}
-            placesTotalPages={likedPlaces.totalPages || 1}
-            placesCurrentPage={likedPlaces.currentPage || 1}
-            onPlacePageChange={(page) => setLikedPlaces(prev => ({ ...prev, currentPage: page }))}
-            routesTotalPages={likedRoutes.totalPages || 1}
-            routesCurrentPage={likedRoutes.currentPage || 1}
-            onRoutePageChange={(page) => setLikedRoutes(prev => ({ ...prev, currentPage: page }))}
+            likedPlaces={likedPlaces.data?.data || []}
+            likedRoutes={likedRoutes.data?.data || []}
+            onContentUpdate={refreshContent}
+            placesTotalPages={likedPlaces.data?.totalPages || 1}
+            placesCurrentPage={likedPlaces.page}
+            onPlacePageChange={likedPlaces.setPage}
+            routesTotalPages={likedRoutes.data?.totalPages || 1}
+            routesCurrentPage={likedRoutes.page}
+            onRoutePageChange={likedRoutes.setPage}
             selectedDistrict={selectedDistrict}
             onDistrictChange={setSelectedDistrict}
             selectedCategory={selectedCategory}
