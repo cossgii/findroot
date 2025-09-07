@@ -1,14 +1,28 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation'; // Import useRouter
 
 import { cn } from '~/src/utils/class-name';
-import DistrictSelectDropdown from '~/src/components/navigation/district-select-dropdown'; // 새 컴포넌트 임포트
-import AuthHeaderControls from '~/src/components/auth/auth-header-controls'; // 새 컴포넌트 임포트
+import DistrictDropdown from '~/src/components/navigation/district-select-dropdown'; // Renamed
+import AuthHeaderControls from '~/src/components/auth/auth-header-controls';
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter(); // Initialize router
+
+  // Get current district from pathname
+  const pathSegments = pathname.split('/');
+  const districtId = pathSegments[1] === 'districts' ? pathSegments[2] || 'all' : 'all';
+
+  // Define onChange handler for the dropdown
+  const handleDistrictChange = (newDistrictId: string) => {
+    if (newDistrictId === 'all') {
+      router.push('/districts');
+    } else {
+      router.push(`/districts/${newDistrictId}`);
+    }
+  };
 
   // 특정 페이지에서는 자치구 드롭다운을 숨깁니다.
   const hideDistrictDropdown = ['/', '/login', '/signup', '/mypage', '/forgot-password', '/reset-password'].includes(pathname);
@@ -27,7 +41,12 @@ export default function Header() {
         <h1 className="text-xl font-bold">FindRoot</h1>
       </Link>
       <nav className="flex items-center space-x-4">
-        {showDistrictDropdown && <DistrictSelectDropdown />}
+        {showDistrictDropdown && (
+          <DistrictDropdown
+            value={districtId}
+            onChange={handleDistrictChange}
+          />
+        )}
         <AuthHeaderControls />
       </nav>
     </header>

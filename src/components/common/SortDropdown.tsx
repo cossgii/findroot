@@ -1,21 +1,33 @@
 'use client';
 
+import Dropdown from '~/src/components/common/dropdown';
+
+interface SortOption {
+  id: 'recent' | 'likes';
+  name: string;
+}
+
+const sortOptions: readonly SortOption[] = [
+  { id: 'recent', name: '최신순' },
+  { id: 'likes', name: '좋아요순' },
+];
+
 interface SortDropdownProps {
   currentSort: 'recent' | 'likes';
   onSortChange: (sortOption: 'recent' | 'likes') => void;
 }
 
 export default function SortDropdown({ currentSort, onSortChange }: SortDropdownProps) {
+  const selectedOption = sortOptions.find(option => option.id === currentSort);
+
   return (
     <div className="my-4 flex justify-end">
-      <select
-        value={currentSort}
-        onChange={(e) => onSortChange(e.target.value as 'recent' | 'likes')}
-        className="rounded-md border-gray-300 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50 text-sm py-2 px-3"
-      >
-        <option value="recent">최신순</option>
-        <option value="likes">좋아요순</option>
-      </select>
+      <Dropdown<SortOption>
+        options={sortOptions}
+        value={selectedOption}
+        onChange={(option) => onSortChange(option.id)}
+        getOptionLabel={(option) => option.name}
+      />
     </div>
   );
 }

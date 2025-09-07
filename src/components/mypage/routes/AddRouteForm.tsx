@@ -18,6 +18,8 @@ import Input from '~/src/components/common/input';
 import Button from '~/src/components/common/button';
 import RouteMap from './RouteMap';
 import ConfirmationDialog from '~/src/components/common/ConfirmationDialog';
+import Dropdown from '~/src/components/common/dropdown';
+import DistrictDropdown from '~/src/components/navigation/district-select-dropdown';
 
 // Helper to map enum to display names
 const routeStopLabelMap: Record<RouteStopLabel, string> = {
@@ -25,6 +27,12 @@ const routeStopLabelMap: Record<RouteStopLabel, string> = {
   CAFE: '카페',
   BAR: '주점',
 };
+
+// Create options for the label dropdown
+const labelOptions = Object.entries(routeStopLabelMap).map(([id, name]) => ({
+  id: id as RouteStopLabel,
+  name,
+}));
 
 interface AddRouteFormProps {
   form: UseFormReturn<{ name: string; description?: string | undefined }>;
@@ -79,7 +87,9 @@ export default function AddRouteForm({
     if (!selectedDistrict) {
       return stops.map((s) => s.place); // If no district, show only places in the route
     }
-    const districtName = SEOUL_DISTRICTS.find((d) => d.id === selectedDistrict)?.name;
+    const districtName = SEOUL_DISTRICTS.find(
+      (d) => d.id === selectedDistrict,
+    )?.name;
     return userPlaces.filter((place) => place.district === districtName);
   }, [userPlaces, selectedDistrict, stops]);
 
@@ -87,7 +97,9 @@ export default function AddRouteForm({
     if (!selectedDistrict) {
       return [];
     }
-    const districtName = SEOUL_DISTRICTS.find((d) => d.id === selectedDistrict)?.name;
+    const districtName = SEOUL_DISTRICTS.find(
+      (d) => d.id === selectedDistrict,
+    )?.name;
     return userPlaces.filter((place) => place.district === districtName);
   }, [userPlaces, selectedDistrict]);
 
@@ -105,18 +117,11 @@ export default function AddRouteForm({
         {/* 1. District Selector */}
         <div>
           <FormLabel>자치구 선택</FormLabel>
-          <select
-            value={selectedDistrict || ''}
-            onChange={(e) => handleDistrictChange(e.target.value)}
-            className="w-full mt-1 rounded-xl border-2 border-secondary-50 bg-white px-4 py-2 shadow-sm text-sm"
-          >
-            <option value="">자치구를 선택하세요</option>
-            {SEOUL_DISTRICTS.filter((d) => d.id !== 'all').map((district) => (
-              <option key={district.id} value={district.id}>
-                {district.name}
-              </option>
-            ))}
-          </select>
+          <DistrictDropdown
+            value={selectedDistrict || 'all'}
+            onChange={handleDistrictChange}
+            className="mt-1"
+          />
         </div>
 
         {/* Render the rest of the form only when a district is selected */}
@@ -176,35 +181,22 @@ export default function AddRouteForm({
               <div className="p-4 space-y-3 border rounded-md bg-gray-50">
                 <h3 className="font-semibold">새 경유지 추가</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <select
-                    onChange={(e) => {
-                      const selectedPlace = filteredPlacesForDropdown.find(
-                        (p) => p.id === e.target.value,
-                      );
-                      setPlaceToAdd(selectedPlace || null);
-                    }}
-                    className="w-full rounded-xl border-2 border-secondary-50 bg-white px-4 py-2 shadow-sm text-sm flex-grow"
-                  >
-                    <option value="">장소를 선택하세요</option>
-                    {filteredPlacesForDropdown.map((place) => (
-                      <option key={place.id} value={place.id}>
-                        {place.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={labelForNewStop}
-                    onChange={(e) =>
-                      setLabelForNewStop(e.target.value as RouteStopLabel)
-                    }
-                    className="w-full sm:w-auto rounded-xl border-2 border-secondary-50 bg-white px-4 py-2 shadow-sm text-sm"
-                  >
-                    {Object.values(RouteStopLabel).map((label) => (
-                      <option key={label} value={label}>
-                        {routeStopLabelMap[label]}
-                      </option>
-                    ))}
-                  </select>
+                  <Dropdown<Place>
+                    options={filteredPlacesForDropdown}
+                    value={placeToAdd || undefined}
+                    onChange={(place) => setPlaceToAdd(place)}
+                    getOptionLabel={(place) => place.name}
+                    placeholder="장소를 선택하세요"
+                    triggerClassName="w-full flex-grow"
+                    contentClassName="max-h-40 overflow-y-auto"
+                  />
+                  <Dropdown
+                    options={labelOptions}
+                    value={labelOptions.find((l) => l.id === labelForNewStop)}
+                    onChange={(label) => setLabelForNewStop(label.id)}
+                    getOptionLabel={(label) => label.name}
+                    triggerClassName="w-full sm:w-auto"
+                  />
                 </div>
                 <Button
                   type="button"

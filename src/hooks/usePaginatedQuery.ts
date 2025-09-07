@@ -12,6 +12,7 @@ export interface PaginatedResponse<T> {
 }
 
 // The props for our custom hook
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface UsePaginatedQueryProps<T> {
   queryKey: (string | number | object)[]; // Base key for the query
   apiEndpoint: string; // The API endpoint to fetch data from

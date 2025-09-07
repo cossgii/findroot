@@ -3,8 +3,7 @@
 import React from 'react';
 import { cn } from '~/src/utils/class-name';
 import Button from '~/src/components/common/button';
-import { SEOUL_DISTRICTS } from '~/src/utils/districts';
-
+import DistrictDropdown from '~/src/components/navigation/district-select-dropdown'; // Import DistrictDropdown
 import { type MyPageSubTab } from '~/src/components/mypage/MyPageTabs';
 
 interface MyPageContentToolbarProps {
@@ -71,17 +70,10 @@ export default function MyPageContentToolbar({
             </Button>
           </>
         )}
-        <select
+        <DistrictDropdown
           value={selectedDistrict}
-          onChange={(e) => onDistrictChange(e.target.value)}
-          className="rounded-md border-gray-300 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50 text-sm py-2 px-3"
-        >
-          {SEOUL_DISTRICTS.map((district) => (
-            <option key={district.id} value={district.id}>
-              {district.name}
-            </option>
-          ))}
-        </select>
+          onChange={onDistrictChange}
+        />
       </div>
     </div>
   );

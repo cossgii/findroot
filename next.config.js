@@ -1,12 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ['@prisma/client'],
-  // Next.js가 알아서 처리하게 두기
-  experimental: {
-  },
+  experimental: {},
 
   webpack(config) {
-    // SVG만 처리
     config.module.rules.push({
       test: /\.svg$/,
       use: [

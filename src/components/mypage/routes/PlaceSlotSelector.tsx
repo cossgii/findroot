@@ -4,6 +4,7 @@ import React from 'react';
 import { ClientPlace as Place, PlaceCategory } from '~/src/types/shared';
 import Button from '~/src/components/common/button';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+import Dropdown from '~/src/components/common/dropdown'; // Import Dropdown
 
 interface PlaceSlotSelectorProps {
   selectedPlace: Place | null;
@@ -22,19 +23,6 @@ export default function PlaceSlotSelector({
   expectedCategory,
   userPlaces,
 }: PlaceSlotSelectorProps) {
-  const handleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedPlaceId = e.target.value;
-    if (selectedPlaceId === '') {
-      onClearPlace();
-      return;
-    }
-
-    const place = userPlaces.find((p) => p.id === selectedPlaceId);
-    if (place) {
-      onSelectPlace(place);
-    }
-  };
-
   const getDistrictNameById = (id: string) => {
     return SEOUL_DISTRICTS.find((d) => d.id === id)?.name || id;
   };
@@ -48,7 +36,10 @@ export default function PlaceSlotSelector({
     return matchesDistrict && matchesCategory;
   });
 
-  const selectedValue = selectedPlace ? selectedPlace.id : '';
+  const getOptionLabel = (place: Place) => {
+    const categoryLabel = place.category === PlaceCategory.MEAL ? '식사' : '음료';
+    return `${place.name} (${place.address}) - ${categoryLabel}`;
+  };
 
   return (
     <div className="space-y-2">
@@ -68,25 +59,18 @@ export default function PlaceSlotSelector({
           </Button>
         </div>
       ) : (
-        <select
-          onChange={handleSelect}
-          value={selectedValue}
-          className="w-full rounded-xl border-2 border-secondary-50 bg-gray-50 px-4 py-2 shadow-sm outline-2 transition-colors duration-75 hover:border-primary-300 focus:outline-primary-600 text-sm"
-        >
-          <option value="">장소를 선택하세요</option>
-          {filteredPlaces.length === 0 ? (
-            <option value="" disabled>
-              이 지역에 등록된 해당 카테고리의 장소가 없습니다.
-            </option>
-          ) : (
-            filteredPlaces.map((place) => (
-              <option key={place.id} value={place.id}>
-                {place.name} ({place.address}) -{' '}
-                {place.category === PlaceCategory.MEAL ? '식사' : '음료'}
-              </option>
-            ))
-          )}
-        </select>
+        <Dropdown<Place>
+          options={filteredPlaces}
+          onChange={onSelectPlace}
+          getOptionLabel={getOptionLabel}
+          placeholder={
+            filteredPlaces.length === 0
+              ? '이 지역에 등록된 장소가 없습니다.'
+              : '장소를 선택하세요'
+          }
+          triggerClassName="w-full"
+          contentClassName="max-h-48 overflow-y-auto"
+        />
       )}
     </div>
   );

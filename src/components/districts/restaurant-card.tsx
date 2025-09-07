@@ -27,7 +27,8 @@ export default function RestaurantCard({ place, label, onLikeToggle }: Restauran
 
   const setModal = useSetAtom(modalAtom);
 
-  const handleOpenModal = () => {
+  const handleOpenModal = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setModal({ type: 'RESTAURANT_DETAIL', props: { restaurantId: place.id } });
   };
 

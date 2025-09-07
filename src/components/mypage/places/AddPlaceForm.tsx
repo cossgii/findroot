@@ -16,6 +16,7 @@ import Button from '~/src/components/common/button';
 import KakaoMap from '~/src/components/common/kakao-map';
 import { usePlaceSearch } from '~/src/hooks/mypage/usePlaceSearch';
 import PlaceSearchInput from './PlaceSearchInput';
+import CategoryDropdown from '~/src/components/common/CategoryDropdown'; // Import CategoryDropdown
 
 type AddPlaceFormValues = z.infer<typeof createPlaceSchema>;
 
@@ -199,14 +200,11 @@ export default function AddPlaceForm({
                 <FormItem>
                   <FormLabel>카테고리</FormLabel>
                   <FormControl>
-                    <select
-                      {...field}
-                      className="w-full rounded-xl border-2 border-secondary-50 bg-gray-50 px-[16px] py-[10px] shadow-sm outline-2 transition-colors duration-75 hover:border-primary-300 focus:outline-primary-600"
-                    >
-                      <option value="">선택하세요</option>
-                      <option value={PlaceCategory.MEAL}>식사 (MEAL)</option>
-                      <option value={PlaceCategory.DRINK}>음료 (DRINK)</option>
-                    </select>
+                    <CategoryDropdown
+                      value={field.value as PlaceCategory}
+                      onChange={field.onChange}
+                      triggerClassName="w-full"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

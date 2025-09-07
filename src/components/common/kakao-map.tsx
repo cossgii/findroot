@@ -41,61 +41,55 @@ const KakaoMap = ({
   polylines,
   ...rest
 }: KakaoMapProps) => {
+  // ✅ 모든 hooks를 early return 이전에 호출
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
   const polylineInstancesRef = useRef<kakao.maps.Polyline[]>([]);
-  const clustererRef = useRef<kakao.maps.MarkerClusterer | null>(null); // Add ref for clusterer
+  const clustererRef = useRef<kakao.maps.MarkerClusterer | null>(null);
   const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
-
-  if (!isApiLoaded) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-gray-200">
-        <p>지도를 불러오는 중입니다...</p>
-      </div>
-    );
-  }
 
   // Effect 1: Map and Clusterer Initialization
   useEffect(() => {
-    if (isApiLoaded && mapContainerRef.current && !mapInstanceRef.current) {
-      const mapOption = {
-        center: new window.kakao.maps.LatLng(latitude, longitude),
-        level: 5, // Initial level
-      };
-      const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
-      mapInstanceRef.current = map;
+    if (!isApiLoaded || !mapContainerRef.current || mapInstanceRef.current)
+      return;
 
-      // Create and store clusterer instance
-      const clusterer = new window.kakao.maps.MarkerClusterer({
-        map: map,
-        averageCenter: true,
-        minLevel: 6, // Zoom level to start clustering from
-        disableClickZoom: true, // Disable zoom on cluster click to handle it manually if needed
-      });
-      clustererRef.current = clusterer;
+    const mapOption = {
+      center: new window.kakao.maps.LatLng(latitude, longitude),
+      level: 5,
+    };
+    const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
+    mapInstanceRef.current = map;
 
-      // Add a click event listener to the clusterer
-      window.kakao.maps.event.addListener(
-        clusterer,
-        'clusterclick',
-        function (cluster: kakao.maps.Cluster) {
-          const level = map.getLevel() - 1;
-          map.setLevel(level, { anchor: cluster.getCenter() });
-        },
-      );
-    }
+    const clusterer = new window.kakao.maps.MarkerClusterer({
+      map: map,
+      averageCenter: true,
+      minLevel: 6,
+      disableClickZoom: true,
+    });
+    clustererRef.current = clusterer;
+
+    window.kakao.maps.event.addListener(
+      clusterer,
+      'clusterclick',
+      function (cluster: kakao.maps.Cluster) {
+        const level = map.getLevel() - 1;
+        map.setLevel(level, { anchor: cluster.getCenter() });
+      },
+    );
   }, [isApiLoaded, latitude, longitude]);
 
   // Effect 2: Update Center (only if no markers)
   useEffect(() => {
-    if (mapInstanceRef.current && markers.length === 0) {
-      const newCenter = new window.kakao.maps.LatLng(latitude, longitude);
-      mapInstanceRef.current.setCenter(newCenter);
-    }
-  }, [latitude, longitude, markers]);
+    if (!isApiLoaded || !mapInstanceRef.current || markers.length > 0) return;
+
+    const newCenter = new window.kakao.maps.LatLng(latitude, longitude);
+    mapInstanceRef.current.setCenter(newCenter);
+  }, [isApiLoaded, latitude, longitude, markers]);
 
   // Effect 3: Update Markers, Polylines, and Bounds
   useEffect(() => {
+    if (!isApiLoaded) return;
+
     const map = mapInstanceRef.current;
     const clusterer = clustererRef.current;
     if (!map || !window.kakao || !clusterer) return;
@@ -135,17 +129,14 @@ const KakaoMap = ({
         return marker;
       });
 
-      // Add new markers to the clusterer
       clusterer.addMarkers(markerInstances);
 
-      // Adjust map bounds to show all markers, but only if there are a few.
-      // If there are many, let the clusterer handle the view.
       if (markers.length < 100) {
         map.setBounds(bounds);
       }
     }
 
-    // Clear and add polylines (unchanged from before)
+    // Clear and add polylines
     polylineInstancesRef.current.forEach((line) => line.setMap(null));
     polylineInstancesRef.current = [];
 
@@ -163,7 +154,16 @@ const KakaoMap = ({
       polyline.setMap(map);
       polylineInstancesRef.current.push(polyline);
     });
-  }, [markers, polylines, onMarkerClick, selectedMarkerIds]);
+  }, [isApiLoaded, markers, polylines, onMarkerClick, selectedMarkerIds]);
+
+  // ✅ early return을 모든 hooks 호출 후에 배치
+  if (!isApiLoaded) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-200">
+        <p>지도를 불러오는 중입니다...</p>
+      </div>
+    );
+  }
 
   return (
     <div

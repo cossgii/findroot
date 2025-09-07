@@ -1,16 +1,10 @@
-// src/components/auth/auth-header-controls.tsx
 'use client';
 
 import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import Button from '~/src/components/common/button';
-import Dropdown, { DropdownItem } from '~/src/components/common/dropdown';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '~/src/components/common/avatar';
+import UserMenuDropdown from './UserMenuDropdown'; // Import the new wrapper
 
 export default function AuthHeaderControls() {
   const { data: session, status } = useSession();
@@ -25,26 +19,7 @@ export default function AuthHeaderControls() {
 
   if (session) {
     return (
-      <Dropdown
-        align="right"
-        trigger={
-          <button className="transition-transform duration-200 ease-in-out hover:scale-110">
-            <Avatar size="medium">
-              <AvatarImage src={session.user?.image || ''} />
-              <AvatarFallback />
-            </Avatar>
-          </button>
-        }
-      >
-        {!isMyPage && (
-          <DropdownItem>
-            <Link href="/mypage" className="block w-full text-left">
-              마이페이지
-            </Link>
-          </DropdownItem>
-        )}
-        <DropdownItem onClick={() => signOut()}>로그아웃</DropdownItem>
-      </Dropdown>
+      <UserMenuDropdown userImage={session.user?.image} isMyPage={isMyPage} />
     );
   }
 

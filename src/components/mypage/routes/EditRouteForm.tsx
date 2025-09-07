@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { ClientPlace, ClientRoute as Route, RouteStopLabel } from '~/src/types/shared';
+import { ClientPlace, RouteStopLabel } from '~/src/types/shared';
 import { RouteStop } from '~/src/hooks/mypage/useEditRouteForm';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
@@ -17,6 +17,8 @@ import {
 import Input from '~/src/components/common/input';
 import Button from '~/src/components/common/button';
 import RouteMap from './RouteMap';
+import Dropdown from '~/src/components/common/dropdown';
+import DistrictDropdown from '~/src/components/navigation/district-select-dropdown';
 
 // Helper to map enum to display names
 const routeStopLabelMap: Record<RouteStopLabel, string> = {
@@ -24,6 +26,12 @@ const routeStopLabelMap: Record<RouteStopLabel, string> = {
   CAFE: '카페',
   BAR: '주점',
 };
+
+// Create options for the label dropdown
+const labelOptions = Object.entries(routeStopLabelMap).map(([id, name]) => ({
+  id: id as RouteStopLabel,
+  name,
+}));
 
 interface EditRouteFormProps {
   form: UseFormReturn<{ name: string; description?: string | undefined }>;
@@ -74,6 +82,15 @@ export default function EditRouteForm({
     return userPlaces.filter((place) => place.district === districtName);
   }, [userPlaces, selectedDistrict, stops]);
 
+  const filteredPlacesForDropdown = useMemo(() => {
+    if (!selectedDistrict) {
+      return [];
+    }
+    const districtName = SEOUL_DISTRICTS.find((d) => d.id === selectedDistrict)?.name;
+    return userPlaces.filter((place) => place.district === districtName);
+  }, [userPlaces, selectedDistrict]);
+
+
   if (isLoading) {
     return <p>루트 정보를 불러오는 중...</p>;
   }
@@ -116,18 +133,11 @@ export default function EditRouteForm({
 
         <div>
           <FormLabel>지도에서 장소 확인</FormLabel>
-          <select
-            value={selectedDistrict || ''}
-            onChange={(e) => handleDistrictChange(e.target.value)}
-            className="w-full mt-1 rounded-xl border-2 border-secondary-50 bg-white px-4 py-2 shadow-sm text-sm"
-          >
-            <option value="">자치구를 선택하세요</option>
-            {SEOUL_DISTRICTS.filter((d) => d.id !== 'all').map((district) => (
-              <option key={district.id} value={district.id}>
-                {district.name}
-              </option>
-            ))}
-          </select>
+          <DistrictDropdown
+            value={selectedDistrict || 'all'}
+            onChange={handleDistrictChange}
+            className="mt-1"
+          />
         </div>
 
         {selectedDistrict && (
@@ -183,35 +193,22 @@ export default function EditRouteForm({
               <div className="p-4 space-y-3 border rounded-md bg-gray-50">
                 <h3 className="font-semibold">새 경유지 추가</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <select
-                    onChange={(e) => {
-                      const selectedPlace = userPlaces.find(
-                        (p) => p.id === e.target.value,
-                      );
-                      setPlaceToAdd(selectedPlace || null);
-                    }}
-                    className="w-full rounded-xl border-2 border-secondary-50 bg-white px-4 py-2 shadow-sm text-sm flex-grow"
-                  >
-                    <option value="">장소를 선택하세요</option>
-                    {userPlaces.map((place) => (
-                      <option key={place.id} value={place.id}>
-                        {place.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={labelForNewStop}
-                    onChange={(e) =>
-                      setLabelForNewStop(e.target.value as RouteStopLabel)
-                    }
-                    className="w-full sm:w-auto rounded-xl border-2 border-secondary-50 bg-white px-4 py-2 shadow-sm text-sm"
-                  >
-                    {Object.values(RouteStopLabel).map((label) => (
-                      <option key={label} value={label}>
-                        {routeStopLabelMap[label]}
-                      </option>
-                    ))}
-                  </select>
+                  <Dropdown<ClientPlace>
+                    options={filteredPlacesForDropdown}
+                    value={placeToAdd || undefined}
+                    onChange={(place) => setPlaceToAdd(place)}
+                    getOptionLabel={(place) => place.name}
+                    placeholder="장소를 선택하세요"
+                    triggerClassName="w-full flex-grow"
+                    contentClassName="max-h-40 overflow-y-auto"
+                  />
+                  <Dropdown
+                    options={labelOptions}
+                    value={labelOptions.find(l => l.id === labelForNewStop)}
+                    onChange={(label) => setLabelForNewStop(label.id)}
+                    getOptionLabel={(label) => label.name}
+                    triggerClassName="w-full sm:w-auto"
+                  />
                 </div>
                 <Button
                   type="button"
