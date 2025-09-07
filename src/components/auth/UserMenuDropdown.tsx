@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
-import Dropdown, { DropdownItem } from '~/src/components/common/dropdown';
+import Dropdown, { DropdownItem } from '~/src/components/common/Dropdown';
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from '~/src/components/common/avatar';
+} from '~/src/components/common/Avatar';
 
 interface UserMenuDropdownProps {
   userImage: string | null | undefined;

@@ -1,5 +1,5 @@
 import { db } from '~/lib/db';
-import { CreatePlaceInput } from './place-schema';
+import { CreatePlaceInput } from '~/src/schemas/place-schema';
 import { Place, Prisma } from '@prisma/client';
 import { PlaceCategory } from '~/src/types/shared';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
@@ -11,8 +11,12 @@ export class DuplicatePlaceError extends Error {
   }
 }
 
-// Helper function to convert Date objects to ISO strings
-function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(place: T): Omit<T, 'createdAt' | 'updatedAt'> & { createdAt: string; updatedAt: string } {
+function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
+  place: T,
+): Omit<T, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
+} {
   return {
     ...place,
     createdAt: place.createdAt.toISOString(),
@@ -20,18 +24,11 @@ function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(p
   };
 }
 
-/**
- * Creates a new place in the database.
- * @param data - The data for the new place, conforming to the CreatePlaceInput schema.
- * @param creatorId - The ID of the user creating the place.
- * @returns The newly created place.
- */
 export async function createPlace(data: CreatePlaceInput, creatorId: string) {
-  // Check for existing place with the same address by the same creator
   const existingPlace = await db.place.findFirst({
     where: {
       creatorId: creatorId,
-      address: data.address, // Assuming address is the unique identifier for a place for a given user
+      address: data.address,
     },
   });
 
@@ -49,29 +46,18 @@ export async function createPlace(data: CreatePlaceInput, creatorId: string) {
   return serializeDatesInPlace(place);
 }
 
-/**
- * Fetches places for a user's feed.
- * This includes places created by the users that the current user follows.
- * @param userId - The ID of the current user.
- * @returns A list of places for the user's feed.
- */
 export async function getPlacesForFeed(userId: string) {
-  // 1. Find all users that the current user follows.
   const followedUsers = await db.follow.findMany({
     where: { followerId: userId },
     select: { followingId: true },
   });
-
   const followedUserIds = followedUsers.map((follow) => follow.followingId);
-
-  // 2. Fetch all places created by those followed users.
   const places = await db.place.findMany({
     where: {
       creatorId: {
         in: followedUserIds,
       },
     },
-    // Optional: Include creator info in the result
     include: {
       creator: {
         select: { id: true, name: true, image: true },
@@ -85,14 +71,9 @@ export async function getPlacesForFeed(userId: string) {
   return places.map(serializeDatesInPlace);
 }
 
-/**
- * Fetches places for a given district.
- * @param districtName - The name of the district.
- * @returns A list of places in the specified district.
- */
 export async function getPlacesByDistrict(
   districtName: string,
-  userId: string | undefined, // 현재 로그인한 사용자 ID
+  userId: string | undefined,
   page: number = 1,
   limit: number = 12,
   sort: 'recent' | 'likes' = 'recent',
@@ -106,7 +87,7 @@ export async function getPlacesByDistrict(
 
   const whereClause: Prisma.PlaceWhereInput = {
     OR: [
-      { creatorId: MAIN_ACCOUNT_ID }, // 대표 유저의 장소
+      { creatorId: MAIN_ACCOUNT_ID },
       ...(userId ? [{ creatorId: userId }] : []), // 로그인한 본인의 장소
     ],
   };
@@ -167,11 +148,6 @@ export async function getPlacesByDistrict(
   };
 }
 
-/**
- * Fetches a place by its ID.
- * @param id - The ID of the place.
- * @returns The place with the specified ID.
- */
 export async function getPlaceById(id: string, userId?: string) {
   const placeWithLikes = await db.place.findUnique({
     where: { id },
@@ -191,7 +167,7 @@ export async function getPlaceById(id: string, userId?: string) {
               userId: true,
             },
           }
-        : false, // Don't include likes if no userId
+        : false,
     },
   });
 
@@ -199,7 +175,8 @@ export async function getPlaceById(id: string, userId?: string) {
     return null;
   }
 
-  const isLiked = userId && placeWithLikes.likes && placeWithLikes.likes.length > 0;
+  const isLiked =
+    userId && placeWithLikes.likes && placeWithLikes.likes.length > 0;
 
   const { _count, likes, ...place } = placeWithLikes;
 
@@ -211,11 +188,6 @@ export async function getPlaceById(id: string, userId?: string) {
   };
 }
 
-/**
- * Fetches places created by a specific user.
- * @param creatorId - The ID of the user who created the places.
- * @returns A list of places created by the specified user.
- */
 export async function getPlacesByCreatorId(
   creatorId: string,
   page: number = 1,
@@ -282,13 +254,6 @@ export async function getPlacesByCreatorId(
   };
 }
 
-/**
- * Deletes a place from the database.
- * @param placeId - The ID of the place to delete.
- * @param userId - The ID of the user attempting to delete the place (for authorization).
- * @returns The deleted place.
- * @throws Error if the place is not found or the user is not authorized.
- */
 export async function deletePlace(placeId: string, userId: string) {
   const placeToDelete = await db.place.findUnique({
     where: { id: placeId },
@@ -307,14 +272,6 @@ export async function deletePlace(placeId: string, userId: string) {
   });
 }
 
-/**
- * Updates an existing place in the database.
- * @param placeId - The ID of the place to update.
- * @param userId - The ID of the user attempting to update the place (for authorization).
- * @param data - The partial data to update the place with.
- * @returns The updated place.
- * @throws Error if the place is not found or the user is not authorized.
- */
 export async function updatePlace(
   placeId: string,
   userId: string,
@@ -338,11 +295,14 @@ export async function updatePlace(
   });
 }
 
-export async function getPlaceLocationsByDistrict(districtName: string, currentUserId?: string) {
+export async function getPlaceLocationsByDistrict(
+  districtName: string,
+  currentUserId?: string,
+) {
   const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
   if (!MAIN_ACCOUNT_ID) {
     console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
-    return []; // Return empty array if not defined
+    return [];
   }
 
   const whereClause: Prisma.PlaceWhereInput = {
@@ -369,10 +329,12 @@ export async function getPlaceLocationsByDistrict(districtName: string, currentU
 }
 
 export async function getAllPlacesByCreatorId(creatorId: string) {
-  return db.place.findMany({
-    where: { creatorId },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  }).then(places => places.map(serializeDatesInPlace));
+  return db.place
+    .findMany({
+      where: { creatorId },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+    .then((places) => places.map(serializeDatesInPlace));
 }

@@ -1,18 +1,22 @@
 'use client';
 
-import Dropdown from '~/src/components/common/dropdown';
+import Dropdown from '~/src/components/common/Dropdown';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
-type District = typeof SEOUL_DISTRICTS[0];
+type District = (typeof SEOUL_DISTRICTS)[0];
 
 interface DistrictDropdownProps {
-  value: string; // The ID of the selected district
+  value: string;
   onChange: (districtId: string) => void;
   className?: string;
 }
 
-export default function DistrictDropdown({ value, onChange, className }: DistrictDropdownProps) {
-  const selectedDistrict = SEOUL_DISTRICTS.find(d => d.id === value);
+export default function DistrictDropdown({
+  value,
+  onChange,
+  className,
+}: DistrictDropdownProps) {
+  const selectedDistrict = SEOUL_DISTRICTS.find((d) => d.id === value);
 
   return (
     <div className={className}>

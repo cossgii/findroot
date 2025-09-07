@@ -9,12 +9,10 @@ import React, {
 } from 'react';
 import { cn } from '~/src/utils/class-name';
 
-// --- Context to allow children to close the dropdown ---
 const DropdownContext = createContext({
   closeDropdown: () => {},
 });
 
-// --- DropdownItem: A child component for custom menus ---
 interface DropdownItemProps {
   children: React.ReactNode;
   onClick?: () => void;
@@ -32,7 +30,7 @@ export function DropdownItem({
     if (onClick) {
       onClick();
     }
-    closeDropdown(); // Close dropdown when an item is clicked
+    closeDropdown();
   };
 
   return (
@@ -48,37 +46,28 @@ export function DropdownItem({
   );
 }
 
-// --- Dropdown: The main component ---
 interface DropdownProps<T> {
-  // For menus built from an array
   options?: readonly T[];
   value?: T;
   onChange?: (value: T) => void;
   getOptionLabel?: (option: T) => string;
   placeholder?: string;
   triggerClassName?: string;
-
-  // For menus built with children (e.g., DropdownItem)
   trigger?: React.ReactNode;
   children?: React.ReactNode;
-
-  // Common props
   contentClassName?: string;
   align?: 'left' | 'right';
 }
 
 export default function Dropdown<T>({
-  // options-based props
   options,
   value,
   onChange,
   getOptionLabel,
   placeholder = 'Select an option',
   triggerClassName,
-  // children-based props
   trigger,
   children,
-  // common props
   contentClassName,
   align = 'right',
 }: DropdownProps<T>) {
@@ -110,36 +99,34 @@ export default function Dropdown<T>({
     closeDropdown();
   };
 
-  // If a trigger is provided, use it. Otherwise, render the default trigger.
-  const triggerNode =
-    trigger ?? (
-      <div
-        className={cn(
-          'flex items-center justify-between px-4 py-2 border border-gray-300 rounded-md',
-          'min-w-[120px] text-sm hover:bg-gray-50',
-          !value ? 'text-gray-400' : 'text-gray-700',
-          triggerClassName,
-        )}
+  const triggerNode = trigger ?? (
+    <div
+      className={cn(
+        'flex items-center justify-between px-4 py-2 border border-gray-300 rounded-md',
+        'min-w-[120px] text-sm hover:bg-gray-50',
+        !value ? 'text-gray-400' : 'text-gray-700',
+        triggerClassName,
+      )}
+    >
+      <span>
+        {value && getOptionLabel ? getOptionLabel(value) : placeholder}
+      </span>
+      <svg
+        className="w-4 h-4 ml-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
       >
-        <span>
-          {value && getOptionLabel ? getOptionLabel(value) : placeholder}
-        </span>
-        <svg
-          className="w-4 h-4 ml-2"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M19 9l-7 7-7-7"
-          ></path>
-        </svg>
-      </div>
-    );
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M19 9l-7 7-7-7"
+        ></path>
+      </svg>
+    </div>
+  );
 
   return (
     <DropdownContext.Provider value={{ closeDropdown }}>
@@ -156,7 +143,6 @@ export default function Dropdown<T>({
             )}
           >
             {options && getOptionLabel && onChange ? (
-              // Render from options array
               <ul className="py-1">
                 {options.map((option, index) => (
                   <li
@@ -175,7 +161,6 @@ export default function Dropdown<T>({
                 ))}
               </ul>
             ) : (
-              // Render children
               <ul className="py-1">{children}</ul>
             )}
           </div>

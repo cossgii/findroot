@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { cn } from '~/src/utils/class-name';
-import Button from '~/src/components/common/button';
-import DistrictDropdown from '~/src/components/navigation/district-select-dropdown'; // Import DistrictDropdown
+import Button from '~/src/components/common/Button';
+import DistrictDropdown from '~/src/components/navigation/DistrictSelectDropdown';
 import { type MyPageSubTab } from '~/src/components/mypage/MyPageTabs';
 
 interface MyPageContentToolbarProps {
@@ -32,7 +32,6 @@ export default function MyPageContentToolbar({
 
   return (
     <div className="flex flex-col md:flex-row justify-between items-center gap-4 p-4 bg-white rounded-lg shadow-md mb-6">
-      {/* Left Side: Sub-tabs */}
       <div className="flex space-x-4 border-b md:border-b-0 pb-2 md:pb-0">
         <button
           onClick={() => onSubTabClick('places')}
@@ -57,8 +56,6 @@ export default function MyPageContentToolbar({
           {subTabLabels[activeTab].routes}
         </button>
       </div>
-
-      {/* Right Side: Controls */}
       <div className="flex items-center gap-2">
         {activeTab === 'content' && (
           <>

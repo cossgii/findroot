@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { getPlacesByDistrict } from '~/src/services/place/placeService';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
-import DistrictClient from '~/src/components/districts/districtClient';
+import DistrictClient from '~/src/components/districts/DistrictClient';
 import { PlaceCategory } from '~/src/types/shared';
 
 interface DistrictPageProps {

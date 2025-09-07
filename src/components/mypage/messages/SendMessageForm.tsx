@@ -13,9 +13,9 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from '~/src/components/common/form';
-import Input from '~/src/components/common/input';
-import Button from '~/src/components/common/button';
+} from '~/src/components/common/Form';
+import Input from '~/src/components/common/Input';
+import Button from '~/src/components/common/Button';
 
 interface SendMessageFormProps {
   onMessageSent: () => void;

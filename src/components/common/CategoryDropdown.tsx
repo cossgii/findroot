@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Dropdown from '~/src/components/common/dropdown';
+import Dropdown from '~/src/components/common/Dropdown';
 import { PlaceCategory } from '~/src/types/shared';
 
 const categoryOptions = [

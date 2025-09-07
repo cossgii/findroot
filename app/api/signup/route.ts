@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '~/lib/db';
 import bcrypt from 'bcryptjs';
-import { z } from 'zod'; // Import z for ZodError
-import { signupSchema } from '~/src/components/auth/auth-schema';
+import { z } from 'zod';
+import { signupSchema } from '~/src/schemas/auth-schema';
 import { MAIN_ACCOUNT_ID } from '~/config';
 
 export async function POST(request: Request) {
@@ -17,10 +17,8 @@ export async function POST(request: Request) {
         { status: 409 },
       );
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 트랜잭션을 사용하여 유저 생성과 팔로우 작업을 원자적으로 처리합니다.
     const newUser = await db.$transaction(async (prisma) => {
       const createdUser = await prisma.user.create({
         data: {
@@ -30,9 +28,6 @@ export async function POST(request: Request) {
         },
       });
 
-      // 새로운 유저가 대표 계정을 자동으로 팔로우합니다.
-      // 피드에 초기 콘텐츠가 보이도록 보장합니다.
-      // MAIN_ACCOUNT_ID가 존재하고, 새로 생성된 유저가 대표 계정이 아닌 경우에만 팔로우
       const mainAccountExists = await prisma.user.findUnique({
         where: { id: MAIN_ACCOUNT_ID },
       });

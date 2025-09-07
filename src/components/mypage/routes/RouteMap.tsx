@@ -1,25 +1,26 @@
 import React, { useMemo } from 'react';
-import KakaoMap from '~/src/components/common/kakao-map';
+import KakaoMap from '~/src/components/common/KakaoMap';
 import { ClientPlace as Place } from '~/src/types/shared';
 import { RouteStop } from '~/src/hooks/mypage/useAddRouteForm';
 
 interface RouteMapProps {
   stops: RouteStop[];
-  center?: { lat: number; lng: number }; // Made optional
+  center?: { lat: number; lng: number };
   districtPlaces: Place[];
 }
 
-const DEFAULT_MAP_CENTER = { lat: 37.5665, lng: 126.978 }; // Seoul City Hall
+const DEFAULT_MAP_CENTER = { lat: 37.5665, lng: 126.978 }; // 시청 위치
 
-export default function RouteMap({ stops, center, districtPlaces }: RouteMapProps) {
+export default function RouteMap({
+  stops,
+  center,
+  districtPlaces,
+}: RouteMapProps) {
   const routePlaces = useMemo(() => stops.map((stop) => stop.place), [stops]);
 
   const mapMarkers = useMemo(() => {
     const allPlaces = new Map<string, Place>();
-
-    // Add district places first
     districtPlaces.forEach((p) => allPlaces.set(p.id, p));
-    // Add/overwrite with places in the current route, to ensure they are included
     routePlaces.forEach((p) => allPlaces.set(p.id, p));
 
     return Array.from(allPlaces.values()).map((place) => ({
@@ -54,10 +55,10 @@ export default function RouteMap({ stops, center, districtPlaces }: RouteMapProp
   return (
     <div className="w-full h-full rounded-md overflow-hidden">
       <KakaoMap
-        latitude={center?.lat || DEFAULT_MAP_CENTER.lat} // Use fallback
-        longitude={center?.lng || DEFAULT_MAP_CENTER.lng} // Use fallback
+        latitude={center?.lat || DEFAULT_MAP_CENTER.lat}
+        longitude={center?.lng || DEFAULT_MAP_CENTER.lng}
         markers={mapMarkers}
-        selectedMarkerIds={routePlaces.map((p) => p.id)} // Highlight only stops in the route
+        selectedMarkerIds={routePlaces.map((p) => p.id)}
         polylines={routePolylines}
         className="w-full h-full"
       />

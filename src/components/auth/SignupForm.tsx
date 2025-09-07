@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { z } from 'zod';
 
-import Button from '~/src/components/common/button';
+import Button from '~/src/components/common/Button';
 import {
   Form,
   FormControl,
@@ -15,9 +15,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '~/src/components/common/form';
-import Input from '~/src/components/common/input';
-import { signupSchema } from '~/src/components/auth/auth-schema';
+} from '~/src/components/common/Form';
+import Input from '~/src/components/common/Input';
+import { signupSchema } from '~/src/schemas/auth-schema';
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
@@ -53,7 +53,9 @@ export function SignupForm() {
         if (data.message === 'Validation error' && data.errors) {
           data.errors.forEach((err: z.ZodIssue) => {
             if (err.path && err.path.length > 0) {
-              form.setError(err.path[0] as Path<SignupFormValues>, { message: err.message });
+              form.setError(err.path[0] as Path<SignupFormValues>, {
+                message: err.message,
+              });
             } else {
               form.setError('root.serverError', { message: err.message });
             }
@@ -72,22 +74,19 @@ export function SignupForm() {
         return;
       }
 
-      // 회원가입 성공 후 바로 로그인 시도
       const signInResponse = await signIn('credentials', {
         email: values.email,
         password: values.password,
-        redirect: false, // 페이지 새로고침 방지
+        redirect: false,
       });
 
       if (signInResponse?.ok) {
-        router.push('/'); // 로그인 성공 시 메인 페이지로 이동
+        router.push('/');
       } else {
-        // 자동 로그인 실패 시 (이론적으로는 발생하기 어려움)
         form.setError('root.serverError', {
           message:
             '회원가입은 완료되었으나, 자동 로그인에 실패했습니다. 다시 로그인해주세요.',
         });
-        // 로그인 페이지로 리디렉션
         setTimeout(() => router.push('/login'), 3000);
       }
     } catch (error) {

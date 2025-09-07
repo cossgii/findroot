@@ -1,5 +1,5 @@
 'use client';
-import RestaurantCard from '~/src/components/districts/restaurant-card';
+import RestaurantCard from '~/src/components/districts/RestaurantCard';
 import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 import { RouteStopLabel } from '~/src/types/shared';

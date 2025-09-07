@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { type MyPageSubTab } from '../MyPageTabs';
-import RestaurantCard from '~/src/components/districts/restaurant-card';
+import RestaurantCard from '~/src/components/districts/RestaurantCard';
 import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 import { useSetAtom } from 'jotai';
@@ -27,7 +27,9 @@ export default function LikedContentList({
   const removeToast = useSetAtom(removeToastAtom);
 
   const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null);
-  const [routeDetails, setRouteDetails] = useState<RouteWithPlaces | null>(null);
+  const [routeDetails, setRouteDetails] = useState<RouteWithPlaces | null>(
+    null,
+  );
   const [isLoadingRouteDetails, setIsLoadingRouteDetails] = useState(false);
 
   useEffect(() => {
@@ -58,17 +60,16 @@ export default function LikedContentList({
   const handleUnlikeWithUndo = async (
     originalHandleLike: (forceLike?: boolean) => Promise<void>,
   ) => {
-    // Optimistically remove the item by re-fetching the list
     await originalHandleLike(false);
-    onContentUpdate(); // Instead of local state update, just refetch.
+    onContentUpdate();
 
     const toastId = Date.now().toString();
     addToast({
       message: '좋아요가 취소되었습니다.',
       actionLabel: '실행 취소',
       onAction: async () => {
-        await originalHandleLike(true); // Re-like the item
-        onContentUpdate(); // Re-fetch the list again to show the restored item
+        await originalHandleLike(true);
+        onContentUpdate();
         removeToast(toastId);
       },
       duration: 5000,
@@ -79,9 +80,9 @@ export default function LikedContentList({
     return likedPlaces.length > 0 ? (
       <ul className="space-y-3">
         {likedPlaces.map((place) => (
-          <RestaurantCard 
-            key={place.id} 
-            place={place} 
+          <RestaurantCard
+            key={place.id}
+            place={place}
             onLikeToggle={(handleLike) => handleUnlikeWithUndo(handleLike)}
           />
         ))}
@@ -105,7 +106,7 @@ export default function LikedContentList({
     <ul className="space-y-3">
       {likedRoutes.map((route: RouteWithLikeData) => {
         const districtName = route.districtId
-          ? SEOUL_DISTRICTS.find(d => d.id === route.districtId)?.name
+          ? SEOUL_DISTRICTS.find((d) => d.id === route.districtId)?.name
           : null;
 
         return (
@@ -125,7 +126,9 @@ export default function LikedContentList({
             <div className="flex justify-between items-start">
               <div className="flex-grow pr-2">
                 <h3 className="text-lg font-bold">{route.name}</h3>
-                {districtName && <p className="text-sm text-gray-500 mt-1">{districtName}</p>}
+                {districtName && (
+                  <p className="text-sm text-gray-500 mt-1">{districtName}</p>
+                )}
               </div>
               <LikeButton
                 routeId={route.id}
@@ -141,11 +144,17 @@ export default function LikedContentList({
                 ) : routeDetails ? (
                   <div className="flex flex-col space-y-4">
                     {routeDetails.places.map(({ place, label }) => (
-                      <RestaurantCard key={place.id} place={place as Restaurant} label={label} />
+                      <RestaurantCard
+                        key={place.id}
+                        place={place as Restaurant}
+                        label={label}
+                      />
                     ))}
                   </div>
                 ) : (
-                  <p className="text-red-500">루트 정보를 불러오지 못했습니다.</p>
+                  <p className="text-red-500">
+                    루트 정보를 불러오지 못했습니다.
+                  </p>
                 )}
               </div>
             )}

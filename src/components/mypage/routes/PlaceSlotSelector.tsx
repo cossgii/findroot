@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { ClientPlace as Place, PlaceCategory } from '~/src/types/shared';
-import Button from '~/src/components/common/button';
+import Button from '~/src/components/common/Button';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
-import Dropdown from '~/src/components/common/dropdown'; // Import Dropdown
+import Dropdown from '~/src/components/common/Dropdown'; // Import Dropdown
 
 interface PlaceSlotSelectorProps {
   selectedPlace: Place | null;

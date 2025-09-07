@@ -7,7 +7,7 @@ import {
   UpdateRouteApiSchema,
   NewRouteInput,
   UpdateRouteInput,
-} from './route-schema';
+} from '~/src/schemas/route-schema';
 
 // Helper function to convert Date objects to ISO strings
 function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(

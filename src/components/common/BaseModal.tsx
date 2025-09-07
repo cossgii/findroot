@@ -54,7 +54,6 @@ export default function Modal({
           onClose();
         }
       }}
-      // 핵심 위치/표시 규칙만 인라인 스타일로 보장
       style={{
         position: 'fixed',
         display: 'grid',
@@ -65,14 +64,11 @@ export default function Modal({
         left: 0,
         zIndex: 9999,
       }}
-      // 나머지 디자인은 클래스로 적용
       className={cn('bg-black/50 p-4', overlayClassName)}
     >
       <div
         ref={modalRef}
-        // 컨텐츠 박스의 핵심 위치 규칙만 인라인 스타일로 보장
         style={{ position: 'relative' }}
-        // 나머지 디자인은 클래스로 적용
         className={cn(
           'bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto',
           contentClassName,

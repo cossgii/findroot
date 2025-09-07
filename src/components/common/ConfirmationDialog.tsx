@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogPortal, DialogOverlay } from '@radix-ui/react-dialog';
-import Button from '~/src/components/common/button';
+import Button from '~/src/components/common/Button';
 import { cn } from '~/src/utils/class-name';
 
 interface ConfirmationDialogProps {

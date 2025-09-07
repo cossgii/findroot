@@ -1,6 +1,6 @@
 'use client';
 
-import Dropdown from '~/src/components/common/dropdown';
+import Dropdown from '~/src/components/common/Dropdown';
 
 interface SortOption {
   id: 'recent' | 'likes';

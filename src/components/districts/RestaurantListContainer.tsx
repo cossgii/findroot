@@ -1,4 +1,4 @@
-import RestaurantCard from '~/src/components/districts/restaurant-card';
+import RestaurantCard from '~/src/components/districts/RestaurantCard';
 import { Restaurant } from '~/src/types/restaurant';
 
 interface RestaurantListContainerProps {

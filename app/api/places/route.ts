@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
-import { createPlaceSchema } from '~/src/services/place/place-schema';
+import { createPlaceSchema } from '~/src/schemas/place-schema';
 import {
   createPlace,
   getPlacesForFeed,
   DuplicatePlaceError,
 } from '~/src/services/place/placeService';
 
-// GET /api/places - 피드를 위한 장소 목록 조회
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
@@ -29,7 +28,6 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/places - 새로운 장소 생성
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
@@ -46,21 +44,15 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newPlace, { status: 201 });
   } catch (error) {
-    // Handle DuplicatePlaceError
     if (error instanceof DuplicatePlaceError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 409 } // 409 Conflict
-      );
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
-    // Zod validation errors are handled here
     if (error instanceof Error && 'issues' in error) {
       return NextResponse.json(
         { error: 'Invalid request body', details: (error as any).issues },
         { status: 400 },
       );
     }
-    // Other errors
     console.error('Error creating place:', error);
     return NextResponse.json(
       { error: 'An unexpected error occurred.' },

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import Button from '~/src/components/common/button';
+import Button from '~/src/components/common/Button';
 import UserMenuDropdown from './UserMenuDropdown'; // Import the new wrapper
 
 export default function AuthHeaderControls() {

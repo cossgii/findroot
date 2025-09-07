@@ -14,10 +14,10 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from '~/src/components/common/form';
-import Input from '~/src/components/common/input';
-import Button from '~/src/components/common/button';
-import { Avatar, AvatarFallback, AvatarImage } from '~/src/components/common/avatar';
+} from '~/src/components/common/Form';
+import Input from '~/src/components/common/Input';
+import Button from '~/src/components/common/Button';
+import { Avatar, AvatarFallback, AvatarImage } from '~/src/components/common/Avatar';
 
 // Schema for text inputs only. Image is handled separately.
 const userProfileSchema = z.object({

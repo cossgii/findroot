@@ -4,7 +4,7 @@ import { authOptions } from '~/src/services/auth/authOptions';
 import {
   createRoute,
 } from '~/src/services/route/routeService';
-import { NewRouteApiSchema } from '~/src/services/route/route-schema';
+import { NewRouteApiSchema } from '~/src/schemas/route-schema';
 import { z } from 'zod';
 
 export async function POST(request: Request) {

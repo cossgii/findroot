@@ -1,4 +1,5 @@
 'use client';
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type z } from 'zod';
@@ -6,16 +7,16 @@ import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { loginSchema } from '~/src/components/auth/auth-schema';
-import Button from '~/src/components/common/button';
+import { loginSchema } from '~/src/schemas/auth-schema';
+import Button from '~/src/components/common/Button';
 import {
   Form,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '~/src/components/common/form';
-import Input from '~/src/components/common/input';
+} from '~/src/components/common/Form';
+import Input from '~/src/components/common/Input';
 
 export default function LoginForm() {
   const router = useRouter();

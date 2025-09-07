@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Modal from '~/src/components/districts/modal';
+import BaseModal from '~/src/components/common/BaseModal';
 import { useAddRouteForm } from '~/src/hooks/mypage/useAddRouteForm';
 import AddRouteForm from './AddRouteForm';
 
@@ -35,7 +35,7 @@ export default function AddRouteModal({
   } = useAddRouteForm({ onClose, onRouteAdded });
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} contentClassName="max-w-2xl">
+    <BaseModal isOpen={isOpen} onClose={onClose} contentClassName="max-w-2xl">
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-4">새 루트 등록</h2>
         <AddRouteForm
@@ -57,6 +57,6 @@ export default function AddRouteModal({
           handleCancelDistrictChange={handleCancelDistrictChange}
         />
       </div>
-    </Modal>
+    </BaseModal>
   );
 }

@@ -1,21 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation'; // Import useRouter
-
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '~/src/utils/class-name';
-import DistrictDropdown from '~/src/components/navigation/district-select-dropdown'; // Renamed
-import AuthHeaderControls from '~/src/components/auth/auth-header-controls';
+import DistrictDropdown from '~/src/components/navigation/DistrictSelectDropdown';
+import AuthHeaderControls from '~/src/components/auth/AuthHeaderControls';
 
 export default function Header() {
   const pathname = usePathname();
-  const router = useRouter(); // Initialize router
-
-  // Get current district from pathname
+  const router = useRouter();
   const pathSegments = pathname.split('/');
-  const districtId = pathSegments[1] === 'districts' ? pathSegments[2] || 'all' : 'all';
-
-  // Define onChange handler for the dropdown
+  const districtId =
+    pathSegments[1] === 'districts' ? pathSegments[2] || 'all' : 'all';
   const handleDistrictChange = (newDistrictId: string) => {
     if (newDistrictId === 'all') {
       router.push('/districts');
@@ -24,8 +20,14 @@ export default function Header() {
     }
   };
 
-  // 특정 페이지에서는 자치구 드롭다운을 숨깁니다.
-  const hideDistrictDropdown = ['/', '/login', '/signup', '/mypage', '/forgot-password', '/reset-password'].includes(pathname);
+  const hideDistrictDropdown = [
+    '/',
+    '/login',
+    '/signup',
+    '/mypage',
+    '/forgot-password',
+    '/reset-password',
+  ].includes(pathname);
   const showDistrictDropdown = !hideDistrictDropdown;
 
   return (

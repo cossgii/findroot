@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 
-import Button from '~/src/components/common/button';
+import Button from '~/src/components/common/Button';
 import {
   Form,
   FormField,
@@ -14,9 +14,9 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from '~/src/components/common/form';
-import Input from '~/src/components/common/input';
-import MainContainer from '~/src/components/layout/main-container';
+} from '~/src/components/common/Form';
+import Input from '~/src/components/common/Input';
+import MainContainer from '~/src/components/layout/MainContainer';
 
 const passwordRegex =
   /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$&*?!%])[A-Za-z\d!@$%&*?]{8,15}$/;

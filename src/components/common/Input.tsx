@@ -1,8 +1,6 @@
 'use client';
 
 import { forwardRef, useState } from 'react';
-
-// import Visibility from '~/src/assets/icons/visibility';
 import { cn } from '~/src/utils/class-name';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -38,9 +36,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               type="button"
               onClick={togglePassword}
               className="absolute right-2 top-1/2 -translate-y-1/2 transform"
-            >
-              {/* <Visibility isVisible={showPassword} /> */}
-            </button>
+            ></button>
           )}
         </div>
         {error && <span className={cn('text-sm text-red-600')}>{error}</span>}

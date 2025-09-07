@@ -1,6 +1,6 @@
 import { UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
-import { createPlaceSchema } from '~/src/services/place/place-schema';
+import { createPlaceSchema } from '~/src/schemas/place-schema';
 import { PlaceCategory } from '~/src/types/shared';
 import {
   Form,
@@ -9,9 +9,9 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from '~/src/components/common/form';
-import Input from '~/src/components/common/input';
-import Button from '~/src/components/common/button';
+} from '~/src/components/common/Form';
+import Input from '~/src/components/common/Input';
+import Button from '~/src/components/common/Button';
 import CategoryDropdown from '~/src/components/common/CategoryDropdown';
 
 type EditPlaceFormValues = z.infer<typeof createPlaceSchema>;

@@ -1,6 +1,6 @@
 'use client';
 
-import Button from '~/src/components/common/button';
+import Button from '~/src/components/common/Button';
 import { type MyPageSubTab } from '../MyPageTabs';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';

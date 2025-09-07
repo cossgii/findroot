@@ -14,7 +14,7 @@ interface ButtonProps extends ComponentPropsWithoutRef<'button'> {
 export default forwardRef(function Button(
   {
     children,
-    variant = 'primary', // 기본값을 'primary'로 설정
+    variant = 'primary',
     disabled,
     className,
     size = 'large',

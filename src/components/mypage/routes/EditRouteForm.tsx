@@ -13,21 +13,19 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from '~/src/components/common/form';
-import Input from '~/src/components/common/input';
-import Button from '~/src/components/common/button';
+} from '~/src/components/common/Form';
+import Input from '~/src/components/common/Input';
+import Button from '~/src/components/common/Button';
 import RouteMap from './RouteMap';
-import Dropdown from '~/src/components/common/dropdown';
-import DistrictDropdown from '~/src/components/navigation/district-select-dropdown';
+import Dropdown from '~/src/components/common/Dropdown';
+import DistrictDropdown from '~/src/components/navigation/DistrictSelectDropdown';
 
-// Helper to map enum to display names
 const routeStopLabelMap: Record<RouteStopLabel, string> = {
   MEAL: '식사',
   CAFE: '카페',
   BAR: '주점',
 };
 
-// Create options for the label dropdown
 const labelOptions = Object.entries(routeStopLabelMap).map(([id, name]) => ({
   id: id as RouteStopLabel,
   name,
@@ -35,7 +33,10 @@ const labelOptions = Object.entries(routeStopLabelMap).map(([id, name]) => ({
 
 interface EditRouteFormProps {
   form: UseFormReturn<{ name: string; description?: string | undefined }>;
-  onSubmit: (values: { name: string; description?: string | undefined }) => void;
+  onSubmit: (values: {
+    name: string;
+    description?: string | undefined;
+  }) => void;
   onClose: () => void;
   stops: RouteStop[];
   userPlaces: ClientPlace[];
@@ -48,7 +49,7 @@ interface EditRouteFormProps {
   handleDistrictChange: (districtId: string) => void;
 }
 
-export default function EditRouteForm({ 
+export default function EditRouteForm({
   form,
   onSubmit,
   onClose,
@@ -76,9 +77,11 @@ export default function EditRouteForm({
 
   const placesForMap = useMemo(() => {
     if (!selectedDistrict) {
-      return stops.map(s => s.place);
+      return stops.map((s) => s.place);
     }
-    const districtName = SEOUL_DISTRICTS.find((d) => d.id === selectedDistrict)?.name;
+    const districtName = SEOUL_DISTRICTS.find(
+      (d) => d.id === selectedDistrict,
+    )?.name;
     return userPlaces.filter((place) => place.district === districtName);
   }, [userPlaces, selectedDistrict, stops]);
 
@@ -86,10 +89,11 @@ export default function EditRouteForm({
     if (!selectedDistrict) {
       return [];
     }
-    const districtName = SEOUL_DISTRICTS.find((d) => d.id === selectedDistrict)?.name;
+    const districtName = SEOUL_DISTRICTS.find(
+      (d) => d.id === selectedDistrict,
+    )?.name;
     return userPlaces.filter((place) => place.district === districtName);
   }, [userPlaces, selectedDistrict]);
-
 
   if (isLoading) {
     return <p>루트 정보를 불러오는 중...</p>;
@@ -123,7 +127,10 @@ export default function EditRouteForm({
               <FormItem>
                 <FormLabel>설명</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="이 루트에 대한 설명을 적어주세요" />
+                  <Input
+                    {...field}
+                    placeholder="이 루트에 대한 설명을 적어주세요"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -204,7 +211,7 @@ export default function EditRouteForm({
                   />
                   <Dropdown
                     options={labelOptions}
-                    value={labelOptions.find(l => l.id === labelForNewStop)}
+                    value={labelOptions.find((l) => l.id === labelForNewStop)}
                     onChange={(label) => setLabelForNewStop(label.id)}
                     getOptionLabel={(label) => label.name}
                     triggerClassName="w-full sm:w-auto"

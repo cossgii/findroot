@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
-import { createPlaceSchema } from '~/src/services/place/place-schema';
+import { createPlaceSchema } from '~/src/schemas/place-schema';
 import { ClientPlace as Place } from '~/src/types/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
@@ -15,7 +15,6 @@ interface UseEditPlaceFormProps {
   onPlaceUpdated: () => void;
 }
 
-// Query Function for initial data fetching
 const fetchPlaceById = async (id: string): Promise<Place> => {
   const response = await fetch(`/api/places/${id}`);
   if (!response.ok) {
@@ -24,8 +23,10 @@ const fetchPlaceById = async (id: string): Promise<Place> => {
   return response.json();
 };
 
-// Mutation Function for updating place
-const updatePlaceApi = async (payload: { placeId: string; values: EditPlaceFormValues }) => {
+const updatePlaceApi = async (payload: {
+  placeId: string;
+  values: EditPlaceFormValues;
+}) => {
   const response = await fetch(`/api/places/${payload.placeId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -50,13 +51,17 @@ export const useEditPlaceForm = ({
     mode: 'onTouched',
   });
 
-  const { data: placeData, isLoading, isError, error } = useQuery<Place, Error>({
+  const {
+    data: placeData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<Place, Error>({
     queryKey: ['place', placeId],
     queryFn: () => fetchPlaceById(placeId),
-    enabled: !!placeId, // Only fetch if placeId is available
+    enabled: !!placeId,
   });
 
-  // Effect to reset form when placeData is loaded
   useEffect(() => {
     if (placeData) {
       form.reset({
@@ -66,13 +71,12 @@ export const useEditPlaceForm = ({
         longitude: placeData.longitude,
         district: placeData.district || '',
         description: placeData.description || '',
-        link: placeData.link || '', // Add the link field
+        link: placeData.link || '',
         category: placeData.category,
       });
     }
   }, [placeData, form]);
 
-  // Effect to handle error when fetching placeData
   useEffect(() => {
     if (isError && error) {
       console.error('Error fetching place data:', error);
@@ -81,16 +85,21 @@ export const useEditPlaceForm = ({
     }
   }, [isError, error, onClose]);
 
-  const { mutate: updatePlaceMutation } = useMutation<Place, Error, { placeId: string; values: EditPlaceFormValues }>({
+  const { mutate: updatePlaceMutation } = useMutation<
+    Place,
+    Error,
+    { placeId: string; values: EditPlaceFormValues }
+  >({
     mutationFn: updatePlaceApi,
     onSuccess: () => {
       alert('장소가 성공적으로 수정되었습니다.');
       onPlaceUpdated();
       onClose();
-      // Invalidate relevant queries after successful update
       queryClient.invalidateQueries({ queryKey: ['place', placeId] });
-      queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id, 'places', 'created'] });
-      queryClient.invalidateQueries({ queryKey: ['placeLocations'] }); // Invalidate all place locations for map
+      queryClient.invalidateQueries({
+        queryKey: ['user', session?.user?.id, 'places', 'created'],
+      });
+      queryClient.invalidateQueries({ queryKey: ['placeLocations'] });
     },
     onError: (err) => {
       console.error('Error updating place:', err);

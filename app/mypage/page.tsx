@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import MainContainer from '~/src/components/layout/main-container';
+import MainContainer from '~/src/components/layout/MainContainer';
 import MyPageTabs, { type MyPageTab } from '~/src/components/mypage/MyPageTabs';
 import { PlaceCategory } from '~/src/types/shared';
 

@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from 'react'; // Import useMemo
+import { useEffect, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
-import { createPlaceSchema } from '~/src/services/place/place-schema';
+import { createPlaceSchema } from '~/src/schemas/place-schema';
 import { PlaceCategory } from '~/src/types/shared';
 import {
   Form,
@@ -10,13 +10,13 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from '~/src/components/common/form';
-import Input from '~/src/components/common/input';
-import Button from '~/src/components/common/button';
-import KakaoMap from '~/src/components/common/kakao-map';
+} from '~/src/components/common/Form';
+import Input from '~/src/components/common/Input';
+import Button from '~/src/components/common/Button';
+import KakaoMap from '~/src/components/common/KakaoMap';
 import { usePlaceSearch } from '~/src/hooks/mypage/usePlaceSearch';
 import PlaceSearchInput from './PlaceSearchInput';
-import CategoryDropdown from '~/src/components/common/CategoryDropdown'; // Import CategoryDropdown
+import CategoryDropdown from '~/src/components/common/CategoryDropdown';
 
 type AddPlaceFormValues = z.infer<typeof createPlaceSchema>;
 
@@ -43,7 +43,7 @@ export default function AddPlaceForm({
     isKakaoPlacesServiceReady,
   } = usePlaceSearch();
 
-  const defaultCenter = useMemo(() => ({ lat: 37.5665, lng: 126.978 }), []); // Memoize defaultCenter
+  const defaultCenter = useMemo(() => ({ lat: 37.5665, lng: 126.978 }), []); //시청 위치
 
   useEffect(() => {
     if (selectedPlace) {
@@ -59,7 +59,7 @@ export default function AddPlaceForm({
       form.setValue('address', placeAddress);
       form.setValue('latitude', placeLatitude);
       form.setValue('longitude', placeLongitude);
-      form.setValue('district', placeDistrict || ''); // Use placeDistrict
+      form.setValue('district', placeDistrict || '');
     }
   }, [selectedPlace, form]);
 
@@ -94,7 +94,7 @@ export default function AddPlaceForm({
                   ]
                 : [];
               return currentMarkers;
-            }, [selectedPlace])} // Memoize markers array
+            }, [selectedPlace])}
             className="w-full h-full"
           />
         </div>
@@ -174,7 +174,10 @@ export default function AddPlaceForm({
                 <FormItem>
                   <FormLabel>설명</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="이 장소에 대한 설명을 적어주세요" />
+                    <Input
+                      {...field}
+                      placeholder="이 장소에 대한 설명을 적어주세요"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -187,7 +190,10 @@ export default function AddPlaceForm({
                 <FormItem>
                   <FormLabel>링크 (선택 사항)</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="관련 웹사이트 링크를 입력하세요 (예: https://example.com)" />
+                    <Input
+                      {...field}
+                      placeholder="관련 웹사이트 링크를 입력하세요 (예: https://example.com)"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

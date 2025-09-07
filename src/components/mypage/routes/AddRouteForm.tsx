@@ -13,13 +13,13 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from '~/src/components/common/form';
-import Input from '~/src/components/common/input';
-import Button from '~/src/components/common/button';
+} from '~/src/components/common/Form';
+import Input from '~/src/components/common/Input';
+import Button from '~/src/components/common/Button';
 import RouteMap from './RouteMap';
 import ConfirmationDialog from '~/src/components/common/ConfirmationDialog';
-import Dropdown from '~/src/components/common/dropdown';
-import DistrictDropdown from '~/src/components/navigation/district-select-dropdown';
+import Dropdown from '~/src/components/common/Dropdown';
+import DistrictDropdown from '~/src/components/navigation/DistrictSelectDropdown';
 
 // Helper to map enum to display names
 const routeStopLabelMap: Record<RouteStopLabel, string> = {

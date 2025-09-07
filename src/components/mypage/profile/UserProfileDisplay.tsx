@@ -6,7 +6,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from '~/src/components/common/avatar';
+} from '~/src/components/common/Avatar';
 
 interface UserProfileDisplayProps {
   user: User;

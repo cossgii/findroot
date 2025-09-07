@@ -1,6 +1,6 @@
 import React from 'react';
-import Input from '~/src/components/common/input';
-import Button from '~/src/components/common/button';
+import Input from '~/src/components/common/Input';
+import Button from '~/src/components/common/Button';
 
 interface PlaceSearchInputProps {
   searchKeyword: string;

@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import KakaoMap from '~/src/components/common/kakao-map';
+import KakaoMap from '~/src/components/common/KakaoMap';
 import ToggleSwitch from '~/src/components/common/ToggleSwitch';
 import RestaurantListContainer from '~/src/components/districts/RestaurantListContainer';
 import RestaurantRouteContainer from '~/src/components/districts/RestaurantRouteContainer';

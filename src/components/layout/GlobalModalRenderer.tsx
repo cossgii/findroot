@@ -16,8 +16,8 @@ import {
 import { Restaurant } from '~/src/types/restaurant';
 
 // Import non-dynamic components
-import Modal from '~/src/components/districts/modal';
-import RestaurantDetailModalContent from '~/src/components/districts/restaurant-detail-modal-content';
+import BaseModal from '~/src/components/common/BaseModal';
+import RestaurantDetailModalContent from '~/src/components/districts/RestaurantDetailModalContent';
 import { useQuery } from '@tanstack/react-query';
 
 // Dynamically import heavy, client-side only modal components
@@ -71,11 +71,11 @@ const RestaurantDetailModal = ({
   });
 
   return (
-    <Modal isOpen={true} onClose={onClose}>
+    <BaseModal isOpen={true} onClose={onClose}>
       {isLoading && <div className="p-6">로딩 중...</div>}
       {error && <div className="p-6">{error.message}</div>}
       {restaurant && <RestaurantDetailModalContent restaurant={restaurant} />}
-    </Modal>
+    </BaseModal>
   );
 };
 
@@ -86,7 +86,7 @@ const InfoMessageModal = ({
   onClose,
 }: InfoMessageModalProps & { onClose: () => void }) => {
   return (
-    <Modal isOpen={true} onClose={onClose}>
+    <BaseModal isOpen={true} onClose={onClose}>
       <div className="p-6">
         <h2 className="text-xl font-bold mb-4">{title}</h2>
         <p>{message}</p>
@@ -99,7 +99,7 @@ const InfoMessageModal = ({
           </button>
         </div>
       </div>
-    </Modal>
+    </BaseModal>
   );
 };
 

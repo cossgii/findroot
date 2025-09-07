@@ -1,4 +1,4 @@
-import { SeoulMap } from '~/src/components/common/seoul-map';
+import { SeoulMap } from '~/src/components/common/SeoulMap';
 
 export default function Page() {
   return (

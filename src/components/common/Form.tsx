@@ -11,7 +11,7 @@ import {
 } from 'react-hook-form';
 import type * as LabelPrimitive from '@radix-ui/react-label';
 
-import { Label } from '~/src/components/common/label';
+import { Label } from '~/src/components/common/Label';
 import { cn } from '~/src/utils/class-name';
 
 const Form = FormProvider;

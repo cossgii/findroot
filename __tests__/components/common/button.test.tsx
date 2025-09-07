@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import Button from '~/src/components/common/button'; // 수정된 경로 사용
+import Button from '~/src/components/common/Button';
 
 describe('Button', () => {
   it('버튼 텍스트를 올바르게 렌더링해야 한다', () => {

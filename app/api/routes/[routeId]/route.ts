@@ -6,7 +6,7 @@ import {
   getRouteById,
   updateRoute,
 } from '~/src/services/route/routeService';
-import { UpdateRouteApiSchema } from '~/src/services/route/route-schema';
+import { UpdateRouteApiSchema } from '~/src/schemas/route-schema';
 import { z } from 'zod';
 
  interface RouteRouteParams {

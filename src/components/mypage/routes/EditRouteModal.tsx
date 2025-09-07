@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Modal from '~/src/components/districts/modal';
+import BaseModal from '~/src/components/common/BaseModal';
 import { useEditRouteForm } from '~/src/hooks/mypage/useEditRouteForm';
 import EditRouteForm from './EditRouteForm';
 
@@ -37,7 +37,7 @@ export default function EditRouteModal({
   });
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} contentClassName="max-w-2xl">
+    <BaseModal isOpen={isOpen} onClose={onClose} contentClassName="max-w-2xl">
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-4">루트 정보 수정</h2>
         <EditRouteForm
@@ -55,6 +55,6 @@ export default function EditRouteModal({
           handleDistrictChange={handleDistrictChange}
         />
       </div>
-    </Modal>
+    </BaseModal>
   );
 }
