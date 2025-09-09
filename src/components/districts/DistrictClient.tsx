@@ -1,23 +1,24 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import KakaoMap from '~/src/components/common/KakaoMap';
 import ToggleSwitch from '~/src/components/common/ToggleSwitch';
-import RestaurantListContainer from '~/src/components/districts/RestaurantListContainer';
 import RestaurantRouteContainer from '~/src/components/districts/RestaurantRouteContainer';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 import { useSetAtom } from 'jotai';
 import { modalAtom } from '~/src/stores/app-store';
 import SortDropdown from '~/src/components/common/SortDropdown';
 import Pagination from '~/src/components/common/Pagination';
-import { Restaurant } from '~/src/types/restaurant';
 import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PlaceCategory } from '~/src/types/shared';
 import { cn } from '~/src/utils/class-name';
-import { PaginatedResponse } from '~/src/hooks/usePaginatedQuery';
+import { PaginatedResponse, usePaginatedQuery } from '~/src/hooks/usePaginatedQuery';
+import PlaceList from './PlaceList';
+import RestaurantListSkeletonGrid from './RestaurantListSkeletonGrid';
+import RouteContainerSkeleton from './RouteContainerSkeleton';
 
 interface PlaceLocation {
   id: string;
@@ -40,33 +41,12 @@ const fetchAllPlaceLocations = async (
   return response.json();
 };
 
-const fetchAllRoutesByDistrict = async (
-  districtId: string,
-  userId: string | undefined,
-  page: number,
-  limit: number,
-): Promise<PaginatedResponse<RouteWithPlaces>> => {
-  if (!districtId) return { data: [], totalPages: 0, currentPage: 1 };
-  const response = await fetch(
-    `/api/routes/locations?districtId=${districtId}&page=${page}&limit=${limit}`,
-  );
-  if (!response.ok) {
-    throw new Error('Failed to fetch routes');
-  }
-  const rawData = await response.json();
-  return {
-    data: rawData.routes,
-    totalPages: rawData.totalPages,
-    currentPage: rawData.currentPage,
-  };
-};
+
 
 interface DistrictClientProps {
   districtId: string;
   districtInfo: (typeof SEOUL_DISTRICTS)[number] | undefined;
   center: { lat: number; lng: number };
-  initialPlaces: Restaurant[];
-  totalPages: number;
   currentPage: number;
   currentSort: 'recent' | 'likes';
   currentCategory?: PlaceCategory;
@@ -78,45 +58,67 @@ const TABS: { label: string; value?: PlaceCategory }[] = [
   { label: '음료', value: PlaceCategory.DRINK },
 ];
 
+// New internal component for fetching and displaying routes
+const RouteListDisplay = ({
+  districtId,
+  initialPage,
+  selectedRouteId,
+  onSelectRoute,
+}: {
+  districtId: string;
+  initialPage: number;
+  selectedRouteId: string | null;
+  onSelectRoute: (routeId: string) => void;
+}) => {
+  const { data: session } = useSession();
+  const userId = session?.user?.id || '';
+
+  const { data, page, setPage } = usePaginatedQuery<RouteWithPlaces>({
+    queryKey: ['allRoutes', districtId],
+    apiEndpoint: `/api/routes/locations`,
+    queryParams: { districtId, limit: 5 },
+    initialPage: initialPage,
+    suspense: true,
+    enabled: !!userId,
+  });
+
+  return (
+    <>
+      <RestaurantRouteContainer
+        routes={data?.data || []}
+        isLoading={false} // Suspense handles loading
+        selectedRouteId={selectedRouteId}
+        onSelectRoute={onSelectRoute}
+      />
+      <Pagination
+        currentPage={page}
+        totalPages={data?.totalPages || 1}
+        onPageChange={setPage}
+      />
+    </>
+  );
+};
+
 export default function DistrictClient({
   districtId,
   districtInfo,
   center,
-  initialPlaces,
-  totalPages,
   currentPage,
   currentSort,
   currentCategory,
 }: DistrictClientProps) {
-  const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
 
   const [isRouteView, setIsRouteView] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
-  const [currentRoutePage, setCurrentRoutePage] = useState(1);
   const setModal = useSetAtom(modalAtom);
 
   const { data: allPlaceLocations = [] } = useQuery<PlaceLocation[], Error>({
     queryKey: ['placeLocations', districtInfo?.name],
     queryFn: () => fetchAllPlaceLocations(districtInfo?.name),
     enabled: !!districtInfo?.name,
-  });
-
-  const { data: paginatedRoutesData, isLoading: isLoadingRoutes } = useQuery<
-    PaginatedResponse<RouteWithPlaces>,
-    Error
-  >({
-    queryKey: ['allRoutes', districtId, currentRoutePage],
-    queryFn: () =>
-      fetchAllRoutesByDistrict(
-        districtId,
-        session?.user?.id,
-        currentRoutePage,
-        5,
-      ),
-    enabled: isRouteView,
-    placeholderData: (prev) => prev,
   });
 
   const handleUrlChange = (newParams: Record<string, string | number>) => {
@@ -149,9 +151,13 @@ export default function DistrictClient({
     setModal({ type: 'RESTAURANT_DETAIL', props: { restaurantId: markerId } });
   };
 
-  const selectedRoute = paginatedRoutesData?.data.find(
-    (r) => r.id === selectedRouteId,
-  );
+  const selectedRoute = useMemo(() => {
+    // This data is now fetched by RouteListDisplay, so we need to get it from query cache
+    const queryData = queryClient.getQueryData<PaginatedResponse<RouteWithPlaces>>([
+      'allRoutes', districtId,
+    ]);
+    return queryData?.data.find((r) => r.id === selectedRouteId);
+  }, [selectedRouteId, districtId, queryClient]);
 
   const mapMarkers = useMemo(() => {
     if (isRouteView) {
@@ -219,10 +225,10 @@ export default function DistrictClient({
           />
         </div>
         {isRouteView ? (
-          <div>
-            <RestaurantRouteContainer
-              routes={paginatedRoutesData?.data || []}
-              isLoading={isLoadingRoutes}
+          <Suspense fallback={<RouteContainerSkeleton />}>
+            <RouteListDisplay
+              districtId={districtId}
+              initialPage={currentPage}
               selectedRouteId={selectedRouteId}
               onSelectRoute={(routeId) => {
                 setSelectedRouteId((prev) =>
@@ -230,12 +236,7 @@ export default function DistrictClient({
                 );
               }}
             />
-            <Pagination
-              currentPage={paginatedRoutesData?.currentPage || 1}
-              totalPages={paginatedRoutesData?.totalPages || 1}
-              onPageChange={setCurrentRoutePage}
-            />
-          </div>
+          </Suspense>
         ) : (
           <div>
             <div className="border-b border-gray-200 mb-4">
@@ -261,19 +262,19 @@ export default function DistrictClient({
               currentSort={currentSort}
               onSortChange={handleSortChange}
             />
-            <RestaurantListContainer
-              places={initialPlaces}
-              districtName={districtInfo?.name || districtId}
-              categoryName={
-                TABS.find((tab) => tab.value === currentCategory)?.label ||
-                '전체'
-              }
-            />
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
+            <Suspense fallback={<RestaurantListSkeletonGrid />}>
+              <PlaceList
+                districtName={districtInfo?.name || '전체'}
+                categoryName={
+                  TABS.find((tab) => tab.value === currentCategory)?.label ||
+                  '전체'
+                }
+                sort={currentSort}
+                category={currentCategory}
+                page={currentPage}
+                onPageChange={handlePageChange}
+              />
+            </Suspense>
           </div>
         )}
       </div>

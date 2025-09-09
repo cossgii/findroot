@@ -1,4 +1,4 @@
-import "server-only";
+import 'server-only';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import GoogleProvider from 'next-auth/providers/google';
 import KakaoProvider from 'next-auth/providers/kakao';
@@ -12,6 +12,7 @@ import {
   GOOGLE_CLIENT_SECRET,
   KAKAO_CLIENT_ID,
   KAKAO_CLIENT_SECRET,
+  MAIN_ACCOUNT_ID,
   NEXTAUTH_SECRET,
 } from '~/config';
 
@@ -78,14 +79,10 @@ export const authOptions: AuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider && account.provider !== 'credentials') {
         let email = user.email;
-
-        // 이메일이 없는 경우 (예: 카카오 비즈니스 앱 미사용), 고유한 더미 이메일 생성
         if (!email && account.provider === 'kakao') {
-          // providerAccountId는 각 소셜 계정의 고유 ID이므로 이를 활용하여 고유성 보장
           email = `${account.provider}_${account.providerAccountId}@noemail.com`;
-          user.email = email; // user 객체에 할당하여 PrismaAdapter가 사용하도록 함
+          user.email = email;
 
-          // user.name이 비어있을 경우 프로필에서 닉네임 가져오기 시도 (이전 로직 유지)
           if (!user.name && profile) {
             const kakaoProfile = profile as any;
             if (kakaoProfile.kakao_account?.profile?.nickname) {
@@ -96,7 +93,6 @@ export const authOptions: AuthOptions = {
           }
         }
 
-        // 이메일이 있는 경우 (또는 더미 이메일이 생성된 경우)에만 계정 통합 로직 실행
         if (email) {
           const existingUser = await db.user.findUnique({ where: { email } });
 
@@ -149,6 +145,7 @@ export const authOptions: AuthOptions = {
           session.user.email = userFromDb.email;
           session.user.image = userFromDb.image;
           session.user.id = userFromDb.id;
+          session.user.isAdmin = userFromDb.id === MAIN_ACCOUNT_ID;
         }
       }
       return session;

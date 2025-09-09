@@ -21,14 +21,12 @@ import ConfirmationDialog from '~/src/components/common/ConfirmationDialog';
 import Dropdown from '~/src/components/common/Dropdown';
 import DistrictDropdown from '~/src/components/navigation/DistrictSelectDropdown';
 
-// Helper to map enum to display names
 const routeStopLabelMap: Record<RouteStopLabel, string> = {
   MEAL: '식사',
   CAFE: '카페',
   BAR: '주점',
 };
 
-// Create options for the label dropdown
 const labelOptions = Object.entries(routeStopLabelMap).map(([id, name]) => ({
   id: id as RouteStopLabel,
   name,
@@ -36,7 +34,10 @@ const labelOptions = Object.entries(routeStopLabelMap).map(([id, name]) => ({
 
 interface AddRouteFormProps {
   form: UseFormReturn<{ name: string; description?: string | undefined }>;
-  onSubmit: (values: { name: string; description?: string | undefined }) => void;
+  onSubmit: (values: {
+    name: string;
+    description?: string | undefined;
+  }) => void;
   onClose: () => void;
   stops: RouteStop[];
   userPlaces: Place[];
@@ -85,7 +86,7 @@ export default function AddRouteForm({
 
   const placesForMap = useMemo(() => {
     if (!selectedDistrict) {
-      return stops.map((s) => s.place); // If no district, show only places in the route
+      return stops.map((s) => s.place);
     }
     const districtName = SEOUL_DISTRICTS.find(
       (d) => d.id === selectedDistrict,
@@ -114,20 +115,17 @@ export default function AddRouteForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* 1. District Selector */}
         <div>
           <FormLabel>자치구 선택</FormLabel>
           <DistrictDropdown
-            value={selectedDistrict || 'all'}
+            value={selectedDistrict || ''}
             onChange={handleDistrictChange}
             className="mt-1"
+            showAll={false}
           />
         </div>
-
-        {/* Render the rest of the form only when a district is selected */}
         {selectedDistrict && (
           <>
-            {/* 2. Map View */}
             <div className="my-6 h-[300px] w-full rounded-md overflow-hidden">
               <RouteMap
                 stops={stops}
@@ -135,8 +133,6 @@ export default function AddRouteForm({
                 districtPlaces={placesForMap}
               />
             </div>
-
-            {/* 3. Current Stops List */}
             <div className="space-y-2">
               <FormLabel>경유지 목록 (최대 5개)</FormLabel>
               {stops.length > 0 ? (
@@ -175,9 +171,7 @@ export default function AddRouteForm({
                 </p>
               )}
             </div>
-
-            {/* 4. Add New Stop Section */}
-            {stops.length < 5 && (
+            {stops.length < 5 && filteredPlacesForDropdown.length > 0 && (
               <div className="p-4 space-y-3 border rounded-md bg-gray-50">
                 <h3 className="font-semibold">새 경유지 추가</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
@@ -208,8 +202,6 @@ export default function AddRouteForm({
                 </Button>
               </div>
             )}
-
-            {/* 5. Route Details */}
             <div className="space-y-4 pt-4 border-t">
               <FormField
                 control={form.control}
@@ -243,8 +235,6 @@ export default function AddRouteForm({
             </div>
           </>
         )}
-
-        {/* 6. Action Buttons */}
         <div className="flex justify-end space-x-2 pt-6 border-t">
           <Button type="button" variant="outlined" onClick={onClose}>
             취소

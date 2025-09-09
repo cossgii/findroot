@@ -14,7 +14,10 @@ interface UserMenuDropdownProps {
   isMyPage: boolean;
 }
 
-export default function UserMenuDropdown({ userImage, isMyPage }: UserMenuDropdownProps) {
+export default function UserMenuDropdown({
+  userImage,
+  isMyPage,
+}: UserMenuDropdownProps) {
   const trigger = (
     <button className="transition-transform duration-200 ease-in-out hover:scale-110">
       <Avatar size="medium">
@@ -25,10 +28,7 @@ export default function UserMenuDropdown({ userImage, isMyPage }: UserMenuDropdo
   );
 
   return (
-    <Dropdown
-      align="right"
-      trigger={trigger}
-    >
+    <Dropdown align="right" trigger={trigger} contentClassName="w-36">
       {!isMyPage && (
         <DropdownItem>
           <Link href="/mypage" className="block w-full text-left">

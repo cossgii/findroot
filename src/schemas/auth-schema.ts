@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const passwordRegex =
-  /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$&*?!%])[A-Za-z\d!@$%&*?]{8,15}$/;
+  /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@const passwordRegex = /.{8,15}/;*?!%])[A-Za-z\d!@$%&*?]{8,15}$/;
 
 export const loginSchema = z.object({
   email: z
@@ -26,7 +26,7 @@ export const signupSchema = z
       .string()
       .min(1, { message: '비밀번호를 입력해주세요' })
       .min(8, { message: '비밀번호는 8자리 이상이어야 합니다' })
-      .regex(passwordRegex, {
+      .refine((val) => passwordRegex.test(val), {
         message: '영문, 숫자, 특수문자(~!@#$%^&*)를 모두 조합해 주세요',
       }),
     confirmPassword: z

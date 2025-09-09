@@ -1,51 +1,26 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import React from 'react';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { ClientMessage as Message, ClientUser as User } from '~/src/types/shared';
 
-// Message model with receiver relation included
 interface MessageWithReceiver extends Message {
   receiver: User;
 }
 
+const fetchSentMessages = async (): Promise<MessageWithReceiver[]> => {
+  const response = await fetch('/api/messages/sent');
+  if (!response.ok) {
+    throw new Error('보낸 메시지를 불러오는데 실패했습니다.');
+  }
+  return response.json();
+};
+
 export default function SentMessages() {
-  const { data: session } = useSession();
-  const [sentMessages, setSentMessages] = useState<MessageWithReceiver[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (session?.user?.id) {
-      const fetchMessages = async () => {
-        try {
-          setLoading(true);
-          const response = await fetch('/api/messages/sent');
-          if (response.ok) {
-            const data: MessageWithReceiver[] = await response.json();
-            setSentMessages(data);
-          } else {
-            const errorData = await response.json();
-            setError(errorData.message || '보낸 메시지를 불러오는데 실패했습니다.');
-          }
-        } catch (err) {
-          console.error('Error fetching sent messages:', err);
-          setError('네트워크 오류 또는 서버 문제');
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchMessages();
-    }
-  }, [session]);
-
-  if (loading) {
-    return <div className="text-center py-4">메시지 로딩 중...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-4 text-red-500">오류: {error}</div>;
-  }
+  const { data: sentMessages } = useSuspenseQuery<MessageWithReceiver[]>({
+    queryKey: ['messages', 'sent'],
+    queryFn: fetchSentMessages,
+  });
 
   return (
     <div className="space-y-4">

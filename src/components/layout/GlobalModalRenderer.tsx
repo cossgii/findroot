@@ -2,7 +2,7 @@
 
 import { useAtom } from 'jotai';
 import dynamic from 'next/dynamic';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   modalAtom,
@@ -15,16 +15,15 @@ import {
 } from '~/src/stores/app-store';
 import { Restaurant } from '~/src/types/restaurant';
 
-// Import non-dynamic components
 import BaseModal from '~/src/components/common/BaseModal';
 import RestaurantDetailModalContent from '~/src/components/districts/RestaurantDetailModalContent';
-import { useQuery } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import RestaurantDetailSkeleton from '~/src/components/districts/RestaurantDetailSkeleton';
 
-// Dynamically import heavy, client-side only modal components
 const AddPlaceModal = dynamic(
   () => import('~/src/components/mypage/places/AddPlaceModal'),
   {
-    ssr: false, // This component is not safe for server-side rendering
+    ssr: false,
     loading: () => <div className="p-6">로딩 중...</div>,
   },
 );
@@ -54,11 +53,7 @@ const RestaurantDetailModal = ({
   restaurantId,
   onClose,
 }: RestaurantDetailModalProps & { onClose: () => void }) => {
-  const {
-    data: restaurant,
-    isLoading,
-    error,
-  } = useQuery<Restaurant, Error>({
+  const { data: restaurant } = useSuspenseQuery<Restaurant>({
     queryKey: ['place', restaurantId],
     queryFn: async () => {
       const response = await fetch(`/api/places/${restaurantId}`);
@@ -67,14 +62,13 @@ const RestaurantDetailModal = ({
       }
       return response.json();
     },
-    enabled: !!restaurantId,
   });
 
   return (
     <BaseModal isOpen={true} onClose={onClose}>
-      {isLoading && <div className="p-6">로딩 중...</div>}
-      {error && <div className="p-6">{error.message}</div>}
-      {restaurant && <RestaurantDetailModalContent restaurant={restaurant} />}
+      <Suspense fallback={<RestaurantDetailSkeleton />}>
+        <RestaurantDetailModalContent restaurant={restaurant} />
+      </Suspense>
     </BaseModal>
   );
 };

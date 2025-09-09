@@ -1,34 +1,30 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 
-// A generic interface for any kind of paginated API response
 export interface PaginatedResponse<T> {
   data: T[];
   totalPages: number;
   currentPage: number;
-  totalCount?: number; // Optional total count
+  totalCount?: number;
 }
 
-// The props for our custom hook
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface UsePaginatedQueryProps<T> {
-  queryKey: (string | number | object)[]; // Base key for the query
-  apiEndpoint: string; // The API endpoint to fetch data from
-  queryParams?: Record<string, string | number | boolean | null | undefined>; // Additional query parameters
+  queryKey: (string | number | object)[];
+  apiEndpoint: string;
+  queryParams?: Record<string, string | number | boolean | null | undefined>;
   initialPage?: number;
   limit?: number;
-  enabled?: boolean; // To conditionally enable the query
+  enabled?: boolean;
+  suspense?: boolean;
 }
-
-// The actual fetcher function
 const fetchPaginatedData = async <T>(
   apiEndpoint: string,
   queryParams: Record<string, string | number | boolean | null | undefined>,
 ): Promise<PaginatedResponse<T>> => {
   const params = new URLSearchParams();
-  // Append all query parameters to the URL
   for (const key in queryParams) {
     if (queryParams[key] !== undefined && queryParams[key] !== null) {
       params.append(key, queryParams[key].toString());
@@ -44,9 +40,8 @@ const fetchPaginatedData = async <T>(
   }
   const result = await response.json();
 
-  // Standardize the response shape
   return {
-    data: result.places || result.routes || [], // Adapt to different data keys
+    data: result.places || result.routes || [],
     totalPages: result.totalPages,
     currentPage: result.currentPage,
     totalCount: result.totalCount,
@@ -60,17 +55,25 @@ export function usePaginatedQuery<T>({
   initialPage = 1,
   limit = 5,
   enabled = true,
+  suspense = false,
 }: UsePaginatedQueryProps<T>) {
   const [page, setPage] = useState(initialPage);
 
   const fullQueryKey = [...queryKey, { ...queryParams, page, limit }];
 
-  const queryResult = useQuery<PaginatedResponse<T>, Error>({
+  const queryOptions = {
     queryKey: fullQueryKey,
-    queryFn: () => fetchPaginatedData<T>(apiEndpoint, { ...queryParams, page, limit }),
+    queryFn: () =>
+      fetchPaginatedData<T>(apiEndpoint, { ...queryParams, page, limit }),
     enabled,
-    placeholderData: (previousData) => previousData, // Keep showing old data while fetching new
-  });
+  };
+
+  const queryResult = suspense
+    ? useSuspenseQuery(queryOptions)
+    : useQuery({
+        ...queryOptions,
+        placeholderData: (previousData) => previousData,
+      });
 
   return {
     ...queryResult,

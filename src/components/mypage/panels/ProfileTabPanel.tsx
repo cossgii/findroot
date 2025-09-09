@@ -1,26 +1,31 @@
 'use client';
 
 import { useState } from 'react';
+import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query';
 import { ClientUser as User } from '~/src/types/shared';
 import Button from '~/src/components/common/Button';
 import UserProfileDisplay from '~/src/components/mypage/profile/UserProfileDisplay';
 import UserProfileEditForm from '~/src/components/mypage/profile/UserProfileEditForm';
 import ChangePasswordForm from '~/src/components/mypage/profile/ChangePasswordForm';
 
-interface ProfileTabPanelProps {
-  user: User;
-  onProfileUpdated: (updatedUser: User) => void;
-}
+const fetchUserProfileData = async (): Promise<User> => {
+  const res = await fetch('/api/users/me');
+  if (!res.ok) throw new Error('Failed to fetch user profile');
+  return res.json();
+};
 
-export default function ProfileTabPanel({
-  user,
-  onProfileUpdated,
-}: ProfileTabPanelProps) {
+export default function ProfileTabPanel() {
+  const queryClient = useQueryClient();
+  const { data: user } = useSuspenseQuery<User>({
+    queryKey: ['user', 'me'],
+    queryFn: fetchUserProfileData,
+  });
+
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const handleSave = (updatedUser: User) => {
-    onProfileUpdated(updatedUser);
+    queryClient.setQueryData(['user', 'me'], updatedUser);
     setIsEditing(false);
   };
   const isCredentialsUser = user.password !== null;
