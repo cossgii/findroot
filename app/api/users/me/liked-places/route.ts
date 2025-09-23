@@ -3,6 +3,16 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { getLikedPlacesByUserId } from '~/src/services/like/likeService';
 import { PlaceCategory } from '~/src/types/shared';
+import { z } from 'zod';
+import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+
+const districtIds = SEOUL_DISTRICTS.map(d => d.id);
+const likedPlacesQuerySchema = z.object({
+  page: z.preprocess((val) => parseInt(z.string().parse(val), 10), z.number().min(1).default(1)),
+  limit: z.preprocess((val) => parseInt(z.string().parse(val), 10), z.number().min(1).default(5)),
+  districtId: z.string().refine(val => districtIds.includes(val) || val === 'all', { message: 'Invalid district ID' }).optional(),
+  category: z.nativeEnum(PlaceCategory).optional().nullable(),
+});
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -11,12 +21,9 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = parseInt(searchParams.get('limit') || '5', 10);
-  const districtId = searchParams.get('districtId');
-  const category = searchParams.get('category') as PlaceCategory | null;
 
   try {
+    const { page, limit, districtId, category } = likedPlacesQuerySchema.parse(Object.fromEntries(searchParams));
     const paginatedData = await getLikedPlacesByUserId(
       session.user.id,
       page,

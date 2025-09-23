@@ -1,34 +1,55 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
-import { createPlaceSchema } from '~/src/schemas/place-schema';
+import { NextRequest, NextResponse } from 'next/server';
 import {
+  getPlacesByDistrict,
   createPlace,
-  getPlacesForFeed,
   DuplicatePlaceError,
 } from '~/src/services/place/placeService';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '~/src/services/auth/authOptions';
+import { PlaceCategory } from '~/src/types/shared';
+import { createPlaceSchema } from '~/src/schemas/place-schema';
 
-export async function GET(request: Request) {
+// 문자열이 PlaceCategory enum의 유효한 값인지 확인하는 타입 가드 함수
+function isPlaceCategory(value: string): value is PlaceCategory {
+  return Object.values(PlaceCategory).includes(value as PlaceCategory);
+}
+
+export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { searchParams } = new URL(request.url);
+  const district = searchParams.get('district') || '전체';
+  const sort = (searchParams.get('sort') as 'recent' | 'likes') || 'recent';
+  const page = parseInt(searchParams.get('page') || '1', 10);
+
+  const categoryParam = searchParams.get('category');
+  let category: PlaceCategory | undefined = undefined;
+
+  if (categoryParam && isPlaceCategory(categoryParam)) {
+    category = categoryParam;
   }
 
   try {
-    const places = await getPlacesForFeed(userId);
-    return NextResponse.json(places);
+    const result = await getPlacesByDistrict(
+      district,
+      userId,
+      page,
+      12,
+      sort,
+      category
+    );
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching places:', error);
     return NextResponse.json(
-      { error: 'An unexpected error occurred.' },
-      { status: 500 },
+      { error: 'Failed to fetch places' },
+      { status: 500 }
     );
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
@@ -36,26 +57,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const body = await request.json();
+  const validationResult = createPlaceSchema.safeParse(body);
+
+  if (!validationResult.success) {
+    return NextResponse.json(
+      { error: validationResult.error.flatten().fieldErrors },
+      { status: 400 },
+    );
+  }
+
   try {
-    const body = await request.json();
-    const validatedData = createPlaceSchema.parse(body);
-
-    const newPlace = await createPlace(validatedData, userId);
-
+    const newPlace = await createPlace(validationResult.data, userId);
     return NextResponse.json(newPlace, { status: 201 });
   } catch (error) {
     if (error instanceof DuplicatePlaceError) {
       return NextResponse.json({ error: error.message }, { status: 409 });
     }
-    if (error instanceof Error && 'issues' in error) {
-      return NextResponse.json(
-        { error: 'Invalid request body', details: (error as any).issues },
-        { status: 400 },
-      );
-    }
     console.error('Error creating place:', error);
     return NextResponse.json(
-      { error: 'An unexpected error occurred.' },
+      { error: 'Internal Server Error' },
       { status: 500 },
     );
   }

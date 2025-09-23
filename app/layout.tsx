@@ -24,6 +24,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
+      <head>
+        <link rel="preload" href={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_APP_KEY}&libraries=services,clusterer&autoload=false`} as="script" crossOrigin="anonymous" />
+      </head>
       <body
         className={`${dongle.variable} ${notoSansKR.variable} font-noto-sans-kr`}
       >

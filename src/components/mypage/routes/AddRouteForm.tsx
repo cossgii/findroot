@@ -115,7 +115,7 @@ export default function AddRouteForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div>
+        <div data-testid="district-dropdown-wrapper">
           <FormLabel>자치구 선택</FormLabel>
           <DistrictDropdown
             value={selectedDistrict || ''}
@@ -175,22 +175,26 @@ export default function AddRouteForm({
               <div className="p-4 space-y-3 border rounded-md bg-gray-50">
                 <h3 className="font-semibold">새 경유지 추가</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <Dropdown<Place>
-                    options={filteredPlacesForDropdown}
-                    value={placeToAdd || undefined}
-                    onChange={(place) => setPlaceToAdd(place)}
-                    getOptionLabel={(place) => place.name}
-                    placeholder="장소를 선택하세요"
-                    triggerClassName="w-full flex-grow"
-                    contentClassName="max-h-40 overflow-y-auto"
-                  />
-                  <Dropdown
-                    options={labelOptions}
-                    value={labelOptions.find((l) => l.id === labelForNewStop)}
-                    onChange={(label) => setLabelForNewStop(label.id)}
-                    getOptionLabel={(label) => label.name}
-                    triggerClassName="w-full sm:w-auto"
-                  />
+                  <div className="w-full sm:w-auto sm:flex-grow">
+                    <Dropdown<Place>
+                      options={filteredPlacesForDropdown}
+                      value={placeToAdd || undefined}
+                      onChange={(place) => setPlaceToAdd(place)}
+                      getOptionLabel={(place) => place.name}
+                      placeholder="장소를 선택하세요"
+                      triggerClassName="w-full min-w-0"
+                      contentClassName="max-h-40 overflow-y-auto"
+                    />
+                  </div>
+                  <div className="w-[120px] sm:flex-shrink-0">
+                    <Dropdown
+                      options={labelOptions}
+                      value={labelOptions.find((l) => l.id === labelForNewStop)}
+                      onChange={(label) => setLabelForNewStop(label.id)}
+                      getOptionLabel={(label) => label.name}
+                      triggerClassName="w-full sm:w-[120px]"
+                    />
+                  </div>
                 </div>
                 <Button
                   type="button"

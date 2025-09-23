@@ -6,6 +6,7 @@ import { createPlaceSchema } from '~/src/schemas/place-schema';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSetAtom } from 'jotai';
 import { addToastAtom } from '~/src/stores/toast-store';
+import { PlaceCategory } from '~/src/types/shared';
 
 type AddPlaceFormValues = z.infer<typeof createPlaceSchema>;
 
@@ -44,16 +45,17 @@ export const useAddPlaceForm = ({
       address: '',
       district: '',
       description: '',
+      category: PlaceCategory.MEAL,
     },
   });
 
   const { mutate: addPlaceMutation, isPending } = useMutation({
     mutationFn: createPlaceApi,
     onSuccess: () => {
+      onClose();
       addToast({ message: '장소가 성공적으로 등록되었습니다.', duration: 3000 });
       form.reset({});
       onPlaceAdded();
-      onClose();
       queryClient.invalidateQueries({
         queryKey: ['user', session?.user?.id, 'places', 'created'],
       });

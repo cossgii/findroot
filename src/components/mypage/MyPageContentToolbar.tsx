@@ -59,7 +59,12 @@ export default function MyPageContentToolbar({
       <div className="flex items-center gap-2">
         {activeTab === 'content' && (
           <>
-            <Button onClick={onAddPlace} size="small" className="w-auto px-3">
+            <Button
+              onClick={onAddPlace}
+              size="small"
+              className="w-auto px-3"
+              data-cy="add-place-button"
+            >
               장소 등록
             </Button>
             <Button onClick={onAddRoute} size="small" className="w-auto px-3">

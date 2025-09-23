@@ -96,7 +96,7 @@ const MyPageContent = () => {
     <>
       <MyPageTabs activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="w-full max-w-4xl space-y-8">
-        <Suspense fallback={<MyPageSkeleton />}>
+        <Suspense fallback={<MyPageSkeleton showTabs={false} />}>
           {renderTabContent()}
         </Suspense>
       </div>

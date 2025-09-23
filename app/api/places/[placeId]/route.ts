@@ -9,6 +9,10 @@ import {
 import { z } from 'zod';
 import { PlaceCategory } from '~/src/types/shared';
 
+const PlaceRouteParamsSchema = z.object({
+  placeId: z.string({ message: '유효한 장소 ID가 필요합니다.' }),
+});
+
 interface PlaceRouteParams {
   placeId: string;
 }
@@ -35,8 +39,7 @@ export async function GET(
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
 
-    const params = await context.params;
-    const placeId = params.placeId;
+    const { placeId } = PlaceRouteParamsSchema.parse(await context.params); // Validate placeId
     const place = await getPlaceById(placeId, userId);
 
     if (!place) {
@@ -46,6 +49,12 @@ export async function GET(
     return NextResponse.json(place);
   } catch (error) {
     console.error('Error fetching place by ID:', error);
+    if (error instanceof z.ZodError) { // Handle Zod errors for params
+      return NextResponse.json(
+        { message: 'Invalid place ID', errors: error.issues },
+        { status: 400 },
+      );
+    }
     return NextResponse.json(
       { error: 'An unexpected error occurred.' },
       { status: 500 },
@@ -63,8 +72,7 @@ export async function DELETE(
   }
 
   try {
-    const params = await context.params;
-    const placeId = params.placeId;
+    const { placeId } = PlaceRouteParamsSchema.parse(await context.params); // Validate placeId
     await deletePlace(placeId, session.user.id);
     return NextResponse.json(
       { message: 'Place deleted successfully' },
@@ -72,7 +80,13 @@ export async function DELETE(
     );
   } catch (error) {
     console.error('Error deleting place:', error);
-    if (error instanceof Error) {
+    if (error instanceof z.ZodError) { // Handle Zod errors for params
+      return NextResponse.json(
+        { message: 'Invalid place ID', errors: error.issues },
+        { status: 400 },
+      );
+    }
+    else if (error instanceof Error) {
       if (error.message === 'Place not found.') {
         return NextResponse.json({ message: error.message }, { status: 404 });
       } else if (error.message === 'Unauthorized to delete this place.') {
@@ -96,8 +110,7 @@ export async function PUT(
   }
 
   try {
-    const params = await context.params;
-    const placeId = params.placeId;
+    const { placeId } = PlaceRouteParamsSchema.parse(await context.params); // Validate placeId
     const body = await request.json();
     const validatedData = updatePlaceSchema.parse(body);
 
@@ -110,11 +123,14 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating place:', error);
     if (error instanceof z.ZodError) {
+      // Check if it's a ZodError from body validation or param validation
+      const isParamError = error.issues.some(issue => issue.path[0] === 'placeId');
       return NextResponse.json(
-        { message: 'Invalid request body', errors: error.issues },
+        { message: isParamError ? 'Invalid place ID' : 'Invalid request body', errors: error.issues },
         { status: 400 },
       );
-    } else if (error instanceof Error) {
+    }
+    else if (error instanceof Error) {
       if (error.message === 'Place not found.') {
         return NextResponse.json({ message: error.message }, { status: 404 });
       } else if (error.message === 'Unauthorized to update this place.') {

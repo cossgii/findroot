@@ -80,11 +80,12 @@ export default function LikedContentList({
     return likedPlaces.length > 0 ? (
       <ul className="space-y-3">
         {likedPlaces.map((place) => (
-          <RestaurantCard
-            key={place.id}
-            place={place}
-            onLikeToggle={(handleLike) => handleUnlikeWithUndo(handleLike)}
-          />
+          <li key={place.id} data-cy="liked-item">
+            <RestaurantCard
+              place={place}
+              onLikeToggle={(handleLike) => handleUnlikeWithUndo(handleLike)}
+            />
+          </li>
         ))}
       </ul>
     ) : (

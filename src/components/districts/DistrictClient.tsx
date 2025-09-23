@@ -1,24 +1,49 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo, Suspense, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import KakaoMap from '~/src/components/common/KakaoMap';
 import ToggleSwitch from '~/src/components/common/ToggleSwitch';
 import RestaurantRouteContainer from '~/src/components/districts/RestaurantRouteContainer';
-import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+
 import { useSetAtom } from 'jotai';
 import { modalAtom } from '~/src/stores/app-store';
 import SortDropdown from '~/src/components/common/SortDropdown';
 import Pagination from '~/src/components/common/Pagination';
 import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { PlaceCategory } from '~/src/types/shared';
 import { cn } from '~/src/utils/class-name';
-import { PaginatedResponse, usePaginatedQuery } from '~/src/hooks/usePaginatedQuery';
+import { usePaginatedQuery } from '~/src/hooks/usePaginatedQuery';
 import PlaceList from './PlaceList';
 import RestaurantListSkeletonGrid from './RestaurantListSkeletonGrid';
 import RouteContainerSkeleton from './RouteContainerSkeleton';
+import { Place } from '@prisma/client';
+
+// Prisma의 Place 타입에서 Date 객체인 필드를 string으로 변환한 타입을 정의합니다.
+type SerializablePlace = Omit<Place, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
+};
+
+// placeService가 반환하는 place 객체의 타입을 정의합니다.
+type PlaceWithLikes = SerializablePlace & {
+  likesCount: number;
+  isLiked: boolean;
+};
+
+interface DistrictClientProps {
+  districtId: string;
+  districtInfo: { name: string; lat: number; lng: number } | undefined;
+  center: { lat: number; lng: number };
+  currentSort: 'recent' | 'likes';
+  currentCategory?: PlaceCategory;
+  currentPage: number;
+  // 새로 추가된 props
+  initialPlaces: PlaceWithLikes[];
+  initialTotalPages: number;
+}
 
 interface PlaceLocation {
   id: string;
@@ -40,17 +65,6 @@ const fetchAllPlaceLocations = async (
   }
   return response.json();
 };
-
-
-
-interface DistrictClientProps {
-  districtId: string;
-  districtInfo: (typeof SEOUL_DISTRICTS)[number] | undefined;
-  center: { lat: number; lng: number };
-  currentPage: number;
-  currentSort: 'recent' | 'likes';
-  currentCategory?: PlaceCategory;
-}
 
 const TABS: { label: string; value?: PlaceCategory }[] = [
   { label: '전체', value: undefined },
@@ -106,14 +120,29 @@ export default function DistrictClient({
   currentPage,
   currentSort,
   currentCategory,
+  initialPlaces,
+  initialTotalPages,
 }: DistrictClientProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const queryClient = useQueryClient();
-
+  const { data: session } = useSession();
   const [isRouteView, setIsRouteView] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const setModal = useSetAtom(modalAtom);
+
+  useEffect(() => {
+    if (isRouteView && !session) {
+      setModal({
+        type: 'LOGIN_PROMPT',
+        props: {
+          title: '로그인이 필요합니다',
+          message: '로그인하고 다른 사용자들이 만든 다양한 루트를 확인해보세요!',
+          onConfirm: () => router.push('/login'),
+          onCancel: () => setIsRouteView(false),
+        },
+      });
+    }
+  }, [isRouteView, session, setModal, router]);
 
   const { data: allPlaceLocations = [] } = useQuery<PlaceLocation[], Error>({
     queryKey: ['placeLocations', districtInfo?.name],
@@ -151,13 +180,43 @@ export default function DistrictClient({
     setModal({ type: 'RESTAURANT_DETAIL', props: { restaurantId: markerId } });
   };
 
-  const selectedRoute = useMemo(() => {
-    // This data is now fetched by RouteListDisplay, so we need to get it from query cache
-    const queryData = queryClient.getQueryData<PaginatedResponse<RouteWithPlaces>>([
-      'allRoutes', districtId,
-    ]);
-    return queryData?.data.find((r) => r.id === selectedRouteId);
-  }, [selectedRouteId, districtId, queryClient]);
+  const { data: selectedRoute } = useQuery<RouteWithPlaces, Error>({
+    queryKey: ['route', selectedRouteId],
+    queryFn: async () => {
+      if (!selectedRouteId) throw new Error('No route ID provided');
+      const response = await fetch(`/api/routes/${selectedRouteId}`);
+      if (!response.ok)
+        throw new Error(`Failed to fetch route: ${response.statusText}`);
+      return response.json();
+    },
+    enabled: !!selectedRouteId, // Only run query if selectedRouteId is available
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['places', districtInfo?.name, currentSort, currentCategory, currentPage],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        district: districtInfo?.name || '전체',
+        sort: currentSort,
+        page: currentPage.toString(),
+      });
+      if (currentCategory) {
+        params.set('category', currentCategory);
+      }
+      
+      const response = await fetch(`/api/places?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch places on client');
+      }
+      return response.json();
+    },
+    initialData: {
+      places: initialPlaces,
+      totalPages: initialTotalPages,
+      currentPage: currentPage,
+    },
+    placeholderData: keepPreviousData,
+  });
 
   const mapMarkers = useMemo(() => {
     if (isRouteView) {
@@ -225,18 +284,24 @@ export default function DistrictClient({
           />
         </div>
         {isRouteView ? (
-          <Suspense fallback={<RouteContainerSkeleton />}>
-            <RouteListDisplay
-              districtId={districtId}
-              initialPage={currentPage}
-              selectedRouteId={selectedRouteId}
-              onSelectRoute={(routeId) => {
-                setSelectedRouteId((prev) =>
-                  prev === routeId ? null : routeId,
-                );
-              }}
-            />
-          </Suspense>
+          session ? (
+            <Suspense fallback={<RouteContainerSkeleton />}>
+              <RouteListDisplay
+                districtId={districtId}
+                initialPage={currentPage}
+                selectedRouteId={selectedRouteId}
+                onSelectRoute={(routeId) => {
+                  setSelectedRouteId((prev) =>
+                    prev === routeId ? null : routeId,
+                  );
+                }}
+              />
+            </Suspense>
+          ) : (
+            <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg">
+              <p className="text-gray-500">루트 정보는 로그인 후 볼 수 있습니다.</p>
+            </div>
+          )
         ) : (
           <div>
             <div className="border-b border-gray-200 mb-4">
@@ -262,19 +327,21 @@ export default function DistrictClient({
               currentSort={currentSort}
               onSortChange={handleSortChange}
             />
-            <Suspense fallback={<RestaurantListSkeletonGrid />}>
+            {isLoading ? (
+              <RestaurantListSkeletonGrid />
+            ) : (
               <PlaceList
+                places={data?.places || []}
                 districtName={districtInfo?.name || '전체'}
                 categoryName={
                   TABS.find((tab) => tab.value === currentCategory)?.label ||
                   '전체'
                 }
-                sort={currentSort}
-                category={currentCategory}
-                page={currentPage}
+                totalPages={data?.totalPages || 1}
+                currentPage={currentPage}
                 onPageChange={handlePageChange}
               />
-            </Suspense>
+            )}
           </div>
         )}
       </div>

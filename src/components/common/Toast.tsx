@@ -45,6 +45,7 @@ export default function Toast() {
           <button
             onClick={() => removeToast(toast.id)}
             className="ml-2 text-gray-400 hover:text-white"
+            aria-label="알림 닫기"
           >
             &times;
           </button>

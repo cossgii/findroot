@@ -1,6 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useSetAtom } from 'jotai';
+import { modalAtom } from '~/src/stores/app-store';
 import { useLike } from '~/src/hooks/useLike';
 import { cn } from '~/src/utils/class-name';
 
@@ -21,7 +25,11 @@ export default function LikeButton({
   initialLikesCount,
   onLikeToggle,
 }: LikeButtonProps) {
-  const { isLiked, likesCount, handleLike } = useLike({
+  const { data: session } = useSession();
+  const router = useRouter();
+  const setModal = useSetAtom(modalAtom);
+
+  const { isLiked, likesCount, handleLike, isLoading } = useLike({
     placeId,
     routeId,
     initialIsLiked,
@@ -31,6 +39,20 @@ export default function LikeButton({
 
   const handleButtonClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    if (!session) {
+      setModal({
+        type: 'LOGIN_PROMPT',
+        props: {
+          title: '로그인이 필요합니다',
+          message: '로그인하고 나만의 장소를 저장해보세요!',
+          onConfirm: () => router.push('/login'),
+          onCancel: () => {},
+        },
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (onLikeToggle) {
@@ -45,13 +67,15 @@ export default function LikeButton({
 
   return (
     <button
+      data-cy="like-button"
       onClick={handleButtonClick}
-      disabled={isSubmitting}
+      disabled={isSubmitting || isLoading}
       className={cn(
         'flex flex-col items-center justify-center text-center w-12 h-12 rounded-md transition-colors',
         'hover:bg-gray-100 active:bg-gray-200 disabled:bg-gray-100 disabled:cursor-not-allowed',
         className,
       )}
+      aria-label={isLiked ? '좋아요 취소' : '좋아요'}
     >
       <span
         className={cn(
@@ -61,7 +85,9 @@ export default function LikeButton({
       >
         ♥︎
       </span>
-      <span className="text-xs font-medium text-gray-600">{likesCount}</span>
+      <span data-cy="like-count" className="text-xs font-medium text-gray-600">
+        {likesCount}
+      </span>
     </button>
   );
 }

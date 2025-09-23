@@ -19,9 +19,13 @@ export default function UserMenuDropdown({
   isMyPage,
 }: UserMenuDropdownProps) {
   const trigger = (
-    <button className="transition-transform duration-200 ease-in-out hover:scale-110">
+    <button
+      data-testid="user-avatar-button"
+      className="transition-transform duration-200 ease-in-out hover:scale-110"
+      aria-label="사용자 메뉴 열기"
+    >
       <Avatar size="medium">
-        <AvatarImage src={userImage || ''} />
+        <AvatarImage src={userImage || ''} alt="사용자 아바타" />
         <AvatarFallback />
       </Avatar>
     </button>

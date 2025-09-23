@@ -117,7 +117,7 @@ export default function UserProfileEditForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
         <div className="flex flex-col items-center space-y-4">
             <Avatar size="large">
-                <AvatarImage src={previewUrl || ''} />
+                <AvatarImage src={previewUrl || ''} alt="프로필 이미지" />
                 <AvatarFallback>{user.name?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
             <input type="file" accept="image/*" onChange={handleFileChange} className="text-sm w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />

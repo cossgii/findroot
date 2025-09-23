@@ -10,6 +10,7 @@ interface DistrictDropdownProps {
   onChange: (districtId: string) => void;
   className?: string;
   showAll?: boolean;
+  triggerClassName?: string;
 }
 
 export default function DistrictDropdown({
@@ -17,6 +18,7 @@ export default function DistrictDropdown({
   onChange,
   className,
   showAll = true,
+  triggerClassName,
 }: DistrictDropdownProps) {
   const districtOptions = showAll
     ? SEOUL_DISTRICTS
@@ -31,6 +33,7 @@ export default function DistrictDropdown({
         onChange={(district) => onChange(district.id)}
         getOptionLabel={(district) => district.name}
         contentClassName="max-h-60 overflow-y-auto"
+        triggerClassName={triggerClassName}
       />
     </div>
   );

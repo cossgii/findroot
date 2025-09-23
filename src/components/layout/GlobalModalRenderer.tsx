@@ -12,6 +12,7 @@ import {
   RestaurantDetailModalProps,
   EditPlaceModalProps,
   EditRouteModalProps,
+  LoginPromptModalProps,
 } from '~/src/stores/app-store';
 import { Restaurant } from '~/src/types/restaurant';
 
@@ -19,6 +20,7 @@ import BaseModal from '~/src/components/common/BaseModal';
 import RestaurantDetailModalContent from '~/src/components/districts/RestaurantDetailModalContent';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import RestaurantDetailSkeleton from '~/src/components/districts/RestaurantDetailSkeleton';
+import ConfirmationDialog from '../common/ConfirmationDialog';
 
 const AddPlaceModal = dynamic(
   () => import('~/src/components/mypage/places/AddPlaceModal'),
@@ -160,6 +162,27 @@ export default function GlobalModalRenderer() {
           isOpen={true}
           {...(modal.props as EditRouteModalProps)}
           onClose={closeModal}
+        />
+      );
+    case 'LOGIN_PROMPT':
+      const loginProps = modal.props as LoginPromptModalProps;
+      return (
+        <ConfirmationDialog
+          isOpen={true}
+          onClose={() => {
+            loginProps.onCancel();
+            closeModal();
+          }}
+          title={loginProps.title}
+          message={loginProps.message}
+          onConfirm={() => {
+            loginProps.onConfirm();
+            closeModal();
+          }}
+          onCancel={() => {
+            loginProps.onCancel();
+            closeModal();
+          }}
         />
       );
     default:

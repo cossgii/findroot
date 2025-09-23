@@ -6,6 +6,20 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import type { AuthOptions } from 'next-auth';
 import * as bcrypt from 'bcryptjs';
 
+interface KakaoProfile {
+  id: number;
+  kakao_account?: {
+    profile?: {
+      nickname?: string;
+      profile_image_url?: string;
+    };
+    email?: string;
+  };
+  properties?: {
+    nickname?: string;
+  };
+}
+
 import { db } from '~/lib/db';
 import {
   GOOGLE_CLIENT_ID,
@@ -84,7 +98,7 @@ export const authOptions: AuthOptions = {
           user.email = email;
 
           if (!user.name && profile) {
-            const kakaoProfile = profile as any;
+            const kakaoProfile = profile as KakaoProfile;
             if (kakaoProfile.kakao_account?.profile?.nickname) {
               user.name = kakaoProfile.kakao_account.profile.nickname;
             } else if (kakaoProfile.properties?.nickname) {
@@ -97,12 +111,10 @@ export const authOptions: AuthOptions = {
           const existingUser = await db.user.findUnique({ where: { email } });
 
           if (existingUser) {
-            const existingAccount = await db.account.findUnique({
+            const existingAccount = await db.account.findFirst({
               where: {
-                provider_providerAccountId: {
-                  provider: account.provider,
-                  providerAccountId: account.providerAccountId,
-                },
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
               },
             });
 
@@ -113,13 +125,13 @@ export const authOptions: AuthOptions = {
                   type: account.type,
                   provider: account.provider,
                   providerAccountId: account.providerAccountId,
-                  access_token: account.access_token,
-                  refresh_token: account.refresh_token,
-                  expires_at: account.expires_at,
-                  token_type: account.token_type,
+                  accessToken: account.access_token,
+                  refreshToken: account.refresh_token,
+                  expiresAt: account.expires_at,
+                  tokenType: account.token_type,
                   scope: account.scope,
-                  id_token: account.id_token,
-                  session_state: account.session_state,
+                  idToken: account.id_token,
+                  sessionState: account.session_state,
                 },
               });
             }
@@ -137,7 +149,7 @@ export const authOptions: AuthOptions = {
     async session({ session, token }) {
       if (token.id && session.user) {
         const userFromDb = await db.user.findUnique({
-          where: { id: token.id as string },
+          where: { id: token.id },
         });
 
         if (userFromDb) {

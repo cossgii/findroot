@@ -47,6 +47,7 @@ export default function Header() {
           <DistrictDropdown
             value={districtId}
             onChange={handleDistrictChange}
+            triggerClassName="w-[100px] min-w-0"
           />
         )}
         <AuthHeaderControls />

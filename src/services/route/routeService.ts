@@ -150,7 +150,7 @@ export async function getRoutesByCreatorId(
   limit: number = 5,
   districtId?: string | null,
 ) {
-  const whereClause: any = { creatorId };
+  const whereClause: Prisma.RouteWhereInput = { creatorId };
 
   if (districtId && districtId !== 'all') {
     whereClause.districtId = districtId;

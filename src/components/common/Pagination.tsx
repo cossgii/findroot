@@ -33,6 +33,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
             <button
               onClick={() => onPageChange(startPage - 1)}
               className="flex items-center justify-center px-4 h-10 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700"
+              aria-label="이전 블록으로 이동"
             >
               <span className="sr-only">Previous Block</span>
               &laquo;&laquo;
@@ -49,6 +50,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
               "flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed",
               !hasPrevBlock ? "rounded-s-lg" : "" // Apply rounded-s-lg if no prev block button
             )}
+            aria-label="이전 페이지로 이동"
           >
             <span className="sr-only">Previous</span>
             &laquo;
@@ -81,6 +83,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
               "flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed",
               !hasNextBlock ? "rounded-e-lg" : "" // Apply rounded-e-lg if no next block button
             )}
+            aria-label="다음 페이지로 이동"
           >
             <span className="sr-only">Next</span>
             &raquo;
@@ -93,6 +96,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
             <button
               onClick={() => onPageChange(endPage + 1)}
               className="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700"
+              aria-label="다음 블록으로 이동"
             >
               <span className="sr-only">Next Block</span>
               &raquo;&raquo;

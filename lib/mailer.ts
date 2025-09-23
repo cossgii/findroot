@@ -44,9 +44,9 @@ export const sendEmail = async (mailOptions: MailOptions) => {
   }
 };
 
-export const sendPasswordResetEmail = async (to: string, token: string) => {
+export const sendPasswordResetEmail = async (to: string, selector: string, validator: string) => {
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+    const resetUrl = `${baseUrl}/reset-password?selector=${selector}&validator=${validator}`;
 
     const mailOptions: MailOptions = {
         from: `"FindRoot" <${emailUser}>`,

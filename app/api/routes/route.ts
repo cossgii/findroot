@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { db } from '~/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
-import {
-  createRoute,
-} from '~/src/services/route/routeService';
+import { createRoute } from '~/src/services/route/routeService';
 import { NewRouteApiSchema } from '~/src/schemas/route-schema';
 import { z } from 'zod';
+
+
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -28,6 +30,12 @@ export async function POST(request: Request) {
       );
     }
     console.error('Error creating route:', error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: 'Invalid request body', errors: error.issues },
+        { status: 400 },
+      );
+    }
     return NextResponse.json(
       { message: 'Internal Server Error' },
       { status: 500 },

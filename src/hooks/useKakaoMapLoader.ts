@@ -12,13 +12,16 @@ export function useKakaoMapLoader() {
 
   useEffect(() => {
     if (isKakaoMapApiLoaded) {
-      return; // API already loaded
+      return;
     }
 
     const KAKAO_MAP_APP_KEY = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
     if (!KAKAO_MAP_APP_KEY) {
       console.error('NEXT_PUBLIC_KAKAO_APP_KEY is not defined.');
-      addToast({ message: '카카오맵 API 키가 설정되지 않았습니다.', duration: 5000 });
+      addToast({
+        message: '카카오맵 API 키가 설정되지 않았습니다.',
+        duration: 5000,
+      });
       return;
     }
 
@@ -28,7 +31,8 @@ export function useKakaoMapLoader() {
     if (!script) {
       script = document.createElement('script');
       script.id = scriptId;
-      script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_APP_KEY}&libraries=services,clusterer&autoload=false`;
+      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_APP_KEY}&libraries=services,clusterer&autoload=false`;
+      script.crossOrigin = 'anonymous';
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
@@ -38,11 +42,18 @@ export function useKakaoMapLoader() {
       if (window.kakao && window.kakao.maps) {
         window.kakao.maps.load(() => {
           setIsKakaoMapApiLoaded(true);
-          console.log('✅ Kakao Map API and services loaded successfully via useKakaoMapLoader.');
+          console.log(
+            '✅ Kakao Map API and services loaded successfully via useKakaoMapLoader.',
+          );
         });
       } else {
-        console.error('❌ window.kakao.maps is not available after script load in useKakaoMapLoader.');
-        addToast({ message: '카카오맵 API 로딩 실패 (객체 없음)', duration: 5000 });
+        console.error(
+          '❌ window.kakao.maps is not available after script load in useKakaoMapLoader.',
+        );
+        addToast({
+          message: '카카오맵 API 로딩 실패 (객체 없음)',
+          duration: 5000,
+        });
       }
     };
 
@@ -55,7 +66,6 @@ export function useKakaoMapLoader() {
     script.addEventListener('load', handleLoad);
     script.addEventListener('error', handleError);
 
-    // Cleanup function
     return () => {
       script?.removeEventListener('load', handleLoad);
       script?.removeEventListener('error', handleError);

@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { getUserById, updateUser } from '~/src/services/user/userService';
+import { z } from 'zod';
+
+const updateUserSchema = z.object({
+  name: z.string().min(1, { message: '이름을 입력해주세요.' }).optional(),
+  image: z.string().url({ message: '유효한 이미지 URL을 입력해주세요.' }).optional().nullable(),
+});
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -32,16 +38,18 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json();
-    const { name, image } = body;
+    const validatedData = updateUserSchema.parse(body);
 
-    const dataToUpdate: { name?: string; image?: string } = {};
-    if (name) dataToUpdate.name = name;
-    if (image !== undefined) dataToUpdate.image = image;
-
-    const updatedUser = await updateUser(session.user.id, dataToUpdate);
+    const updatedUser = await updateUser(session.user.id, validatedData);
     return NextResponse.json(updatedUser);
     
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: 'Validation error', errors: error.issues },
+        { status: 400 },
+      );
+    }
     console.error('Error updating user profile:', error);
     return NextResponse.json(
       { message: 'Internal Server Error' },

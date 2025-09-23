@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { getLikedRoutesByUserId } from '~/src/services/like/likeService';
+import { z } from 'zod';
+import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+
+const districtIds = SEOUL_DISTRICTS.map(d => d.id);
+const likedRoutesQuerySchema = z.object({
+  page: z.preprocess((val) => parseInt(z.string().parse(val), 10), z.number().min(1).default(1)),
+  limit: z.preprocess((val) => parseInt(z.string().parse(val), 10), z.number().min(1).default(5)),
+  districtId: z.string().refine(val => districtIds.includes(val) || val === 'all', { message: 'Invalid district ID' }).optional(),
+});
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -10,11 +19,9 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = parseInt(searchParams.get('limit') || '5', 10);
-  const districtId = searchParams.get('districtId');
 
   try {
+    const { page, limit, districtId } = likedRoutesQuerySchema.parse(Object.fromEntries(searchParams));
     const paginatedData = await getLikedRoutesByUserId(
       session.user.id,
       page,

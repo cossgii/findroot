@@ -10,7 +10,7 @@ const RoutePlaceSchema = z.object({
 export const NewRouteApiSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1, { message: '설명을 입력해주세요.' }),
-  districtId: z.string().optional(),
+  districtId: z.string().nullable().optional(),
   places: z.array(RoutePlaceSchema),
 });
 

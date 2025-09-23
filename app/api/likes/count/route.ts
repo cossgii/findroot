@@ -3,20 +3,27 @@ import {
   getPlaceLikesCount,
   getRouteLikesCount,
 } from '~/src/services/like/likeService';
+import { z } from 'zod';
+
+const likeCountQuerySchema = z
+  .object({
+    placeId: z.string().optional(),
+    routeId: z.string().optional(),
+  })
+  .refine((data) => data.placeId || data.routeId, {
+    message: 'placeId or routeId is required',
+  })
+  .refine((data) => !(data.placeId && data.routeId), {
+    message: 'Only one of placeId or routeId can be provided',
+  });
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const placeId = searchParams.get('placeId');
-  const routeId = searchParams.get('routeId');
-
-  if (!placeId && !routeId) {
-    return NextResponse.json(
-      { message: 'placeId or routeId is required' },
-      { status: 400 },
-    );
-  }
 
   try {
+    const { placeId, routeId } = likeCountQuerySchema.parse(
+      Object.fromEntries(searchParams),
+    );
     let count;
     if (placeId) {
       count = await getPlaceLikesCount(placeId);

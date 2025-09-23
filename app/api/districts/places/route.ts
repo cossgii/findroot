@@ -1,24 +1,32 @@
 import { NextResponse } from 'next/server';
 import { getPlacesByDistrict } from '~/src/services/place/placeService';
 import { PlaceCategory } from '~/src/types/shared';
+import { z } from 'zod';
+
+const placesQuerySchema = z.object({
+  districtName: z.string().min(1, { message: 'districtName is required' }),
+  userId: z.string().optional(),
+  page: z.preprocess(
+    (val) => parseInt(z.string().parse(val), 10),
+    z.number().min(1).default(1),
+  ),
+  limit: z.preprocess(
+    (val) => parseInt(z.string().parse(val), 10),
+    z.number().min(1).default(12),
+  ),
+  sort: z.enum(['recent', 'likes']).default('recent'),
+  category: z.nativeEnum(PlaceCategory).optional(),
+});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const districtName = searchParams.get('districtName');
-  const userId = searchParams.get('userId') || undefined;
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = parseInt(searchParams.get('limit') || '12', 10);
-  const sort = (searchParams.get('sort') as 'recent' | 'likes') || 'recent';
-  const category = searchParams.get('category') as PlaceCategory | undefined;
-
-  if (!districtName) {
-    return NextResponse.json(
-      { message: 'districtName is required' },
-      { status: 400 },
-    );
-  }
-
   try {
+    const validatedParams = placesQuerySchema.parse(
+      Object.fromEntries(searchParams),
+    );
+
+    const { districtName, userId, page, limit, sort, category } =
+      validatedParams;
     const data = await getPlacesByDistrict(
       districtName,
       userId,

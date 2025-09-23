@@ -3,8 +3,9 @@
 import { forwardRef, useState } from 'react';
 import { cn } from '~/src/utils/class-name';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value'> {
   error?: string;
+  value?: string | number | readonly string[] | null;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -36,6 +37,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               type="button"
               onClick={togglePassword}
               className="absolute right-2 top-1/2 -translate-y-1/2 transform"
+              aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
             ></button>
           )}
         </div>

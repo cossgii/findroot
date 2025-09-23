@@ -78,6 +78,7 @@ export default function Modal({
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+          aria-label="모달 닫기"
         >
           &times;
         </button>

@@ -11,7 +11,6 @@ interface UseLikeProps {
   initialLikesCount: number;
 }
 
-// --- Mutation Functions ---
 const addLikeApi = async (payload: { placeId?: string; routeId?: string }) => {
   const response = await fetch('/api/likes', {
     method: 'POST',
@@ -25,7 +24,10 @@ const addLikeApi = async (payload: { placeId?: string; routeId?: string }) => {
   return response.json();
 };
 
-const removeLikeApi = async (payload: { placeId?: string; routeId?: string }) => {
+const removeLikeApi = async (payload: {
+  placeId?: string;
+  routeId?: string;
+}) => {
   const response = await fetch('/api/likes', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
@@ -37,15 +39,12 @@ const removeLikeApi = async (payload: { placeId?: string; routeId?: string }) =>
   }
   return response.json();
 };
-// --- End Mutation Functions ---
 
-// --- Query Function for Like Info ---
 const fetchLikeInfo = async (type: 'placeId' | 'routeId', id: string) => {
   const res = await fetch(`/api/likes/info?${type}=${id}`);
   if (!res.ok) throw new Error('Failed to fetch like info');
   return res.json();
 };
-// --- End Query Function ---
 
 export function useLike({
   placeId,
@@ -53,104 +52,165 @@ export function useLike({
   initialIsLiked,
   initialLikesCount,
 }: UseLikeProps) {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const queryClient = useQueryClient();
 
-  // Fetch current like info using useQuery
-  const { data: likeInfo, isLoading: isLikeInfoLoading } = useQuery<{ count: number; liked: boolean }, Error>({
+  const { data: likeInfo, isLoading: isLikeInfoLoading } = useQuery<
+    { count: number; liked: boolean },
+    Error
+  >({
     queryKey: placeId ? ['placeLikes', placeId] : ['routeLikes', routeId],
-    queryFn: () => fetchLikeInfo(placeId ? 'placeId' : 'routeId', placeId || routeId || ''),
-    enabled: !!(placeId || routeId), // Only run if placeId or routeId is provided
-    initialData: { count: initialLikesCount, liked: initialIsLiked }, // Provide initial data to avoid loading flicker
-    staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
+    queryFn: () =>
+      fetchLikeInfo(placeId ? 'placeId' : 'routeId', placeId || routeId || ''),
+    enabled: !!(placeId || routeId),
+    initialData: { count: initialLikesCount, liked: initialIsLiked },
+    staleTime: 5 * 60 * 1000,
   });
 
-  // useMutation for adding a like
   const { mutate: addLikeMutation } = useMutation({
     mutationFn: addLikeApi,
     onMutate: async (newLike) => {
-      // Optimistic update
-      const queryKey = newLike.placeId ? ['placeLikes', newLike.placeId] : ['routeLikes', newLike.routeId];
+      const queryKey = newLike.placeId
+        ? ['placeLikes', newLike.placeId]
+        : ['routeLikes', newLike.routeId];
       await queryClient.cancelQueries({ queryKey });
 
       const previousData = queryClient.getQueryData(queryKey);
 
-      queryClient.setQueryData(queryKey, (old: { count: number; liked: boolean }) => ({
-        ...old,
-        count: old.count + 1,
-        liked: true,
-      }));
+      queryClient.setQueryData(
+        queryKey,
+        (old: { count: number; liked: boolean }) => ({
+          ...old,
+          count: old.count + 1,
+          liked: true,
+        }),
+      );
 
       return { previousData };
     },
+    onSuccess: (data, variables) => {
+      const queryKey = variables.placeId
+        ? ['placeLikes', variables.placeId]
+        : ['routeLikes', variables.routeId];
+      if (
+        data &&
+        typeof data.count === 'number' &&
+        typeof data.liked === 'boolean'
+      ) {
+        queryClient.setQueryData(queryKey, data);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['place', variables.placeId] });
+
+      // Removed the problematic invalidateQueries({ queryKey }) for race condition
+      // queryClient.invalidateQueries({ queryKey });
+
+      if (session?.user?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ['user', 'me', 'places', 'liked'],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['user', 'me', 'routes', 'liked'],
+        });
+      }
+    },
     onError: (err, newLike, context) => {
-      const queryKey = newLike.placeId ? ['placeLikes', newLike.placeId] : ['routeLikes', newLike.routeId];
+      const queryKey = newLike.placeId
+        ? ['placeLikes', newLike.placeId]
+        : ['routeLikes', newLike.routeId];
       queryClient.setQueryData(queryKey, context?.previousData);
       alert(`좋아요 처리 중 오류가 발생했습니다: ${err.message}`);
     },
-    onSettled: (data, error, variables) => {
-      const queryKey = variables.placeId ? ['placeLikes', variables.placeId] : ['routeLikes', variables.routeId];
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: ['place', variables.placeId] });
-      queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id, 'places', 'liked'] });
-      queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id, 'routes', 'liked'] });
-    },
   });
 
-  // useMutation for removing a like
   const { mutate: removeLikeMutation } = useMutation({
     mutationFn: removeLikeApi,
     onMutate: async (removedLike) => {
-      // Optimistic update
-      const queryKey = removedLike.placeId ? ['placeLikes', removedLike.placeId] : ['routeLikes', removedLike.routeId];
+      const queryKey = removedLike.placeId
+        ? ['placeLikes', removedLike.placeId]
+        : ['routeLikes', removedLike.routeId];
       await queryClient.cancelQueries({ queryKey });
 
       const previousData = queryClient.getQueryData(queryKey);
 
-      queryClient.setQueryData(queryKey, (old: { count: number; liked: boolean }) => ({
-        ...old,
-        count: old.count - 1,
-        liked: false,
-      }));
+      queryClient.setQueryData(
+        queryKey,
+        (old: { count: number; liked: boolean }) => ({
+          ...old,
+          count: old.count - 1,
+          liked: false,
+        }),
+      );
 
       return { previousData };
     },
+    onSuccess: (data, variables) => {
+      const queryKey = variables.placeId
+        ? ['placeLikes', variables.placeId]
+        : ['routeLikes', variables.routeId];
+      if (
+        data &&
+        typeof data.count === 'number' &&
+        typeof data.liked === 'boolean'
+      ) {
+        queryClient.setQueryData(queryKey, data);
+      }
+
+      // Removed the problematic invalidateQueries({ queryKey }) for race condition
+      // queryClient.invalidateQueries({ queryKey });
+
+      queryClient.invalidateQueries({ queryKey: ['place', variables.placeId] });
+      queryClient.invalidateQueries({
+        queryKey: ['user', 'me', 'places', 'liked'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['user', 'me', 'routes', 'liked'],
+      });
+    },
     onError: (err, removedLike, context) => {
-      const queryKey = removedLike.placeId ? ['placeLikes', removedLike.placeId] : ['routeLikes', removedLike.routeId];
+      const queryKey = removedLike.placeId
+        ? ['placeLikes', removedLike.placeId]
+        : ['routeLikes', removedLike.routeId];
       queryClient.setQueryData(queryKey, context?.previousData);
       alert(`좋아요 취소 중 오류가 발생했습니다: ${err.message}`);
     },
-    onSettled: (data, error, variables) => {
-      const queryKey = variables.placeId ? ['placeLikes', variables.placeId] : ['routeLikes', variables.routeId];
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: ['place', variables.placeId] });
-      queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id, 'places', 'liked'] });
-      queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id, 'routes', 'liked'] });
-    },
   });
 
-  const handleLike = useCallback(async (forceLike?: boolean) => {
-    if (!session?.user?.id) {
-      alert('로그인이 필요합니다.');
-      return;
-    }
+  const handleLike = useCallback(
+    async (forceLike?: boolean) => {
+      if (sessionStatus !== 'authenticated' || !session?.user?.id) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
 
-    const currentLikedStatus = likeInfo?.liked ?? initialIsLiked;
-    const newLikedStatus = typeof forceLike === 'boolean' ? forceLike : !currentLikedStatus;
+      const currentLikedStatus = likeInfo?.liked ?? initialIsLiked;
+      const newLikedStatus =
+        typeof forceLike === 'boolean' ? forceLike : !currentLikedStatus;
 
-    const payload = { placeId, routeId };
+      const payload = { placeId, routeId };
 
-    if (newLikedStatus) {
-      addLikeMutation(payload);
-    } else {
-      removeLikeMutation(payload);
-    }
-  }, [session, placeId, routeId, likeInfo, initialIsLiked, addLikeMutation, removeLikeMutation]);
+      if (newLikedStatus) {
+        addLikeMutation(payload);
+      } else {
+        removeLikeMutation(payload);
+      }
+    },
+    [
+      session,
+      sessionStatus,
+      placeId,
+      routeId,
+      likeInfo,
+      initialIsLiked,
+      addLikeMutation,
+      removeLikeMutation,
+    ],
+  );
 
   return {
     isLiked: likeInfo?.liked ?? initialIsLiked,
     likesCount: likeInfo?.count ?? initialLikesCount,
     handleLike,
-    isLoading: isLikeInfoLoading,
+    isLoading: isLikeInfoLoading || sessionStatus === 'loading',
   };
 }

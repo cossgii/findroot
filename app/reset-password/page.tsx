@@ -42,7 +42,8 @@ type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const selector = searchParams.get('selector');
+  const validator = searchParams.get('validator');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -55,7 +56,7 @@ function ResetPasswordForm() {
   });
 
   async function onSubmit(values: ResetPasswordFormValues) {
-    if (!token) {
+    if (!selector || !validator) {
       setError('유효한 토큰이 없습니다.');
       return;
     }
@@ -68,7 +69,11 @@ function ResetPasswordForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ token, password: values.password }),
+        body: JSON.stringify({
+          selector,
+          validator,
+          password: values.password,
+        }),
       });
 
       const data = await response.json();
@@ -85,7 +90,7 @@ function ResetPasswordForm() {
     }
   }
 
-  if (!token) {
+  if (!selector || !validator) {
     return (
       <div className="text-center text-red-600">
         유효한 비밀번호 재설정 토큰이 없습니다. 링크가 올바른지 확인해주세요.

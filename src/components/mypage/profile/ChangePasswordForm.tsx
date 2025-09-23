@@ -97,7 +97,11 @@ export default function ChangePasswordForm({ onSuccess, onCancel }: ChangePasswo
             <FormItem>
               <FormLabel>현재 비밀번호</FormLabel>
               <FormControl>
-                <Input type="password" {...field} />
+                <Input
+                  type="password"
+                  {...field}
+                  autoComplete="current-password"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -110,7 +114,7 @@ export default function ChangePasswordForm({ onSuccess, onCancel }: ChangePasswo
             <FormItem>
               <FormLabel>새 비밀번호</FormLabel>
               <FormControl>
-                <Input type="password" {...field} />
+                <Input type="password" {...field} autoComplete="new-password" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -123,7 +127,7 @@ export default function ChangePasswordForm({ onSuccess, onCancel }: ChangePasswo
             <FormItem>
               <FormLabel>새 비밀번호 확인</FormLabel>
               <FormControl>
-                <Input type="password" {...field} />
+                <Input type="password" {...field} autoComplete="new-password" />
               </FormControl>
               <FormMessage />
             </FormItem>

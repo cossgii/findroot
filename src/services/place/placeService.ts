@@ -196,7 +196,7 @@ export async function getPlacesByCreatorId(
   currentUserId?: string,
   category?: PlaceCategory | null,
 ) {
-  const whereClause: any = { creatorId };
+  const whereClause: Prisma.PlaceWhereInput = { creatorId };
 
   if (district && district !== 'all') {
     const districtName = SEOUL_DISTRICTS.find((d) => d.id === district)?.name;

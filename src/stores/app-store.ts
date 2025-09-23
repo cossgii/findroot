@@ -8,7 +8,8 @@ export type ModalType =
   | 'INFO_MESSAGE'
   | 'EDIT_PLACE'
   | 'EDIT_ROUTE'
-  | 'CONFIRMATION';
+  | 'CONFIRMATION'
+  | 'LOGIN_PROMPT';
 
 export interface ConfirmationModalProps {
   title: string;
@@ -16,6 +17,8 @@ export interface ConfirmationModalProps {
   onConfirm: () => void;
   onCancel: () => void;
 }
+
+export type LoginPromptModalProps = ConfirmationModalProps;
 
 export interface AddPlaceModalProps {
   onPlaceAdded: () => void;
@@ -53,7 +56,8 @@ export interface ModalState {
     | InfoMessageModalProps
     | EditPlaceModalProps
     | EditRouteModalProps
-    | ConfirmationModalProps // Add ConfirmationModalProps here
+    | ConfirmationModalProps
+    | LoginPromptModalProps
     | Record<string, never>;
 }
 

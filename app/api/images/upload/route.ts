@@ -2,12 +2,17 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
+import { z } from 'zod';
 
 // Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_KEY!
 );
+
+const uploadRequestSchema = z.object({
+  fileName: z.string().min(1, { message: 'fileName is required' }).max(255, { message: 'fileName is too long' }).regex(/^[a-zA-Z0-9_.-]+$/, { message: 'fileName contains invalid characters' }),
+});
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -16,11 +21,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { fileName } = await request.json();
-
-    if (!fileName) {
-      return NextResponse.json({ error: 'fileName is required' }, { status: 400 });
-    }
+    const { fileName } = uploadRequestSchema.parse(await request.json());
 
     const userId = session.user.id;
     const filePath = `${userId}/${Date.now()}-${fileName}`;

@@ -105,10 +105,11 @@ export default function Dropdown<T>({
         'flex items-center justify-between px-4 py-2 border border-gray-300 rounded-md',
         'min-w-[120px] text-sm hover:bg-gray-50',
         !value ? 'text-gray-400' : 'text-gray-700',
+        'min-w-0',
         triggerClassName,
       )}
     >
-      <span>
+      <span className="truncate">
         {value && getOptionLabel ? getOptionLabel(value) : placeholder}
       </span>
       <svg

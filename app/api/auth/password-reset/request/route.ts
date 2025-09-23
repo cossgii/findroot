@@ -26,34 +26,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate a secure token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = await bcrypt.hash(resetToken, 10);
+    // Generate a secure token (selector and validator)
+    const selector = crypto.randomBytes(16).toString('hex'); // 16 bytes for selector
+    const validator = crypto.randomBytes(32).toString('hex'); // 32 bytes for validator
+    const hashedValidator = await bcrypt.hash(validator, 10);
 
     // Set token expiration to 1 hour from now
     const tokenExpires = new Date(Date.now() + 3600000); // 1 hour
 
-    // Store the hashed token in the database
+    // Store the selector and hashedValidator in the database
     await db.passwordResetToken.create({
       data: {
         email: user.email,
-        token: hashedToken,
+        selector: selector,
+        hashedValidator: hashedValidator,
         expires: tokenExpires,
       },
     });
 
-    // Construct the reset URL
-    const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`;
+    // Construct the reset URL with selector and validator
+    const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?selector=${selector}&validator=${validator}`;
 
     // --- EMAIL SENDING ---
-    // In a real application, you would send an email to the user here.
-    // For development, you can use Ethereal Email (https://ethereal.email/)
-    // Configure your .env with Ethereal credentials:
-    // EMAIL_SERVER_HOST=smtp.ethereal.email
-    // EMAIL_SERVER_PORT=587
-    // EMAIL_FROM=your_ethereal_email@ethereal.email
-    // EMAIL_SERVER_PASSWORD=your_ethereal_password
-    await sendPasswordResetEmail(user.email, resetToken);
+    await sendPasswordResetEmail(user.email, selector, validator); // Pass selector and validator
     // --- END EMAIL SENDING ---
 
     return NextResponse.json(

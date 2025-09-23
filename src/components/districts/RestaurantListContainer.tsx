@@ -16,7 +16,7 @@ export default function RestaurantListContainer({
     return (
       <div className="flex justify-center items-center h-40 rounded-lg bg-gray-50">
         <p className="text-gray-500">
-          {`${districtName}에 등록된 ${categoryName} 장소가 없습니다.`}
+          {`${districtName}에 등록된 장소(${categoryName})가 없습니다.`}
         </p>
       </div>
     );

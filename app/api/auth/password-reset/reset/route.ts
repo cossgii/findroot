@@ -8,7 +8,8 @@ const passwordRegex =
   /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$&*?!%])[A-Za-z\d!@$%&*?]{8,15}$/;
 
 const resetPasswordSchema = z.object({
-  token: z.string().min(1, { message: '토큰이 필요합니다.' }),
+  selector: z.string().min(1, { message: '선택자가 필요합니다.' }),
+  validator: z.string().min(1, { message: '검증자가 필요합니다.' }),
   password: z
     .string()
     .min(8, { message: '비밀번호는 8자리 이상이어야 합니다' })
@@ -20,34 +21,33 @@ const resetPasswordSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { token, password } = resetPasswordSchema.parse(body);
+    const { selector, validator, password } = resetPasswordSchema.parse(body);
 
-    // Find a token that is not expired.
-    const resetTokens = await db.passwordResetToken.findMany({
-        where: {
-            expires: {
-                gt: new Date(),
-            }
-        }
+    // Find the token using the selector
+    const resetToken = await db.passwordResetToken.findUnique({
+      where: {
+        selector: selector,
+      },
     });
 
-    let matchedToken = null;
-    for (const dbToken of resetTokens) {
-        const isMatch = await bcrypt.compare(token, dbToken.token);
-        if (isMatch) {
-            matchedToken = dbToken;
-            break;
-        }
-    }
-
-    if (!matchedToken) {
+    if (!resetToken || resetToken.expires < new Date()) {
       return NextResponse.json(
         { message: '유효하지 않거나 만료된 토큰입니다.' },
         { status: 400 },
       );
     }
 
-    const user = await db.user.findUnique({ where: { email: matchedToken.email } });
+    // Compare the provided validator with the stored hashedValidator
+    const isMatch = await bcrypt.compare(validator, resetToken.hashedValidator);
+
+    if (!isMatch) {
+      return NextResponse.json(
+        { message: '유효하지 않거나 만료된 토큰입니다.' },
+        { status: 400 },
+      );
+    }
+
+    const user = await db.user.findUnique({ where: { email: resetToken.email } });
     if (!user) {
       // This should theoretically not happen if a token exists
       return NextResponse.json({ message: '사용자를 찾을 수 없습니다.' }, { status: 404 });
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
         data: { password: hashedPassword },
       }),
       db.passwordResetToken.deleteMany({
-        where: { email: user.email },
+        where: { email: resetToken.email },
       }),
     ]);
 
