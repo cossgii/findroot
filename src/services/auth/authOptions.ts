@@ -44,20 +44,20 @@ export const authOptions: AuthOptions = {
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
-        email: { label: 'Email', type: 'text' },
+        loginId: { label: 'Login ID', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('이메일과 비밀번호를 입력해주세요.');
+        if (!credentials?.loginId || !credentials?.password) {
+          throw new Error('아이디와 비밀번호를 입력해주세요.');
         }
 
         const user = await db.user.findUnique({
-          where: { email: credentials.email },
+          where: { loginId: credentials.loginId },
         });
 
         if (!user) {
-          throw new Error('가입되지 않은 이메일입니다.');
+          throw new Error('가입되지 않은 아이디입니다.');
         }
 
         if (!user.password) {
@@ -65,7 +65,7 @@ export const authOptions: AuthOptions = {
             where: { userId: user.id },
           });
           const provider = account?.provider.toUpperCase() || '다른';
-          throw new Error(`이 이메일은 ${provider} 계정으로 가입되었습니다.`);
+          throw new Error(`이 아이디는 ${provider} 계정으로 가입되었습니다.`);
         }
 
         const isPasswordValid = await bcrypt.compare(
@@ -92,51 +92,65 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider && account.provider !== 'credentials') {
+        const existingAccount = await db.account.findUnique({
+          where: {
+            provider_providerAccountId: {
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+            },
+          },
+        });
+
+        if (existingAccount) {
+          user.id = existingAccount.userId;
+          return true;
+        }
+
         let email = user.email;
-        if (!email && account.provider === 'kakao') {
-          email = `${account.provider}_${account.providerAccountId}@noemail.com`;
-          user.email = email;
+        let name = user.name;
+        let image = user.image;
 
-          if (!user.name && profile) {
-            const kakaoProfile = profile as KakaoProfile;
-            if (kakaoProfile.kakao_account?.profile?.nickname) {
-              user.name = kakaoProfile.kakao_account.profile.nickname;
-            } else if (kakaoProfile.properties?.nickname) {
-              user.name = kakaoProfile.properties.nickname;
-            }
-          }
+        if (account.provider === 'kakao' && profile) {
+          const kakaoProfile = profile as KakaoProfile;
+          const kakaoAccount = kakaoProfile.kakao_account;
+          email =
+            kakaoAccount?.email ||
+            `${account.provider}_${account.providerAccountId}@noemail.com`;
+          name = kakaoAccount?.profile?.nickname || name;
+          image = kakaoAccount?.profile?.profile_image_url || image;
         }
 
-        if (email) {
-          const existingUser = await db.user.findUnique({ where: { email } });
-
-          if (existingUser) {
-            const existingAccount = await db.account.findFirst({
-              where: {
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-              },
-            });
-
-            if (!existingAccount) {
-              await db.account.create({
-                data: {
-                  userId: existingUser.id,
-                  type: account.type,
-                  provider: account.provider,
-                  providerAccountId: account.providerAccountId,
-                  accessToken: account.access_token,
-                  refreshToken: account.refresh_token,
-                  expiresAt: account.expires_at,
-                  tokenType: account.token_type,
-                  scope: account.scope,
-                  idToken: account.id_token,
-                  sessionState: account.session_state,
-                },
-              });
-            }
-          }
+        if (!email) {
+          return false;
         }
+
+        const newLoginId = `${account.provider}_${account.providerAccountId}`;
+        const newUser = await db.user.create({
+          data: {
+            loginId: newLoginId,
+            email: email,
+            name: name || 'User',
+            image: image,
+          },
+        });
+
+        await db.account.create({
+          data: {
+            userId: newUser.id,
+            type: account.type,
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+            accessToken: account.access_token,
+            refreshToken: account.refresh_token,
+            expiresAt: account.expires_at,
+            tokenType: account.token_type,
+            scope: account.scope,
+            idToken: account.id_token,
+            sessionState: account.session_state,
+          },
+        });
+
+        user.id = newUser.id;
       }
       return true;
     },

@@ -26,7 +26,7 @@ describe('루트 생성 테스트', () => {
     cy.task('db:cleanup');
     cy.session('user-session', () => {
       cy.visit('/login');
-      cy.get('input[name="email"]').type('test2@test.com');
+      cy.get('input[name="loginId"]').type('testuser');
       cy.get('input[name="password"]').type('test1234!');
       cy.get('button[type="submit"]').click();
       cy.url().should('eq', Cypress.config().baseUrl + '/');

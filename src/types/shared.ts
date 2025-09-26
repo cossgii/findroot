@@ -34,6 +34,7 @@ export interface ClientRoute {
 export interface ClientUser {
   id: string;
   name: string | null;
+  loginId: string;
   email: string | null;
   image: string | null;
   password?: string | null; // password can be null for social logins

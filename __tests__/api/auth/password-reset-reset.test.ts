@@ -12,6 +12,7 @@ jest.mock('~/lib/db', () => ({
   db: {
     user: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
     },
     passwordResetToken: {
@@ -51,9 +52,9 @@ describe('POST /api/auth/password-reset/reset', () => {
       expires: new Date(Date.now() + 3600000), // 1 hour from now
     });
 
-    // Mock the user findUnique call
+    // Mock the user findFirst call
     const mockUser = { id: 'user-1', email: 'test@example.com' };
-    (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+    (mockedDb.user.findFirst as jest.Mock).mockResolvedValue(mockUser);
 
     // Mock the transaction
     (mockedDb.$transaction as jest.Mock).mockResolvedValue([{}, {}]);

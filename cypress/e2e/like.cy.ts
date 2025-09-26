@@ -3,6 +3,7 @@ describe("'좋아요' 기능 플로우", () => {
   let createdPlaceName: string;
 
   beforeEach(() => {
+    cy.task('db:cleanup');
     cy.intercept('POST', '/api/places').as('createPlace');
     cy.intercept('POST', '/api/likes').as('addLike');
     cy.intercept('DELETE', '/api/likes').as('removeLike');
@@ -10,7 +11,7 @@ describe("'좋아요' 기능 플로우", () => {
 
     cy.visit('/login');
 
-    cy.get('input[name="email"]').type('test2@test.com');
+    cy.get('input[name="loginId"]').type('testuser');
     cy.get('input[name="password"]').type('test1234!');
     cy.get('button[type="submit"]').click();
 

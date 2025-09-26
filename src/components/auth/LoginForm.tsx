@@ -24,7 +24,7 @@ export default function LoginForm() {
     resolver: zodResolver(loginSchema),
     mode: 'onChange',
     defaultValues: {
-      email: '',
+      loginId: '',
       password: '',
     },
   });
@@ -33,13 +33,13 @@ export default function LoginForm() {
     try {
       const result = await signIn('credentials', {
         redirect: false,
-        email: values.email,
+        loginId: values.loginId,
         password: values.password,
       });
 
       if (result?.error) {
         form.setError('root.serverError', {
-          message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+          message: '아이디 또는 비밀번호가 올바르지 않습니다.',
         });
         return;
       }
@@ -61,14 +61,14 @@ export default function LoginForm() {
       >
         <FormField
           control={form.control}
-          name="email"
+          name="loginId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="email">아이디</FormLabel>
+              <FormLabel htmlFor="loginId">아이디</FormLabel>
               <Input
-                error={form.formState.errors.email?.message}
-                type="email"
-                placeholder="이메일을 입력해주세요"
+                error={form.formState.errors.loginId?.message}
+                type="text"
+                placeholder="아이디를 입력해주세요"
                 {...field}
               />
               <FormMessage />

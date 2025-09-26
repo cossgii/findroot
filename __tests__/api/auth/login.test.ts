@@ -17,7 +17,7 @@ jest.mock('~/src/services/auth/authOptions', () => ({
         name: 'Credentials',
         type: 'credentials', // Important for NextAuth.js to recognize it
         credentials: {
-          email: { label: 'Email', type: 'text' },
+          loginId: { label: 'Login ID', type: 'text' },
           password: { label: 'Password', type: 'password' },
         },
         authorize: mockAuthorize, // Our mocked authorize function
@@ -50,6 +50,7 @@ describe('Login API (CredentialsProvider authorize function)', () => {
   it('유효한 자격 증명으로 성공적으로 로그인해야 한다', async () => {
     const mockUser = {
       id: 'user-1',
+      loginId: 'testuser',
       email: 'test@example.com',
       name: 'Test User',
       password: 'hashedPassword',
@@ -61,7 +62,7 @@ describe('Login API (CredentialsProvider authorize function)', () => {
     });
 
     const user = await mockAuthorize(
-      { email: 'test@example.com', password: 'correctPassword' },
+      { loginId: 'testuser', password: 'correctPassword' },
       mockReq,
     );
 
@@ -72,7 +73,7 @@ describe('Login API (CredentialsProvider authorize function)', () => {
     });
     expect(mockAuthorize).toHaveBeenCalledWith(
       // Check if mockAuthorize was called
-      { email: 'test@example.com', password: 'correctPassword' },
+      { loginId: 'testuser', password: 'correctPassword' },
       mockReq,
     );
   });
@@ -82,84 +83,84 @@ describe('Login API (CredentialsProvider authorize function)', () => {
 
     expect(
       await mockAuthorize(
-        { email: 'test@example.com', password: 'wrongPassword' },
+        { loginId: 'testuser', password: 'wrongPassword' },
         mockReq,
       ),
     ).toBeNull();
 
     expect(mockAuthorize).toHaveBeenCalledWith(
       // Check if mockAuthorize was called
-      { email: 'test@example.com', password: 'wrongPassword' },
+      { loginId: 'testuser', password: 'wrongPassword' },
       mockReq,
     );
   });
 
-  it('가입되지 않은 이메일로 로그인 시 에러를 반환해야 한다', async () => {
+  it('가입되지 않은 아이디로 로그인 시 에러를 반환해야 한다', async () => {
     mockAuthorize.mockResolvedValue(null); // Mock the authorize function to return null
 
     expect(
       await mockAuthorize(
-        { email: 'unregistered@example.com', password: 'anyPassword' },
+        { loginId: 'unregistered', password: 'anyPassword' },
         mockReq,
       ),
     ).toBeNull();
 
     expect(mockAuthorize).toHaveBeenCalledWith(
       // Check if mockAuthorize was called
-      { email: 'unregistered@example.com', password: 'anyPassword' },
+      { loginId: 'unregistered', password: 'anyPassword' },
       mockReq,
     );
   });
 
-  it('소셜 로그인으로 가입된 이메일로 자격 증명 로그인 시 에러를 반환해야 한다', async () => {
+  it('소셜 로그인으로 가입된 아이디로 자격 증명 로그인 시 에러를 반환해야 한다', async () => {
     mockAuthorize.mockResolvedValue(null); // Mock the authorize function to return null
 
     expect(
       await mockAuthorize(
-        { email: 'social@example.com', password: 'anyPassword' },
+        { loginId: 'socialuser', password: 'anyPassword' },
         mockReq,
       ),
     ).toBeNull();
 
     expect(mockAuthorize).toHaveBeenCalledWith(
       // Check if mockAuthorize was called
-      { email: 'social@example.com', password: 'anyPassword' },
+      { loginId: 'socialuser', password: 'anyPassword' },
       mockReq,
     );
   });
 
-  it('이메일 또는 비밀번호가 제공되지 않으면 에러를 반환해야 한다', async () => {
+  it('아이디 또는 비밀번호가 제공되지 않으면 에러를 반환해야 한다', async () => {
     mockAuthorize.mockResolvedValue(null); // Mock the authorize function to return null
 
     expect(
-      await mockAuthorize({ email: 'test@example.com', password: '' }, mockReq),
+      await mockAuthorize({ loginId: 'testuser', password: '' }, mockReq),
     ).toBeNull();
 
     expect(mockAuthorize).toHaveBeenCalledWith(
       // Check if mockAuthorize was called
-      { email: 'test@example.com', password: '' },
+      { loginId: 'testuser', password: '' },
       mockReq,
     );
 
     mockAuthorize.mockResolvedValue(null); // Reset mock for next call
     expect(
-      await mockAuthorize({ email: '', password: 'password' }, mockReq),
+      await mockAuthorize({ loginId: '', password: 'password' }, mockReq),
     ).toBeNull();
 
     expect(mockAuthorize).toHaveBeenCalledWith(
       // Check if mockAuthorize was called
-      { email: '', password: 'password' },
+      { loginId: '', password: 'password' },
       mockReq,
     );
 
     mockAuthorize.mockResolvedValue(null); // Reset mock for next call
     expect(
-      await mockAuthorize({ email: '', password: '' }, mockReq),
+      await mockAuthorize({ loginId: '', password: '' }, mockReq),
     ).toBeNull();
 
     expect(mockAuthorize).toHaveBeenCalledWith(
       // Check if mockAuthorize was called
-      { email: '', password: '' },
+      { loginId: '', password: '' },
       mockReq,
     );
   });

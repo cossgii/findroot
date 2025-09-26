@@ -18,6 +18,7 @@ import Input from '~/src/components/common/Input';
 import MainContainer from '~/src/components/layout/MainContainer';
 
 const forgotPasswordSchema = z.object({
+  loginId: z.string().min(1, { message: '아이디를 입력해주세요' }),
   email: z
     .string()
     .min(1, { message: '이메일을 입력해주세요' })
@@ -33,6 +34,7 @@ export default function ForgotPasswordPage() {
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
+      loginId: '',
       email: '',
     },
   });
@@ -55,10 +57,7 @@ export default function ForgotPasswordPage() {
         throw new Error(data.message || '알 수 없는 오류가 발생했습니다.');
       }
 
-      setMessage(
-        data.message +
-          ' (실제로는 이메일이 전송되지만, 현재는 콘솔을 확인해주세요.)',
-      );
+      setMessage(data.message);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       setError(errorMessage);
@@ -72,6 +71,22 @@ export default function ForgotPasswordPage() {
         <h2 className="text-2xl font-bold text-center">비밀번호 찾기</h2>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="loginId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>아이디</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="아이디를 입력해주세요"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"

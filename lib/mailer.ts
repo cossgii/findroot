@@ -9,8 +9,6 @@ if (!resendApiKey || !emailFrom) {
   );
 }
 
-const resend = new Resend(resendApiKey);
-
 export const sendPasswordResetEmail = async (to: string, selector: string, validator: string) => {
     if (!resendApiKey || !emailFrom) {
         console.error('Email sending is disabled due to missing configuration.');
@@ -18,6 +16,7 @@ export const sendPasswordResetEmail = async (to: string, selector: string, valid
         return; 
     }
 
+    const resend = new Resend(resendApiKey);
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
     const resetUrl = `${baseUrl}/reset-password?selector=${selector}&validator=${validator}`;
 

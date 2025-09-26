@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await db.user.findUnique({ where: { email: resetToken.email } });
+    const user = await db.user.findFirst({ where: { email: resetToken.email } });
     if (!user) {
       // This should theoretically not happen if a token exists
       return NextResponse.json({ message: '사용자를 찾을 수 없습니다.' }, { status: 404 });

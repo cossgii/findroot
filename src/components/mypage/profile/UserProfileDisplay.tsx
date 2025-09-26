@@ -20,7 +20,7 @@ export default function UserProfileDisplay({ user }: UserProfileDisplayProps) {
         <AvatarFallback>{user.name?.charAt(0) || 'U'}</AvatarFallback>
       </Avatar>
       <h2 className="text-2xl font-bold">{user.name || '이름 없음'}</h2>
-      <p className="text-gray-600">{user.email}</p>
+      <p className="text-gray-600">{user.loginId}</p>
     </div>
   );
 }

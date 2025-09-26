@@ -1,10 +1,14 @@
 describe('로그인 및 로그아웃 테스트', () => {
+  beforeEach(() => {
+    cy.task('db:cleanup');
+  });
+
   it('사용자는 성공적으로 로그인하고 로그아웃할 수 있어야 한다', () => {
     // 1. 로그인 페이지 방문
     cy.visit('/login');
 
     // 2. 테스트 계정 정보 입력
-    cy.get('input[name="email"]').type('test2@test.com');
+    cy.get('input[name="loginId"]').type('testuser');
     cy.get('input[name="password"]').type('test1234!');
 
     // 3. 로그인 버튼 클릭

@@ -9,10 +9,10 @@ import { MAIN_ACCOUNT_ID } from '~/config';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    let email, password, name;
+    let email, password, name, loginId;
 
     try {
-      ({ email, password, name } = signupSchema.parse(body));
+      ({ email, password, name, loginId } = signupSchema.parse(body));
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
         return NextResponse.json(
@@ -23,10 +23,18 @@ export async function POST(request: Request) {
       throw validationError;
     }
 
-    const existingUser = await db.user.findUnique({ where: { email } });
-    if (existingUser) {
+    const existingUserByEmail = await db.user.findFirst({ where: { email } });
+    if (existingUserByEmail) {
       return NextResponse.json(
         { message: 'User with this email already exists' },
+        { status: 409 },
+      );
+    }
+
+    const existingUserByLoginId = await db.user.findUnique({ where: { loginId } });
+    if (existingUserByLoginId) {
+      return NextResponse.json(
+        { message: 'User with this loginId already exists' },
         { status: 409 },
       );
     }
@@ -38,6 +46,7 @@ export async function POST(request: Request) {
           data: {
             email,
             name,
+            loginId,
             password: hashedPassword,
           },
         });

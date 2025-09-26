@@ -7,15 +7,16 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
 const requestResetSchema = z.object({
+  loginId: z.string().min(1, { message: '아이디를 입력해주세요.' }),
   email: z.string().email({ message: '유효한 이메일을 입력해주세요.' }),
 });
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email } = requestResetSchema.parse(body);
+    const { loginId, email } = requestResetSchema.parse(body);
 
-    const user = await db.user.findUnique({ where: { email } });
+    const user = await db.user.findFirst({ where: { loginId, email } });
 
     if (!user) {
       // Do not reveal if the user exists or not for security reasons.

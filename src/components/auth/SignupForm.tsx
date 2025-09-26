@@ -27,6 +27,7 @@ export function SignupForm() {
     resolver: zodResolver(signupSchema),
     defaultValues: {
       name: '',
+      loginId: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -42,6 +43,7 @@ export function SignupForm() {
         },
         body: JSON.stringify({
           name: values.name,
+          loginId: values.loginId,
           email: values.email,
           password: values.password,
           confirmPassword: values.confirmPassword,
@@ -75,7 +77,7 @@ export function SignupForm() {
       }
 
       const signInResponse = await signIn('credentials', {
-        email: values.email,
+        loginId: values.loginId,
         password: values.password,
         redirect: false,
       });
@@ -100,6 +102,19 @@ export function SignupForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="loginId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>아이디</FormLabel>
+              <FormControl>
+                <Input placeholder="로그인 아이디" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="email"

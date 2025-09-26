@@ -4,10 +4,9 @@ const passwordRegex =
   /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$&*?!%])[A-Za-z\d!@$%&*?]{8,15}$/;
 
 export const loginSchema = z.object({
-  email: z
+  loginId: z
     .string()
-    .min(1, { message: '이메일을 입력해주세요' })
-    .pipe(z.email({ message: '이메일 형식이 아닙니다' })),
+    .min(1, { message: '로그인 아이디를 입력해주세요' }),
   password: z.string().min(1, { message: '비밀번호를 입력해주세요' }),
 });
 
@@ -16,6 +15,9 @@ export const signupSchema = z
     name: z
       .string()
       .min(2, { message: '이름은 2글자 이상이어야 합니다' }),
+    loginId: z
+      .string()
+      .min(1, { message: '로그인 아이디를 입력해주세요' }),
     email: z
       .string()
       .min(1, { message: '이메일을 입력해주세요' })

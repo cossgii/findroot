@@ -13,6 +13,7 @@ jest.mock('~/lib/db', () => ({
   db: {
     user: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
     },
     passwordResetToken: {
       create: jest.fn(),
@@ -51,14 +52,14 @@ describe('POST /api/auth/password-reset/request', () => {
       email: 'test@example.com',
       name: 'Test User',
     };
-    (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+    (mockedDb.user.findFirst as jest.Mock).mockResolvedValue(mockUser);
     (mockedBcrypt.hash as jest.Mock).mockResolvedValue('hashed-token');
     (mockedDb.passwordResetToken.create as jest.Mock).mockResolvedValue({});
     mockedMailer.sendPasswordResetEmail.mockResolvedValue();
 
     const req = new NextRequest('http://localhost', {
       method: 'POST',
-      body: JSON.stringify({ email: 'test@example.com' }),
+      body: JSON.stringify({ loginId: 'testuser', email: 'test@example.com' }),
     });
 
     // Act
@@ -78,11 +79,11 @@ describe('POST /api/auth/password-reset/request', () => {
 
   it('가입되지 않은 이메일로 요청 시, 보안을 위해 성공 메시지를 반환하지만 실제 작업은 수행하지 않아야 한다', async () => {
     // Arrange
-    (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(null);
+    (mockedDb.user.findFirst as jest.Mock).mockResolvedValue(null);
 
     const req = new NextRequest('http://localhost', {
       method: 'POST',
-      body: JSON.stringify({ email: 'not-found@example.com' }),
+      body: JSON.stringify({ loginId: 'notfound', email: 'not-found@example.com' }),
     });
 
     // Act

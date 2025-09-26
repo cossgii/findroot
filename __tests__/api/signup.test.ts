@@ -11,7 +11,7 @@ import { NextRequest } from 'next/server';
 jest.mock('~/config', () => ({ MAIN_ACCOUNT_ID: 'test-main-account-id' }));
 jest.mock('~/lib/db', () => ({
   db: {
-    user: { findUnique: jest.fn(), create: jest.fn() },
+    user: { findUnique: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
     $transaction: jest.fn(),
   },
 }));
@@ -33,7 +33,8 @@ describe('POST /api/signup', () => {
   describe('성공 케이스', () => {
     it('유효한 정보로 사용자 등록 시 201을 반환하고, 트랜잭션이 올바르게 실행된다', async () => {
       // Arrange: Mock setup for a successful signup flow
-      (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(null); // No existing user
+      (mockedDb.user.findFirst as jest.Mock).mockResolvedValue(null); // No existing user by email
+      (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(null); // No existing user by loginId
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedpassword');
 
       // Mock the transaction callback
@@ -43,6 +44,7 @@ describe('POST /api/signup', () => {
             create: jest.fn().mockResolvedValue({
               id: 'new-user-id',
               email: 'test@example.com',
+              loginId: 'testuser',
               name: 'Test User',
             }),
             findUnique: jest.fn().mockResolvedValue({ id: 'test-main-account-id' }), // Main account exists
@@ -54,6 +56,7 @@ describe('POST /api/signup', () => {
 
       const req = createRequest({
         email: 'test@example.com',
+        loginId: 'testuser',
         name: 'Test User',
         password: 'Password123!',
         confirmPassword: 'Password123!',
@@ -69,8 +72,11 @@ describe('POST /api/signup', () => {
       expect(body.user.email).toBe('test@example.com');
 
       // Verify that the correct functions were called
-      expect(mockedDb.user.findUnique).toHaveBeenCalledWith({
+      expect(mockedDb.user.findFirst).toHaveBeenCalledWith({
         where: { email: 'test@example.com' },
+      });
+      expect(mockedDb.user.findUnique).toHaveBeenCalledWith({
+        where: { loginId: 'testuser' },
       });
       expect(bcrypt.hash).toHaveBeenCalledWith('Password123!', 10);
       expect(mockedDb.$transaction).toHaveBeenCalledTimes(1);
@@ -80,14 +86,17 @@ describe('POST /api/signup', () => {
   describe('클라이언트 오류 (400번대)', () => {
     it('중복된 이메일로 가입 시 409를 반환한다', async () => {
       // Arrange
-      (mockedDb.user.findUnique as jest.Mock).mockResolvedValue({
+      (mockedDb.user.findFirst as jest.Mock).mockResolvedValue({
         id: 'existing-user-id',
         email: 'test@example.com',
         name: 'Existing User',
       });
+      (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(null);
+
 
       const req = createRequest({
         email: 'test@example.com',
+        loginId: 'testuser',
         name: 'Test User',
         password: 'Password123!',
         confirmPassword: 'Password123!',
@@ -102,9 +111,36 @@ describe('POST /api/signup', () => {
       expect(body.message).toBe('User with this email already exists');
     });
 
+    it('중복된 아이디로 가입 시 409를 반환한다', async () => {
+      // Arrange
+      (mockedDb.user.findFirst as jest.Mock).mockResolvedValue(null);
+      (mockedDb.user.findUnique as jest.Mock).mockResolvedValue({
+        id: 'existing-user-id',
+        loginId: 'testuser',
+        name: 'Existing User',
+      });
+
+      const req = createRequest({
+        email: 'test@example.com',
+        loginId: 'testuser',
+        name: 'Test User',
+        password: 'Password123!',
+        confirmPassword: 'Password123!',
+      });
+
+      // Act
+      const response = await POST(req);
+      const body = await response.json();
+
+      // Assert
+      expect(response.status).toBe(409);
+      expect(body.message).toBe('User with this loginId already exists');
+    });
+
     it('여러 유효성 검사 실패 시 400과 모든 에러 메시지를 반환한다', async () => {
       // Arrange
       const req = createRequest({
+        loginId: 'a', // loginId too short
         email: 'invalid-email', // Invalid email format
         name: 'A', // Name too short
         password: 'short', // Password too short
@@ -177,6 +213,7 @@ describe('POST /api/signup', () => {
 
       const req = createRequest({
         email: 'test@example.com',
+        loginId: 'testuser',
         name: 'Test User',
         password: 'Password123!',
         confirmPassword: 'Password123!',
@@ -201,6 +238,7 @@ describe('POST /api/signup', () => {
 
       const req = createRequest({
         email: 'test@example.com',
+        loginId: 'testuser',
         name: 'Test User',
         password: 'Password123!',
         confirmPassword: 'Password123!',

@@ -6,31 +6,17 @@ describe('Auth Schemas', () => {
   describe('loginSchema', () => {
     it('유효한 이메일과 비밀번호를 제공하면 검증에 통과해야 한다', () => {
       const validData = {
+        loginId: 'testuser',
         email: 'test@example.com',
         password: 'password123',
       };
       expect(() => loginSchema.parse(validData)).not.toThrow();
     });
 
-    it('유효하지 않은 이메일 형식을 제공하면 에러를 던져야 한다', () => {
-      const invalidData = {
-        email: 'not-an-email',
-        password: 'password123',
-      };
-      expect(() => loginSchema.parse(invalidData)).toThrow(ZodError);
-    });
-
     it('비밀번호가 비어있으면 에러를 던져야 한다', () => {
       const invalidData = {
-        email: 'test@example.com',
+        loginId: 'testuser',
         password: '',
-      };
-      expect(() => loginSchema.parse(invalidData)).toThrow(ZodError);
-    });
-
-    it('이메일 필드가 없으면 에러를 던져야 한다', () => {
-      const invalidData = {
-        password: 'password123',
       };
       expect(() => loginSchema.parse(invalidData)).toThrow(ZodError);
     });
@@ -43,6 +29,7 @@ describe('Auth Schemas', () => {
     beforeEach(() => {
       validData = {
         name: 'Test User',
+        loginId: 'testuser',
         email: 'test@example.com',
         password: 'Password123!',
         confirmPassword: 'Password123!',
