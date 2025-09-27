@@ -3,7 +3,7 @@ import { Provider } from 'jotai';
 import AuthProvider from '~/src/components/auth/AuthProvider';
 import GlobalModalRenderer from '~/src/components/layout/GlobalModalRenderer';
 import Header from '~/src/components/layout/Header';
-import { dongle, notoSansKR } from '~/src/fonts/fonts';
+
 import '~/src/styles/globals.css';
 
 import KakaoMapApiLoader from '~/src/components/common/KakaoMapApiLoader';
@@ -12,8 +12,8 @@ import Toast from '~/src/components/common/Toast';
 import ReactQueryProvider from '~/src/providers/react-query-provider';
 
 export const metadata: Metadata = {
-  title: 'My Awesome App',
-  description: 'This is a description of my awesome app.',
+  title: 'FindRoot',
+  description: 'This recommends Seoul places and routes to you',
   keywords: ['next.js', 'app router', 'metadata'],
 };
 
@@ -25,11 +25,14 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        <link rel="preload" href={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_APP_KEY}&libraries=services,clusterer&autoload=false`} as="script" crossOrigin="anonymous" />
+        <link
+          rel="preload"
+          href={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_APP_KEY}&libraries=services,clusterer&autoload=false`}
+          as="script"
+          crossOrigin="anonymous"
+        />
       </head>
-      <body
-        className={`${dongle.variable} ${notoSansKR.variable} font-noto-sans-kr`}
-      >
+      <body>
         <div id="root-content" className="h-screen flex flex-col">
           <Provider>
             <ReactQueryProvider>

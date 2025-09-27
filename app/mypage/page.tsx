@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useCallback } from 'react';
+import { Suspense, useState, useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import MainContainer from '~/src/components/layout/MainContainer';
 import MyPageTabs, { type MyPageTab } from '~/src/components/mypage/MyPageTabs';
@@ -13,15 +13,26 @@ import MessagesTabPanel from '~/src/components/mypage/panels/MessagesTabPanel';
 import MyPageSkeleton from '~/src/components/mypage/MyPageSkeleton';
 import { useSession } from 'next-auth/react';
 
-const MyPageContent = () => {
+const MyPageContent = ({ userId }: { userId: string }) => {
   const [activeTab, setActiveTab] = useState<MyPageTab>('profile');
   const [selectedDistrict, setSelectedDistrict] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState<PlaceCategory | undefined>();
   const queryClient = useQueryClient();
 
+  const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    } else {
+      setSelectedDistrict('all');
+      setSelectedCategory(undefined);
+    }
+  }, [activeTab]);
+
   const refreshContent = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
-  }, [queryClient]);
+    queryClient.invalidateQueries({ queryKey: ['user', userId] });
+  }, [queryClient, userId]);
 
   const { openAddPlaceModal, openAddRouteModal, openEditPlaceModal, openEditRouteModal } =
     useMyPageModals(refreshContent);
@@ -33,12 +44,21 @@ const MyPageContent = () => {
         const res = await fetch(`/api/places/${placeId}`, { method: 'DELETE' });
         if (!res.ok) throw new Error(await res.text());
         alert('장소가 삭제되었습니다.');
-        queryClient.invalidateQueries({ queryKey: ['user', 'me', 'places', 'created'] });
+        queryClient.invalidateQueries({
+          queryKey: [
+            'user',
+            userId,
+            'places',
+            'created',
+            selectedDistrict,
+            selectedCategory || 'all',
+          ],
+        });
       } catch (e) {
         alert(`장소 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`);
       }
     },
-    [queryClient],
+    [queryClient, userId, selectedDistrict, selectedCategory],
   );
 
   const handleDeleteRoute = useCallback(
@@ -123,7 +143,7 @@ const MyPage = () => {
   return (
     <MainContainer className="flex flex-col items-center py-8">
       <h1 className="text-3xl font-bold mb-8">마이페이지</h1>
-      <MyPageContent />
+      <MyPageContent userId={session.user.id} />
     </MainContainer>
   );
 };

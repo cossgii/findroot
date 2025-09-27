@@ -50,32 +50,40 @@ const KakaoMap = ({
 
   // Effect 1: Map and Clusterer Initialization
   useEffect(() => {
-    if (!isApiLoaded || !mapContainerRef.current || mapInstanceRef.current)
-      return;
+    if (!isApiLoaded || !mapContainerRef.current || mapInstanceRef.current) return;
 
-    const mapOption = {
-      center: new window.kakao.maps.LatLng(latitude, longitude),
-      level: 5,
-    };
-    const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
-    mapInstanceRef.current = map;
+    const frameId = requestAnimationFrame(() => {
+      if (mapContainerRef.current) {
+        const mapOption = {
+          center: new window.kakao.maps.LatLng(latitude, longitude),
+          level: 5,
+        };
+        const map = new window.kakao.maps.Map(
+          mapContainerRef.current,
+          mapOption,
+        );
+        mapInstanceRef.current = map;
 
-    const clusterer = new window.kakao.maps.MarkerClusterer({
-      map: map,
-      averageCenter: true,
-      minLevel: 6,
-      disableClickZoom: true,
+        const clusterer = new window.kakao.maps.MarkerClusterer({
+          map: map,
+          averageCenter: true,
+          minLevel: 6,
+          disableClickZoom: true,
+        });
+        clustererRef.current = clusterer;
+
+        window.kakao.maps.event.addListener(
+          clusterer,
+          'clusterclick',
+          function (cluster: kakao.maps.Cluster) {
+            const level = map.getLevel() - 1;
+            map.setLevel(level, { anchor: cluster.getCenter() });
+          },
+        );
+      }
     });
-    clustererRef.current = clusterer;
 
-    window.kakao.maps.event.addListener(
-      clusterer,
-      'clusterclick',
-      function (cluster: kakao.maps.Cluster) {
-        const level = map.getLevel() - 1;
-        map.setLevel(level, { anchor: cluster.getCenter() });
-      },
-    );
+    return () => cancelAnimationFrame(frameId);
   }, [isApiLoaded, latitude, longitude]);
 
   // Effect 2: Update Center (only if no markers)

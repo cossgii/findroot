@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, Suspense, useEffect } from 'react';
+import { useState, useMemo, Suspense, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import KakaoMap from '~/src/components/common/KakaoMap';
@@ -136,7 +136,8 @@ export default function DistrictClient({
         type: 'LOGIN_PROMPT',
         props: {
           title: '로그인이 필요합니다',
-          message: '로그인하고 다른 사용자들이 만든 다양한 루트를 확인해보세요!',
+          message:
+            '로그인하고 다른 사용자들이 만든 다양한 루트를 확인해보세요!',
           onConfirm: () => router.push('/login'),
           onCancel: () => setIsRouteView(false),
         },
@@ -176,9 +177,15 @@ export default function DistrictClient({
     handleUrlChange({ page, category: currentCategory || '' });
   };
 
-  const handleMarkerClick = (markerId: string) => {
-    setModal({ type: 'RESTAURANT_DETAIL', props: { restaurantId: markerId } });
-  };
+  const handleMarkerClick = useCallback(
+    (markerId: string) => {
+      setModal({
+        type: 'RESTAURANT_DETAIL',
+        props: { restaurantId: markerId },
+      });
+    },
+    [setModal],
+  );
 
   const { data: selectedRoute } = useQuery<RouteWithPlaces, Error>({
     queryKey: ['route', selectedRouteId],
@@ -243,8 +250,8 @@ export default function DistrictClient({
     }));
   }, [isRouteView, selectedRoute, allPlaceLocations, currentCategory]);
 
-  const mapPolylines =
-    isRouteView && selectedRoute
+  const mapPolylines = useMemo(() => {
+    return isRouteView && selectedRoute
       ? [
           {
             path: selectedRoute.places.map((p) => ({
@@ -254,6 +261,7 @@ export default function DistrictClient({
           },
         ]
       : [];
+  }, [isRouteView, selectedRoute]);
 
   return (
     <div className="flex flex-col desktop:flex-row h-full desktop:gap-4">
@@ -299,7 +307,9 @@ export default function DistrictClient({
             </Suspense>
           ) : (
             <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg">
-              <p className="text-gray-500">루트 정보는 로그인 후 볼 수 있습니다.</p>
+              <p className="text-gray-500">
+                루트 정보는 로그인 후 볼 수 있습니다.
+              </p>
             </div>
           )
         ) : (

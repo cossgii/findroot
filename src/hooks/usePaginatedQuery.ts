@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 
 export interface PaginatedResponse<T> {
@@ -58,6 +58,10 @@ export function usePaginatedQuery<T>({
   suspense = false,
 }: UsePaginatedQueryProps<T>) {
   const [page, setPage] = useState(initialPage);
+
+  useEffect(() => {
+    setPage(1);
+  }, [JSON.stringify(queryParams), JSON.stringify(queryKey)]);
 
   const fullQueryKey = [...queryKey, { ...queryParams, page, limit }];
 
