@@ -84,6 +84,9 @@ model Place {
   routes      RoutePlace[]
 
   @@index([district])
+  @@index([creatorId])
+  @@index([address])
+  @@index([category])
   @@map("places")
 }
 
@@ -100,6 +103,7 @@ model Route {
   creator     User         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@index([districtId])
+  @@index([creatorId])
   @@map("routes")
 }
 
