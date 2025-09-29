@@ -287,14 +287,36 @@ export async function getPublicRoutesByDistrict(
     db.route.count({ where: whereClause }),
   ]);
 
+  const allPlaceIds = routesWithLikes.flatMap((route) =>
+    (route.places || []).map((rp) => rp.place.id),
+  );
+
+  const likeCounts = await db.like.groupBy({
+    by: ['placeId'],
+    where: { placeId: { in: allPlaceIds } },
+    _count: { placeId: true },
+  });
+
+  const userLikes = currentUserId
+    ? await db.like.findMany({
+        where: { userId: currentUserId, placeId: { in: allPlaceIds } },
+        select: { placeId: true },
+      })
+    : [];
+
+  const userLikedPlaceIds = new Set(userLikes.map((like) => like.placeId));
+  const placeIdToLikeCountMap = new Map(
+    likeCounts.map((item) => [item.placeId, item._count.placeId]),
+  );
+
   const routes = routesWithLikes.map(({ _count, likes, ...route }) => {
     const serializedRoute = serializeDatesInPlace(route);
     const serializedPlaces = route.places.map((rp) => ({
       ...rp,
       place: {
         ...serializeDatesInPlace(rp.place),
-        likesCount: 0, // 임시로 0으로 설정
-        isLiked: false, // 임시로 false로 설정
+        likesCount: placeIdToLikeCountMap.get(rp.place.id) || 0,
+        isLiked: userLikedPlaceIds.has(rp.place.id),
       },
     }));
     return {
