@@ -93,7 +93,7 @@ export async function getPlacesByDistrict(
   };
 
   if (districtName !== '전체') {
-    whereClause.address = { contains: districtName };
+    whereClause.district = districtName;
   }
 
   if (category) {

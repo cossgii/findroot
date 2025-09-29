@@ -1,6 +1,6 @@
 'use client';
 
-import { HTMLAttributes, useEffect, useRef, memo } from 'react';
+import { HTMLAttributes, useEffect, useRef, useState } from 'react';
 import { PlaceCategory } from '~/src/types/shared';
 import { useAtomValue } from 'jotai';
 import { isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
@@ -41,19 +41,25 @@ const KakaoMap = ({
   polylines,
   ...rest
 }: KakaoMapProps) => {
-  // ✅ 모든 hooks를 early return 이전에 호출
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
   const polylineInstancesRef = useRef<kakao.maps.Polyline[]>([]);
   const clustererRef = useRef<kakao.maps.MarkerClusterer | null>(null);
   const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
+  const [isContainerReady, setIsContainerReady] = useState(false);
+  const [isMapInitialized, setIsMapInitialized] = useState(false);
 
-  // Effect 1: Map and Clusterer Initialization
   useEffect(() => {
-    if (!isApiLoaded || !mapContainerRef.current || mapInstanceRef.current) return;
+    if (mapContainerRef.current) {
+      setIsContainerReady(true);
+    } else {
+      setIsContainerReady(false);
+    }
+  }, [mapContainerRef.current]);
 
+  useEffect(() => {
     const frameId = requestAnimationFrame(() => {
-      if (mapContainerRef.current) {
+      if (mapContainerRef.current && !mapInstanceRef.current) {
         const mapOption = {
           center: new window.kakao.maps.LatLng(latitude, longitude),
           level: 5,
@@ -72,6 +78,8 @@ const KakaoMap = ({
         });
         clustererRef.current = clusterer;
 
+        map.relayout();
+
         window.kakao.maps.event.addListener(
           clusterer,
           'clusterclick',
@@ -80,29 +88,42 @@ const KakaoMap = ({
             map.setLevel(level, { anchor: cluster.getCenter() });
           },
         );
+        setIsMapInitialized(true);
+      } else if (mapInstanceRef.current) {
       }
     });
 
-    return () => cancelAnimationFrame(frameId);
-  }, [isApiLoaded, latitude, longitude]);
+    return () => {
+      cancelAnimationFrame(frameId);
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current = null;
+        clustererRef.current = null;
+        setIsMapInitialized(false);
+      }
+    };
+  }, [isApiLoaded, latitude, longitude, isContainerReady]);
 
-  // Effect 2: Update Center (only if no markers)
   useEffect(() => {
-    if (!isApiLoaded || !mapInstanceRef.current || markers.length > 0) return;
+    if (
+      !isApiLoaded ||
+      !isMapInitialized ||
+      !mapInstanceRef.current ||
+      markers.length > 0
+    )
+      return;
 
     const newCenter = new window.kakao.maps.LatLng(latitude, longitude);
     mapInstanceRef.current.setCenter(newCenter);
-  }, [isApiLoaded, latitude, longitude, markers]);
-
-  // Effect 3: Update Markers, Polylines, and Bounds
+  }, [isApiLoaded, latitude, longitude, markers, isMapInitialized]);
   useEffect(() => {
     if (!isApiLoaded) return;
 
     const map = mapInstanceRef.current;
     const clusterer = clustererRef.current;
-    if (!map || !window.kakao || !clusterer) return;
+    if (!map || !window.kakao || !clusterer) {
+      return;
+    }
 
-    // Clear existing markers from the clusterer
     clusterer.clear();
 
     if (markers.length > 0) {
@@ -144,7 +165,8 @@ const KakaoMap = ({
       }
     }
 
-    // Clear and add polylines
+    map.relayout();
+
     polylineInstancesRef.current.forEach((line) => line.setMap(null));
     polylineInstancesRef.current = [];
 
@@ -162,9 +184,15 @@ const KakaoMap = ({
       polyline.setMap(map);
       polylineInstancesRef.current.push(polyline);
     });
-  }, [isApiLoaded, markers, polylines, onMarkerClick, selectedMarkerIds]);
+  }, [
+    isApiLoaded,
+    markers,
+    polylines,
+    onMarkerClick,
+    selectedMarkerIds,
+    isMapInitialized,
+  ]);
 
-  // ✅ early return을 모든 hooks 호출 후에 배치
   if (!isApiLoaded) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-200">
@@ -182,4 +210,4 @@ const KakaoMap = ({
   );
 };
 
-export default memo(KakaoMap);
+export default KakaoMap;

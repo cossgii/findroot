@@ -6,9 +6,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import KakaoMap from '~/src/components/common/KakaoMap';
 import ToggleSwitch from '~/src/components/common/ToggleSwitch';
 import RestaurantRouteContainer from '~/src/components/districts/RestaurantRouteContainer';
-
-import { useSetAtom } from 'jotai';
-import { modalAtom } from '~/src/stores/app-store';
+import { useSetAtom, useAtomValue } from 'jotai';
+import { modalAtom, isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
 import SortDropdown from '~/src/components/common/SortDropdown';
 import Pagination from '~/src/components/common/Pagination';
 import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer';
@@ -21,13 +20,11 @@ import RestaurantListSkeletonGrid from './RestaurantListSkeletonGrid';
 import RouteContainerSkeleton from './RouteContainerSkeleton';
 import { Place } from '@prisma/client';
 
-// Prisma의 Place 타입에서 Date 객체인 필드를 string으로 변환한 타입을 정의합니다.
 type SerializablePlace = Omit<Place, 'createdAt' | 'updatedAt'> & {
   createdAt: string;
   updatedAt: string;
 };
 
-// placeService가 반환하는 place 객체의 타입을 정의합니다.
 type PlaceWithLikes = SerializablePlace & {
   likesCount: number;
   isLiked: boolean;
@@ -72,7 +69,6 @@ const TABS: { label: string; value?: PlaceCategory }[] = [
   { label: '음료', value: PlaceCategory.DRINK },
 ];
 
-// New internal component for fetching and displaying routes
 const RouteListDisplay = ({
   districtId,
   initialPage,
@@ -100,7 +96,7 @@ const RouteListDisplay = ({
     <>
       <RestaurantRouteContainer
         routes={data?.data || []}
-        isLoading={false} // Suspense handles loading
+        isLoading={false}
         selectedRouteId={selectedRouteId}
         onSelectRoute={onSelectRoute}
       />
@@ -129,6 +125,7 @@ export default function DistrictClient({
   const [isRouteView, setIsRouteView] = useState(false);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const setModal = useSetAtom(modalAtom);
+  const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
 
   useEffect(() => {
     if (isRouteView && !session) {
@@ -196,11 +193,17 @@ export default function DistrictClient({
         throw new Error(`Failed to fetch route: ${response.statusText}`);
       return response.json();
     },
-    enabled: !!selectedRouteId, // Only run query if selectedRouteId is available
+    enabled: !!selectedRouteId,
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['places', districtInfo?.name, currentSort, currentCategory, currentPage],
+    queryKey: [
+      'places',
+      districtInfo?.name,
+      currentSort,
+      currentCategory,
+      currentPage,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams({
         district: districtInfo?.name || '전체',
@@ -210,7 +213,7 @@ export default function DistrictClient({
       if (currentCategory) {
         params.set('category', currentCategory);
       }
-      
+
       const response = await fetch(`/api/places?${params.toString()}`);
       if (!response.ok) {
         throw new Error('Failed to fetch places on client');
@@ -248,7 +251,13 @@ export default function DistrictClient({
       longitude: p.longitude,
       category: p.category,
     }));
-  }, [isRouteView, selectedRoute, allPlaceLocations, currentCategory]);
+  }, [
+    isRouteView,
+    selectedRoute,
+    allPlaceLocations,
+    currentCategory,
+    isApiLoaded,
+  ]);
 
   const mapPolylines = useMemo(() => {
     return isRouteView && selectedRoute

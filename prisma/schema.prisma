@@ -87,6 +87,7 @@ model Place {
   @@index([creatorId])
   @@index([address])
   @@index([category])
+  @@index([district, createdAt])
   @@map("places")
 }
 
@@ -104,6 +105,7 @@ model Route {
 
   @@index([districtId])
   @@index([creatorId])
+  @@index([districtId, createdAt])
   @@map("routes")
 }
 
