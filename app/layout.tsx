@@ -3,6 +3,7 @@ import { Provider } from 'jotai';
 import AuthProvider from '~/src/components/auth/AuthProvider';
 import GlobalModalRenderer from '~/src/components/layout/GlobalModalRenderer';
 import Header from '~/src/components/layout/Header';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import '~/src/styles/globals.css';
 
@@ -47,6 +48,7 @@ export default function RootLayout({
           </Provider>
         </div>
         <div id="modal-root"></div>
+        <SpeedInsights />
       </body>
     </html>
   );
