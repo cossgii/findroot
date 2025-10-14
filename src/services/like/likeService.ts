@@ -1,4 +1,4 @@
-import { PlaceCategory, Prisma } from '@prisma/client'; // Ensure Prisma is imported here
+import { PlaceCategory, Prisma } from '@prisma/client';
 import { db } from '~/lib/db';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
@@ -35,14 +35,16 @@ export async function addLike(userId: string, { placeId, routeId }: LikeInput) {
     routeId,
   };
 
-  return db.like.upsert({
-    where: where,
-    create: create,
-    update: {},
-  }).catch(error => {
-    console.error("Prisma upsert error in addLike:", error);
-    throw error; // Re-throw the error to be caught by the API route
-  });
+  return db.like
+    .upsert({
+      where: where,
+      create: create,
+      update: {},
+    })
+    .catch((error) => {
+      console.error('Prisma upsert error in addLike:', error);
+      throw error;
+    });
 }
 
 export async function removeLike(
@@ -101,7 +103,7 @@ export async function getLikedPlacesByUserId(
   districtId?: string | null,
   category?: PlaceCategory | null,
 ) {
-  const whereClause: Prisma.LikeWhereInput = { // Corrected type
+  const whereClause: Prisma.LikeWhereInput = {
     userId,
     placeId: { not: null },
     place: {},
@@ -110,12 +112,12 @@ export async function getLikedPlacesByUserId(
   if (districtId && districtId !== 'all') {
     const districtName = SEOUL_DISTRICTS.find((d) => d.id === districtId)?.name;
     if (districtName) {
-      (whereClause.place as Prisma.PlaceWhereInput).district = districtName; // Type assertion
+      (whereClause.place as Prisma.PlaceWhereInput).district = districtName;
     }
   }
 
   if (category) {
-    (whereClause.place as Prisma.PlaceWhereInput).category = category; // Type assertion
+    (whereClause.place as Prisma.PlaceWhereInput).category = category;
   }
 
   const [likedItems, totalCount] = await db.$transaction([
@@ -165,13 +167,13 @@ export async function getLikedRoutesByUserId(
   limit: number = 5,
   districtId?: string | null,
 ) {
-  const whereClause: Prisma.LikeWhereInput = { // Corrected type
+  const whereClause: Prisma.LikeWhereInput = {
     userId,
     routeId: { not: null },
   };
 
   if (districtId && districtId !== 'all') {
-    (whereClause.route as Prisma.RouteWhereInput) = { // Type assertion
+    (whereClause.route as Prisma.RouteWhereInput) = {
       districtId: districtId,
     };
   }

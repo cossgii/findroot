@@ -257,6 +257,7 @@ export async function getPlacesByCreatorId(
 export async function deletePlace(placeId: string, userId: string) {
   const placeToDelete = await db.place.findUnique({
     where: { id: placeId },
+    select: { id: true, creatorId: true },
   });
 
   if (!placeToDelete) {
@@ -279,6 +280,7 @@ export async function updatePlace(
 ) {
   const placeToUpdate = await db.place.findUnique({
     where: { id: placeId },
+    select: { id: true, creatorId: true },
   });
 
   if (!placeToUpdate) {
@@ -313,7 +315,7 @@ export async function getPlaceLocationsByDistrict(
   };
 
   if (districtName && districtName !== '전체') {
-    whereClause.address = { contains: districtName };
+    whereClause.district = districtName;
   }
 
   return db.place.findMany({

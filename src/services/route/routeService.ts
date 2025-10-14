@@ -1,15 +1,7 @@
 import { db } from '~/lib/db';
-import { z } from 'zod';
-import { RouteStopLabel } from '~/src/types/shared';
 import { Prisma } from '@prisma/client';
-import {
-  NewRouteApiSchema,
-  UpdateRouteApiSchema,
-  NewRouteInput,
-  UpdateRouteInput,
-} from '~/src/schemas/route-schema';
+import { NewRouteInput, UpdateRouteInput } from '~/src/schemas/route-schema';
 
-// Helper function to convert Date objects to ISO strings
 function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
   place: T,
 ): Omit<T, 'createdAt' | 'updatedAt'> & {
@@ -23,16 +15,9 @@ function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
   };
 }
 
-/**
- * Creates a new route with a flexible number of stops.
- * @param data - The data for the new route, conforming to NewRouteInput.
- * @param creatorId - The ID of the user creating the route.
- * @returns The newly created route with its places.
- */
 export async function createRoute(data: NewRouteInput, creatorId: string) {
   const { name, description, districtId, places } = data;
 
-  // Use a transaction to ensure the route and its places are created atomically
   return db.$transaction(async (prisma) => {
     const newRoute = await prisma.route.create({
       data: {
@@ -65,22 +50,20 @@ const routeInclude = {
       order: 'asc' as const,
     },
     include: {
-      place: true, // Include the full Place object for each stop
+      place: {
+        include: {
+          _count: { select: { likes: true } },
+        },
+      },
     },
   },
 };
 
-/**
- * Fetches a single route by its ID, including its places.
- * @param id - The ID of the route.
- * @returns The route with its places, or null if not found.
- */
 export async function getRouteById(id: string, userId?: string) {
-  // 1. Fetch the route with its places
   const routeWithLikes = await db.route.findUnique({
     where: { id },
     include: {
-      ...routeInclude, // Includes places
+      ...routeInclude,
       _count: { select: { likes: true } },
       likes: userId ? { where: { userId }, select: { userId: true } } : false,
     },
@@ -92,14 +75,6 @@ export async function getRouteById(id: string, userId?: string) {
 
   const allPlaceIds = (routeWithLikes.places || []).map((p) => p.place.id);
 
-  // 2. Get like counts for all places in one query
-  const likeCounts = await db.like.groupBy({
-    by: ['placeId'],
-    where: { placeId: { in: allPlaceIds } },
-    _count: { placeId: true },
-  });
-
-  // 3. Get liked status for all places for the current user in one query
   const userLikes = userId
     ? await db.like.findMany({
         where: { userId, placeId: { in: allPlaceIds } },
@@ -108,24 +83,19 @@ export async function getRouteById(id: string, userId?: string) {
     : [];
 
   const userLikedPlaceIds = new Set(userLikes.map((like) => like.placeId));
-  const placeIdToLikeCountMap = new Map(
-    likeCounts.map((item) => [item.placeId, item._count.placeId]),
-  );
 
-  // 4. Enrich the places data
   const enrichedPlaces = routeWithLikes.places.map((routePlace) => {
-    const place = routePlace.place;
+    const { _count, ...place } = routePlace.place;
     return {
       ...routePlace,
       place: {
         ...serializeDatesInPlace(place),
-        likesCount: placeIdToLikeCountMap.get(place.id) || 0,
+        likesCount: _count.likes,
         isLiked: userLikedPlaceIds.has(place.id),
       },
     };
   });
 
-  // 5. Construct final object
   const isRouteLiked = !!(
     routeWithLikes.likes && routeWithLikes.likes.length > 0
   );
@@ -139,11 +109,6 @@ export async function getRouteById(id: string, userId?: string) {
   };
 }
 
-/**
- * Fetches all routes created by a specific user.
- * @param creatorId - The ID of the user.
- * @returns A list of routes created by the user.
- */
 export async function getRoutesByCreatorId(
   creatorId: string,
   page: number = 1,
@@ -230,12 +195,6 @@ export async function getRoutesByCreatorId(
   };
 }
 
-/**
- * Fetches all public routes for a given district.
- * @param districtId - The ID of the district.
- * @param currentUserId - The ID of the current user (optional, for checking likes).
- * @returns A list of routes in the district.
- */
 export async function getPublicRoutesByDistrict(
   districtId: string,
   currentUserId?: string,
@@ -335,16 +294,10 @@ export async function getPublicRoutesByDistrict(
   };
 }
 
-/**
- * Deletes a route from the database.
- * @param routeId - The ID of the route to delete.
- * @param userId - The ID of the user attempting to delete the route (for authorization).
- * @returns The deleted route.
- * @throws Error if the route is not found or the user is not authorized.
- */
 export async function deleteRoute(routeId: string, userId: string) {
   const routeToDelete = await db.route.findUnique({
     where: { id: routeId },
+    select: { id: true, creatorId: true },
   });
 
   if (!routeToDelete) {
@@ -360,14 +313,6 @@ export async function deleteRoute(routeId: string, userId: string) {
   });
 }
 
-/**
- * Updates an existing route in the database.
- * @param routeId - The ID of the route to update.
- * @param userId - The ID of the user attempting to update the route (for authorization).
- * @param data - The partial data to update the route with, including an optional new list of places.
- * @returns The updated route.
- * @throws Error if the route is not found or the user is not authorized.
- */
 export async function updateRoute(
   routeId: string,
   userId: string,
@@ -375,6 +320,7 @@ export async function updateRoute(
 ) {
   const routeToUpdate = await db.route.findUnique({
     where: { id: routeId },
+    select: { id: true, creatorId: true },
   });
 
   if (!routeToUpdate) {
@@ -386,7 +332,6 @@ export async function updateRoute(
   }
 
   return db.$transaction(async (prisma) => {
-    // 1. Update main route details
     const updatedRoute = await prisma.route.update({
       where: { id: routeId },
       data: {
@@ -396,7 +341,6 @@ export async function updateRoute(
       },
     });
 
-    // 2. If places are provided, delete existing RoutePlace records and create new ones
     if (data.places !== undefined) {
       await prisma.routePlace.deleteMany({
         where: { routeId: routeId },
