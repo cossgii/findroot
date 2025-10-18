@@ -88,6 +88,8 @@ export const authOptions: AuthOptions = {
   secret: NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt' as const,
+    maxAge: 30 * 60,
+    updateAge: 5 * 60,
   },
   callbacks: {
     async signIn({ user, account, profile }) {
