@@ -8,9 +8,13 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-const pagesPerBlock = 5; // 한 블록당 보여줄 페이지 수
+const pagesPerBlock = 5;
 
-export default function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
+export default function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+}: PaginationProps) {
   if (totalPages <= 1) {
     return null;
   }
@@ -19,7 +23,10 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
   const startPage = (currentBlock - 1) * pagesPerBlock + 1;
   const endPage = Math.min(startPage + pagesPerBlock - 1, totalPages);
 
-  const visiblePages = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+  const visiblePages = Array.from(
+    { length: endPage - startPage + 1 },
+    (_, i) => startPage + i,
+  );
 
   const hasPrevBlock = currentBlock > 1;
   const hasNextBlock = endPage < totalPages;
@@ -27,7 +34,6 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
   return (
     <nav className="flex justify-center my-8">
       <ul className="flex items-center -space-x-px h-10 text-base">
-        {/* 이전 블록으로 이동 버튼 */}
         {hasPrevBlock && (
           <li>
             <button
@@ -40,15 +46,13 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
             </button>
           </li>
         )}
-
-        {/* 이전 페이지로 이동 버튼 */}
         <li>
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
             className={cn(
-              "flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed",
-              !hasPrevBlock ? "rounded-s-lg" : "" // Apply rounded-s-lg if no prev block button
+              'flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed',
+              !hasPrevBlock ? 'rounded-s-lg' : '',
             )}
             aria-label="이전 페이지로 이동"
           >
@@ -56,8 +60,6 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
             &laquo;
           </button>
         </li>
-
-        {/* 페이지 번호들 */}
         {visiblePages.map((page) => (
           <li key={page}>
             <button
@@ -66,22 +68,20 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
                 'flex items-center justify-center px-4 h-10 leading-tight border border-gray-300',
                 currentPage === page
                   ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700'
+                  : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700',
               )}
             >
               {page}
             </button>
           </li>
         ))}
-
-        {/* 다음 페이지로 이동 버튼 */}
         <li>
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
             className={cn(
-              "flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed",
-              !hasNextBlock ? "rounded-e-lg" : "" // Apply rounded-e-lg if no next block button
+              'flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed',
+              !hasNextBlock ? 'rounded-e-lg' : '',
             )}
             aria-label="다음 페이지로 이동"
           >
@@ -89,8 +89,6 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
             &raquo;
           </button>
         </li>
-
-        {/* 다음 블록으로 이동 버튼 */}
         {hasNextBlock && (
           <li>
             <button

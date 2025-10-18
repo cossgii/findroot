@@ -5,7 +5,7 @@ export interface ToastState {
   message: string;
   actionLabel?: string;
   onAction?: () => void;
-  duration?: number; // ms, 0 for indefinite
+  duration?: number;
 }
 
 export const toastsAtom = atom<ToastState[]>([]);
@@ -18,9 +18,6 @@ export const addToastAtom = atom(
   },
 );
 
-export const removeToastAtom = atom(
-  null,
-  (get, set, id: string) => {
-    set(toastsAtom, (prev) => prev.filter((toast) => toast.id !== id));
-  },
-);
+export const removeToastAtom = atom(null, (get, set, id: string) => {
+  set(toastsAtom, (prev) => prev.filter((toast) => toast.id !== id));
+});

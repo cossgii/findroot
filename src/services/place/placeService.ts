@@ -88,7 +88,7 @@ export async function getPlacesByDistrict(
   const whereClause: Prisma.PlaceWhereInput = {
     OR: [
       { creatorId: MAIN_ACCOUNT_ID },
-      ...(userId ? [{ creatorId: userId }] : []), // 로그인한 본인의 장소
+      ...(userId ? [{ creatorId: userId }] : []),
     ],
   };
 

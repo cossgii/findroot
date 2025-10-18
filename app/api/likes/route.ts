@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     console.error('--- END OF DETAILED ERROR ---');
     return NextResponse.json(
       { message: 'Internal Server Error', errorDetail: String(error) },
-      { status: 500 }, // Changed status back to 500
+      { status: 500 },
     );
   }
 }
@@ -50,14 +50,12 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    // Add try-catch block here
-    const { placeId, routeId } = likeSchema.parse(await request.json()); // Use the same schema
+    const { placeId, routeId } = likeSchema.parse(await request.json());
 
     await removeLike(session.user.id, { placeId, routeId });
     return NextResponse.json({ message: 'Like removed' }, { status: 200 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      // Handle Zod errors
       return NextResponse.json(
         { message: 'Validation error', errors: error.issues },
         { status: 400 },

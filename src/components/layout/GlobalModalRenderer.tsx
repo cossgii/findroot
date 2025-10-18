@@ -75,7 +75,6 @@ const RestaurantDetailModal = ({
   );
 };
 
-// INFO_MESSAGE 타입의 모달을 위한 컴포넌트
 const InfoMessageModal = ({
   title,
   message,

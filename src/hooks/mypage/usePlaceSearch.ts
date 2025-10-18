@@ -14,7 +14,7 @@ export const usePlaceSearch = () => {
     name: string;
     address: string;
     id: string;
-    district: string | null; // Added district field
+    district: string | null;
   } | null>(null);
   const isKakaoPlacesServiceReady = useAtomValue(isKakaoMapApiLoadedAtom);
   const addToast = useSetAtom(addToastAtom);

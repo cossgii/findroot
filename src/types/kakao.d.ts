@@ -28,8 +28,11 @@ declare namespace kakao.maps {
     getCenter(): LatLng;
     relayout(): void;
     setBounds(bounds: LatLngBounds): void;
-    getLevel(): number; // Add this
-    setLevel(level: number, options?: { animate?: boolean; anchor?: LatLng }): void; // Add this
+    getLevel(): number;
+    setLevel(
+      level: number,
+      options?: { animate?: boolean; anchor?: LatLng },
+    ): void;
   }
 
   interface MapOptions {
@@ -44,7 +47,6 @@ declare namespace kakao.maps {
     clear(): void;
     getMarkers(): Marker[];
     getClusters(): Cluster[];
-    // Add other methods/properties as needed, based on usage in kakao-map.tsx
   }
 
   interface MarkerClustererOptions {
@@ -124,28 +126,24 @@ declare namespace kakao.maps {
   }
 
   namespace event {
-    // 1. Map 클릭 이벤트
     function addListener(
       target: Map,
       type: 'click',
       callback: (e: KakaoMouseEvent) => void,
     ): void;
 
-    // 2. Marker 클릭 이벤트
     function addListener(
       target: Marker,
       type: 'click',
       callback: (e: MouseEvent) => void,
     ): void;
 
-    // 3. MarkerClusterer 클릭 이벤트
     function addListener(
       target: MarkerClusterer,
       type: 'clusterclick',
       callback: (cluster: Cluster) => void,
     ): void;
 
-    // 4. 그 외 모든 경우
     function addListener(
       target: Map | Marker | Polyline | MarkerClusterer,
       type: string,

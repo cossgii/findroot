@@ -9,7 +9,6 @@ export enum RouteStopLabel {
   BAR = 'BAR',
 }
 
-// Client-safe Place interface
 export interface ClientPlace {
   id: string;
   name: string;
@@ -22,7 +21,6 @@ export interface ClientPlace {
   category: PlaceCategory;
 }
 
-// Client-safe Route interface
 export interface ClientRoute {
   id: string;
   name: string;
@@ -30,17 +28,15 @@ export interface ClientRoute {
   districtId: string | null;
 }
 
-// Client-safe User interface
 export interface ClientUser {
   id: string;
   name: string | null;
   loginId: string;
   email: string | null;
   image: string | null;
-  password?: string | null; // password can be null for social logins
+  password?: string | null;
 }
 
-// Client-safe Message interface
 export interface ClientMessage {
   id: string;
   senderId: string;

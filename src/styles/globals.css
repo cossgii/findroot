@@ -12,8 +12,6 @@
   }
 }
 
-/* #root-content 스타일은 frontend에는 없으므로, 필요에 따라 유지하거나 제거할 수 있습니다. */
-/* 현재는 유지하겠습니다. */
 #root-content {
   position: relative;
   height: 100vh; /* 뷰포트 전체 높이 */

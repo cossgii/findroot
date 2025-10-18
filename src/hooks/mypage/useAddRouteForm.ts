@@ -89,16 +89,21 @@ export const useAddRouteForm = ({
 
   const [stops, setStops] = useState<RouteStop[]>([]);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
-  const [pendingDistrictId, setPendingDistrictId] = useState<string | null>(null);
+  const [pendingDistrictId, setPendingDistrictId] = useState<string | null>(
+    null,
+  );
   const [mapCenter, setMapCenter] = useState(SEOUL_CENTER);
 
   const userId = session?.user?.id || '';
 
-  // Refactored to use useQuery instead of useEffect and useState
-  const { data: userPlaces = [], isLoading, error } = useQuery<Place[], Error>({
+  const {
+    data: userPlaces = [],
+    isLoading,
+    error,
+  } = useQuery<Place[], Error>({
     queryKey: ['user', userId, 'places', 'all'],
     queryFn: () => fetchAllUserPlaces(userId),
-    enabled: !!userId, // Only run query if userId is available
+    enabled: !!userId,
   });
 
   const { mutate: addRouteMutation, isPending } = useMutation({
@@ -165,7 +170,9 @@ export const useAddRouteForm = ({
   const handleConfirmDistrictChange = () => {
     setStops([]);
     setSelectedDistrict(pendingDistrictId);
-    const districtInfo = SEOUL_DISTRICTS.find((d) => d.id === pendingDistrictId);
+    const districtInfo = SEOUL_DISTRICTS.find(
+      (d) => d.id === pendingDistrictId,
+    );
     if (districtInfo) {
       setMapCenter({ lat: districtInfo.lat, lng: districtInfo.lng });
     }
@@ -215,7 +222,7 @@ export const useAddRouteForm = ({
     stops,
     userPlaces,
     isLoading,
-    error: error ? error.message : null, // Return error message string
+    error: error ? error.message : null,
     addStop,
     removeStop,
     onSubmit,

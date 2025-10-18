@@ -14,7 +14,7 @@ interface LikedContentListProps {
   activeSubTab: MyPageSubTab;
   likedPlaces: Restaurant[];
   likedRoutes: RouteWithLikeData[];
-  onContentUpdate: () => void; // Replaced setters with a single callback
+  onContentUpdate: () => void;
 }
 
 export default function LikedContentList({

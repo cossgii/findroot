@@ -102,9 +102,6 @@ export function useLike({
 
       queryClient.invalidateQueries({ queryKey: ['place', variables.placeId] });
 
-      // Removed the problematic invalidateQueries({ queryKey }) for race condition
-      // queryClient.invalidateQueries({ queryKey });
-
       if (session?.user?.id) {
         queryClient.invalidateQueries({
           queryKey: ['user', 'me', 'places', 'liked'],
@@ -155,9 +152,6 @@ export function useLike({
       ) {
         queryClient.setQueryData(queryKey, data);
       }
-
-      // Removed the problematic invalidateQueries({ queryKey }) for race condition
-      // queryClient.invalidateQueries({ queryKey });
 
       queryClient.invalidateQueries({ queryKey: ['place', variables.placeId] });
       queryClient.invalidateQueries({

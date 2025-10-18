@@ -17,12 +17,18 @@ import {
 } from '~/src/components/common/Form';
 import Input from '~/src/components/common/Input';
 import Button from '~/src/components/common/Button';
-import { Avatar, AvatarFallback, AvatarImage } from '~/src/components/common/Avatar';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '~/src/components/common/Avatar';
 
-// Schema for text inputs only. Image is handled separately.
 const userProfileSchema = z.object({
   name: z.string().min(1, { message: '이름을 입력해주세요.' }).optional(),
-  email: z.string().email({ message: '유효한 이메일 주소를 입력해주세요.' }).optional(),
+  email: z
+    .string()
+    .email({ message: '유효한 이메일 주소를 입력해주세요.' })
+    .optional(),
 });
 
 type UserProfileFormValues = z.infer<typeof userProfileSchema>;
@@ -61,12 +67,10 @@ export default function UserProfileEditForm({
 
   const onSubmit = async (values: UserProfileFormValues) => {
     setIsUploading(true);
-    let imageUrl = user.image; // Start with the existing image URL
+    let imageUrl = user.image;
 
     try {
-      // Step 1: If a new file is selected, upload it
       if (selectedFile) {
-        // 1a: Get the signed URL and the final public URL from our server
         const apiResponse = await fetch('/api/images/upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -75,21 +79,15 @@ export default function UserProfileEditForm({
 
         if (!apiResponse.ok) throw new Error('Failed to get upload URL.');
         const { signedUrl, publicUrl } = await apiResponse.json();
-
-        // 1b: Upload the file to Supabase Storage using the signed URL
         const uploadResponse = await fetch(signedUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': selectedFile.type },
-            body: selectedFile,
+          method: 'PUT',
+          headers: { 'Content-Type': selectedFile.type },
+          body: selectedFile,
         });
 
         if (!uploadResponse.ok) throw new Error('Image upload failed.');
-        
-        // 1c: The upload was successful, so we can use the public URL
         imageUrl = publicUrl;
       }
-
-      // Step 2: Update the user profile with other form data and the new image URL
       const updatePayload = { ...values, image: imageUrl };
       const profileUpdateResponse = await fetch('/api/users/me', {
         method: 'PUT',
@@ -97,16 +95,18 @@ export default function UserProfileEditForm({
         body: JSON.stringify(updatePayload),
       });
 
-      if (!profileUpdateResponse.ok) throw new Error('Failed to update profile.');
+      if (!profileUpdateResponse.ok)
+        throw new Error('Failed to update profile.');
 
       const updatedUser = await profileUpdateResponse.json();
       await updateSession({ user: updatedUser });
       onSave(updatedUser);
       alert('프로필이 성공적으로 업데이트되었습니다.');
-
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert(`프로필 업데이트 중 오류가 발생했습니다: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(
+        `프로필 업데이트 중 오류가 발생했습니다: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     } finally {
       setIsUploading(false);
     }
@@ -116,11 +116,16 @@ export default function UserProfileEditForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-4">
         <div className="flex flex-col items-center space-y-4">
-            <Avatar size="large">
-                <AvatarImage src={previewUrl || ''} alt="프로필 이미지" />
-                <AvatarFallback>{user.name?.charAt(0) || 'U'}</AvatarFallback>
-            </Avatar>
-            <input type="file" accept="image/*" onChange={handleFileChange} className="text-sm w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
+          <Avatar size="large">
+            <AvatarImage src={previewUrl || ''} alt="프로필 이미지" />
+            <AvatarFallback>{user.name?.charAt(0) || 'U'}</AvatarFallback>
+          </Avatar>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="text-sm w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+          />
         </div>
 
         <FormField
@@ -129,7 +134,9 @@ export default function UserProfileEditForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>이름</FormLabel>
-              <FormControl><Input {...field} /></FormControl>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -140,14 +147,21 @@ export default function UserProfileEditForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>이메일</FormLabel>
-              <FormControl><Input type="email" {...field} readOnly disabled /></FormControl>
+              <FormControl>
+                <Input type="email" {...field} readOnly disabled />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <div className="flex justify-end space-x-2 mt-6">
-          <Button type="button" variant="outlined" onClick={onCancel} disabled={isUploading}>
+          <Button
+            type="button"
+            variant="outlined"
+            onClick={onCancel}
+            disabled={isUploading}
+          >
             취소
           </Button>
           <Button type="submit" disabled={isUploading}>

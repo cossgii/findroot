@@ -1,5 +1,4 @@
 import { atom } from 'jotai';
-import { ComponentType } from 'react';
 
 export type ModalType =
   | 'ADD_PLACE'
@@ -39,7 +38,7 @@ export interface EditRouteModalProps {
 }
 
 export interface RestaurantDetailModalProps {
-  restaurantId: string; // RestaurantDetailModal에서 restaurantId를 string으로 사용
+  restaurantId: string;
 }
 
 export interface InfoMessageModalProps {

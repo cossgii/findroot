@@ -43,6 +43,8 @@ export default function AddPlaceForm({
     isKakaoPlacesServiceReady,
   } = usePlaceSearch();
 
+  const category = form.watch('category');
+
   const defaultCenter = useMemo(() => ({ lat: 37.5665, lng: 126.978 }), []); //시청 위치
 
   useEffect(() => {
@@ -90,11 +92,12 @@ export default function AddPlaceForm({
                       longitude: selectedPlace.longitude,
                       title: selectedPlace.name,
                       id: selectedPlace.id,
+                      category: category as PlaceCategory,
                     },
                   ]
                 : [];
               return currentMarkers;
-            }, [selectedPlace])}
+            }, [selectedPlace, category])}
             className="w-full h-full"
           />
         </div>

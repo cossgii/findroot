@@ -1,8 +1,6 @@
-// src/utils/districts.ts
-
 export interface DistrictInfo {
-  id: string; // 영문 ID (URL 파라미터용)
-  name: string; // 한글 이름 (표시용)
+  id: string;
+  name: string;
   lat: number;
   lng: number;
 }

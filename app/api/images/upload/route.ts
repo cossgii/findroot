@@ -4,14 +4,19 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { z } from 'zod';
 
-// Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_SERVICE_KEY!,
 );
 
 const uploadRequestSchema = z.object({
-  fileName: z.string().min(1, { message: 'fileName is required' }).max(255, { message: 'fileName is too long' }).regex(/^[a-zA-Z0-9_.-]+$/, { message: 'fileName contains invalid characters' }),
+  fileName: z
+    .string()
+    .min(1, { message: 'fileName is required' })
+    .max(255, { message: 'fileName is too long' })
+    .regex(/^[a-zA-Z0-9_.-]+$/, {
+      message: 'fileName contains invalid characters',
+    }),
 });
 
 export async function POST(request: Request) {
@@ -26,7 +31,6 @@ export async function POST(request: Request) {
     const userId = session.user.id;
     const filePath = `${userId}/${Date.now()}-${fileName}`;
 
-    // 1. Generate a signed URL for the upload
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('profile-images')
       .createSignedUploadUrl(filePath);
@@ -36,18 +40,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: uploadError.message }, { status: 500 });
     }
 
-    // 2. Get the public URL for the file path
     const { data: publicUrlData } = supabase.storage
       .from('profile-images')
       .getPublicUrl(filePath);
 
-    return NextResponse.json({ 
-      signedUrl: uploadData.signedUrl, 
-      publicUrl: publicUrlData.publicUrl 
+    return NextResponse.json({
+      signedUrl: uploadData.signedUrl,
+      publicUrl: publicUrlData.publicUrl,
     });
-
   } catch (error) {
     console.error('Internal Server Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 },
+    );
   }
 }

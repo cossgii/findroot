@@ -4,7 +4,7 @@ import React from 'react';
 import { ClientPlace as Place, PlaceCategory } from '~/src/types/shared';
 import Button from '~/src/components/common/Button';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
-import Dropdown from '~/src/components/common/Dropdown'; // Import Dropdown
+import Dropdown from '~/src/components/common/Dropdown';
 
 interface PlaceSlotSelectorProps {
   selectedPlace: Place | null;
@@ -29,7 +29,9 @@ export default function PlaceSlotSelector({
 
   const filteredPlaces = userPlaces.filter((place) => {
     const districtName = districtId ? getDistrictNameById(districtId) : null;
-    const matchesDistrict = districtName ? place.district === districtName : true;
+    const matchesDistrict = districtName
+      ? place.district === districtName
+      : true;
     const matchesCategory = expectedCategory
       ? place.category === expectedCategory
       : true;
@@ -37,7 +39,8 @@ export default function PlaceSlotSelector({
   });
 
   const getOptionLabel = (place: Place) => {
-    const categoryLabel = place.category === PlaceCategory.MEAL ? '식사' : '음료';
+    const categoryLabel =
+      place.category === PlaceCategory.MEAL ? '식사' : '음료';
     return `${place.name} (${place.address}) - ${categoryLabel}`;
   };
 

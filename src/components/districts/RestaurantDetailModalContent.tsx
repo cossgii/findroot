@@ -1,5 +1,3 @@
-import React from 'react';
-
 import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant } from '~/src/types/restaurant';
 

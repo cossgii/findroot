@@ -1,5 +1,3 @@
-// src/utils/colors.ts
-
 export const DISTRICT_COLORS = [
   '#A8D8EA',
   '#A3D3A9',

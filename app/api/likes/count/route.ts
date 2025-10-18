@@ -30,7 +30,6 @@ export async function GET(request: Request) {
     } else if (routeId) {
       count = await getRouteLikesCount(routeId);
     } else {
-      // This case is already handled by the check above, but for type safety
       return NextResponse.json({ count: 0 });
     }
     return NextResponse.json({ count }, { status: 200 });

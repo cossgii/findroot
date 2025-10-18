@@ -37,7 +37,6 @@ interface DistrictClientProps {
   currentSort: 'recent' | 'likes';
   currentCategory?: PlaceCategory;
   currentPage: number;
-  // 새로 추가된 props
   initialPlaces: PlaceWithLikes[];
   initialTotalPages: number;
 }

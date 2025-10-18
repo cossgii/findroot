@@ -45,7 +45,6 @@ export default function SendMessageForm({
     }
 
     try {
-      // 서버에서 MAIN_ACCOUNT_ID를 수신자로 설정하도록 API 호출
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: {
@@ -53,7 +52,7 @@ export default function SendMessageForm({
         },
         body: JSON.stringify({
           content: values.content,
-          receiverId: 'MAIN_ACCOUNT_ID_PLACEHOLDER', // 이 값은 서버에서 실제 MAIN_ACCOUNT_ID로 대체됩니다.
+          receiverId: 'MAIN_ACCOUNT_ID_PLACEHOLDER',
         }),
       });
 

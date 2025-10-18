@@ -8,7 +8,6 @@ import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { usePaginatedQuery } from '~/src/hooks/usePaginatedQuery';
 
-// This fetch function remains as it's for a single, non-paginated item.
 const fetchUserProfileData = async (userId: string) => {
   if (!userId) return null;
   const res = await fetch('/api/users/me');
@@ -25,14 +24,13 @@ export function useMyPageData(
   const queryClient = useQueryClient();
   const userId = session?.user?.id || '';
 
-  // Fetch user profile data (non-paginated)
-  const { data: user, isLoading: isUserLoading } = useQuery<User | null, Error>({
-    queryKey: ['user', 'me'],
-    queryFn: () => fetchUserProfileData(userId),
-    enabled: status === 'authenticated' && activeTab === 'profile',
-  });
-
-  // --- Refactored Data Fetching using the new generic hook ---
+  const { data: user, isLoading: isUserLoading } = useQuery<User | null, Error>(
+    {
+      queryKey: ['user', 'me'],
+      queryFn: () => fetchUserProfileData(userId),
+      enabled: status === 'authenticated' && activeTab === 'profile',
+    },
+  );
 
   const myCreatedPlaces = usePaginatedQuery<Restaurant>({
     queryKey: ['user', userId, 'places', 'created'],
@@ -62,8 +60,6 @@ export function useMyPageData(
     enabled: status === 'authenticated' && activeTab === 'likes',
   });
 
-  // --- End of Refactored Data Fetching ---
-
   const refreshContent = useCallback(() => {
     if (!userId) return;
     switch (activeTab) {
@@ -71,12 +67,20 @@ export function useMyPageData(
         queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
         break;
       case 'content':
-        queryClient.invalidateQueries({ queryKey: ['user', userId, 'places', 'created'] });
-        queryClient.invalidateQueries({ queryKey: ['user', userId, 'routes', 'created'] });
+        queryClient.invalidateQueries({
+          queryKey: ['user', userId, 'places', 'created'],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['user', userId, 'routes', 'created'],
+        });
         break;
       case 'likes':
-        queryClient.invalidateQueries({ queryKey: ['user', userId, 'places', 'liked'] });
-        queryClient.invalidateQueries({ queryKey: ['user', userId, 'routes', 'liked'] });
+        queryClient.invalidateQueries({
+          queryKey: ['user', userId, 'places', 'liked'],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['user', userId, 'routes', 'liked'],
+        });
         break;
     }
   }, [activeTab, userId, queryClient]);
@@ -85,12 +89,13 @@ export function useMyPageData(
     session,
     status,
     user,
-    setUser: (updatedUser: User) => queryClient.setQueryData(['user', 'me'], updatedUser),
+    setUser: (updatedUser: User) =>
+      queryClient.setQueryData(['user', 'me'], updatedUser),
     myCreatedPlaces,
     myCreatedRoutes,
     likedPlaces,
     likedRoutes,
-    isLoading: // Consolidate loading states from all relevant queries
+    isLoading:
       isUserLoading ||
       myCreatedPlaces.isLoading ||
       myCreatedRoutes.isLoading ||
