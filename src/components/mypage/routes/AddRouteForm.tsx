@@ -84,15 +84,7 @@ export default function AddRouteForm({
     }
   };
 
-  const placesForMap = useMemo(() => {
-    if (!selectedDistrict) {
-      return stops.map((s) => s.place);
-    }
-    const districtName = SEOUL_DISTRICTS.find(
-      (d) => d.id === selectedDistrict,
-    )?.name;
-    return userPlaces.filter((place) => place.district === districtName);
-  }, [userPlaces, selectedDistrict, stops]);
+  
 
   const filteredPlacesForDropdown = useMemo(() => {
     if (!selectedDistrict) {
@@ -130,7 +122,6 @@ export default function AddRouteForm({
               <RouteMap
                 stops={stops}
                 center={mapCenter}
-                districtPlaces={placesForMap}
               />
             </div>
             <div className="space-y-2">

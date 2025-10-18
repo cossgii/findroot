@@ -1,36 +1,26 @@
 import React, { useMemo } from 'react';
 import KakaoMap from '~/src/components/common/KakaoMap';
-import { ClientPlace as Place } from '~/src/types/shared';
 import { RouteStop } from '~/src/hooks/mypage/useAddRouteForm';
 
 interface RouteMapProps {
   stops: RouteStop[];
   center?: { lat: number; lng: number };
-  districtPlaces: Place[];
 }
 
 const DEFAULT_MAP_CENTER = { lat: 37.5665, lng: 126.978 }; // 시청 위치
 
-export default function RouteMap({
-  stops,
-  center,
-  districtPlaces,
-}: RouteMapProps) {
+export default function RouteMap({ stops, center }: RouteMapProps) {
   const routePlaces = useMemo(() => stops.map((stop) => stop.place), [stops]);
 
   const mapMarkers = useMemo(() => {
-    const allPlaces = new Map<string, Place>();
-    districtPlaces.forEach((p) => allPlaces.set(p.id, p));
-    routePlaces.forEach((p) => allPlaces.set(p.id, p));
-
-    return Array.from(allPlaces.values()).map((place) => ({
+    return routePlaces.map((place) => ({
       latitude: place.latitude,
       longitude: place.longitude,
       title: place.name,
       id: place.id,
       category: place.category,
     }));
-  }, [districtPlaces, routePlaces]);
+  }, [routePlaces]);
 
   const routePolylines = useMemo(() => {
     if (routePlaces.length < 2) {

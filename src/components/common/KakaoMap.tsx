@@ -1,6 +1,6 @@
 'use client';
 
-import { HTMLAttributes, useEffect, useRef, useState } from 'react';
+import { HTMLAttributes, useEffect, useRef } from 'react';
 import { PlaceCategory } from '~/src/types/shared';
 import { useAtomValue } from 'jotai';
 import { isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
@@ -46,83 +46,54 @@ const KakaoMap = ({
   const polylineInstancesRef = useRef<kakao.maps.Polyline[]>([]);
   const clustererRef = useRef<kakao.maps.MarkerClusterer | null>(null);
   const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
-  const [isContainerReady, setIsContainerReady] = useState(false);
-  const [isMapInitialized, setIsMapInitialized] = useState(false);
 
   useEffect(() => {
-    if (mapContainerRef.current) {
-      setIsContainerReady(true);
-    } else {
-      setIsContainerReady(false);
-    }
-  }, [mapContainerRef.current]);
+    if (!isApiLoaded || !mapContainerRef.current) return;
 
-  useEffect(() => {
-    const frameId = requestAnimationFrame(() => {
-      if (mapContainerRef.current && !mapInstanceRef.current) {
-        const mapOption = {
-          center: new window.kakao.maps.LatLng(latitude, longitude),
-          level: 5,
-        };
-        const map = new window.kakao.maps.Map(
-          mapContainerRef.current,
-          mapOption,
-        );
-        mapInstanceRef.current = map;
+    const mapOption = {
+      center: new window.kakao.maps.LatLng(latitude, longitude),
+      level: 5,
+    };
+    const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
+    mapInstanceRef.current = map;
 
-        const clusterer = new window.kakao.maps.MarkerClusterer({
-          map: map,
-          averageCenter: true,
-          minLevel: 6,
-          disableClickZoom: true,
-        });
-        clustererRef.current = clusterer;
-
-        map.relayout();
-
-        window.kakao.maps.event.addListener(
-          clusterer,
-          'clusterclick',
-          function (cluster: kakao.maps.Cluster) {
-            const level = map.getLevel() - 1;
-            map.setLevel(level, { anchor: cluster.getCenter() });
-          },
-        );
-        setIsMapInitialized(true);
-      } else if (mapInstanceRef.current) {
-      }
+    const clusterer = new window.kakao.maps.MarkerClusterer({
+      map: map,
+      averageCenter: true,
+      minLevel: 6,
+      disableClickZoom: true,
     });
+    clustererRef.current = clusterer;
+
+    window.kakao.maps.event.addListener(
+      clusterer,
+      'clusterclick',
+      function (cluster: kakao.maps.Cluster) {
+        const level = map.getLevel() - 1;
+        map.setLevel(level, { anchor: cluster.getCenter() });
+      },
+    );
 
     return () => {
-      cancelAnimationFrame(frameId);
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current = null;
-        clustererRef.current = null;
-        setIsMapInitialized(false);
-      }
+      mapInstanceRef.current = null;
+      clustererRef.current = null;
     };
-  }, [isApiLoaded, latitude, longitude, isContainerReady]);
+  }, [isApiLoaded]);
 
   useEffect(() => {
-    if (
-      !isApiLoaded ||
-      !isMapInitialized ||
-      !mapInstanceRef.current ||
-      markers.length > 0
-    )
-      return;
+    const map = mapInstanceRef.current;
+    if (!map) return;
 
-    const newCenter = new window.kakao.maps.LatLng(latitude, longitude);
-    mapInstanceRef.current.setCenter(newCenter);
-  }, [isApiLoaded, latitude, longitude, markers, isMapInitialized]);
+    if (markers.length === 0) {
+      const newCenter = new window.kakao.maps.LatLng(latitude, longitude);
+      map.setCenter(newCenter);
+    }
+  }, [latitude, longitude, markers]);
+
   useEffect(() => {
-    if (!isApiLoaded) return;
-
     const map = mapInstanceRef.current;
     const clusterer = clustererRef.current;
-    if (!map || !window.kakao || !clusterer) {
-      return;
-    }
+    if (!map || !clusterer) return;
 
     clusterer.clear();
 
@@ -184,14 +155,7 @@ const KakaoMap = ({
       polyline.setMap(map);
       polylineInstancesRef.current.push(polyline);
     });
-  }, [
-    isApiLoaded,
-    markers,
-    polylines,
-    onMarkerClick,
-    selectedMarkerIds,
-    isMapInitialized,
-  ]);
+  }, [markers, polylines, onMarkerClick, selectedMarkerIds]);
 
   if (!isApiLoaded) {
     return (

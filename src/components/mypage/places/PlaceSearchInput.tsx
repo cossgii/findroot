@@ -28,6 +28,12 @@ export default function PlaceSearchInput({
           <Input
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSearch();
+              }
+            }}
             placeholder="장소 이름 또는 주소를 검색하세요"
           />
         </div>
