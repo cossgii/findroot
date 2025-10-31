@@ -43,6 +43,7 @@ const config: Config = {
         territory: {
           600: '#DC2626',
         },
+        destructive: '#DC2626',
       },
       boxShadow: {
         'card-hover':

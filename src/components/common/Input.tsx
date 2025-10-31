@@ -41,7 +41,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ></button>
           )}
         </div>
-        {error && <span className={cn('text-sm text-red-600')}>{error}</span>}
       </>
     );
   },
