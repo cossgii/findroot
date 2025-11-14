@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
 import { createPlaceSchema } from '~/src/schemas/place-schema';
@@ -42,6 +42,8 @@ export default function AddPlaceForm({
     handleSelectPlace,
     isKakaoPlacesServiceReady,
   } = usePlaceSearch();
+  const [isCheckingPlace, setIsCheckingPlace] = useState(false);
+  const [placeExistsError, setPlaceExistsError] = useState<string | null>(null);
 
   const category = form.watch('category');
 
@@ -62,6 +64,28 @@ export default function AddPlaceForm({
       form.setValue('latitude', placeLatitude);
       form.setValue('longitude', placeLongitude);
       form.setValue('district', placeDistrict || '');
+
+      const checkExistingPlace = async () => {
+        setIsCheckingPlace(true);
+        setPlaceExistsError(null);
+        try {
+          const response = await fetch(
+            `/api/places/exists?address=${encodeURIComponent(placeAddress)}`,
+          );
+          if (response.ok) {
+            const data = await response.json();
+            if (data.exists) {
+              setPlaceExistsError('이미 등록된 장소입니다.');
+            }
+          }
+        } catch (error) {
+          console.error('Error checking place existence:', error);
+        } finally {
+          setIsCheckingPlace(false);
+        }
+      };
+
+      checkExistingPlace();
     }
   }, [selectedPlace, form]);
 
@@ -126,6 +150,16 @@ export default function AddPlaceForm({
                   <FormControl>
                     <Input {...field} readOnly />
                   </FormControl>
+                  {isCheckingPlace && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      기존 장소 확인 중...
+                    </p>
+                  )}
+                  {placeExistsError && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {placeExistsError}
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -230,7 +264,7 @@ export default function AddPlaceForm({
           >
             취소
           </Button>
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" disabled={isPending || !!placeExistsError}>
             {isPending ? '등록 중...' : '등록'}
           </Button>
         </div>

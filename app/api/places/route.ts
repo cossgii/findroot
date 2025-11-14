@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getPlacesByDistrict,
   createPlace,
-  DuplicatePlaceError,
 } from '~/src/services/place/placeService';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '~/src/services/auth/authOptions';
@@ -71,9 +70,6 @@ export async function POST(request: NextRequest) {
     const newPlace = await createPlace(validationResult.data, userId);
     return NextResponse.json(newPlace, { status: 201 });
   } catch (error) {
-    if (error instanceof DuplicatePlaceError) {
-      return NextResponse.json({ error: error.message }, { status: 409 });
-    }
     console.error('Error creating place:', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },

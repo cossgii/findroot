@@ -62,14 +62,10 @@ export const useAddPlaceForm = ({
       queryClient.invalidateQueries({ queryKey: ['placeLocations'] });
     },
     onError: (error) => {
-      if (error.message.includes('이미 동일한 주소의 장소를 등록하셨습니다.')) {
-        addToast({ message: error.message, duration: 5000 });
-      } else {
-        addToast({
-          message: `장소 등록 실패: ${error.message}`,
-          duration: 5000,
-        });
-      }
+      addToast({
+        message: `장소 등록 실패: ${error.message}`,
+        duration: 5000,
+      });
       console.error('Error adding place:', error);
     },
   });

@@ -4,12 +4,7 @@ import { Place, Prisma } from '@prisma/client';
 import { PlaceCategory } from '~/src/types/shared';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
-export class DuplicatePlaceError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'DuplicatePlaceError';
-  }
-}
+
 
 function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
   place: T,
@@ -25,17 +20,6 @@ function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
 }
 
 export async function createPlace(data: CreatePlaceInput, creatorId: string) {
-  const existingPlace = await db.place.findFirst({
-    where: {
-      creatorId: creatorId,
-      address: data.address,
-    },
-  });
-
-  if (existingPlace) {
-    throw new DuplicatePlaceError('이미 동일한 주소의 장소를 등록하셨습니다.');
-  }
-
   const place = await db.place.create({
     data: {
       ...data,
@@ -44,6 +28,17 @@ export async function createPlace(data: CreatePlaceInput, creatorId: string) {
     },
   });
   return serializeDatesInPlace(place);
+}
+
+export async function checkPlaceExists(address: string, creatorId: string) {
+  const existingPlace = await db.place.findFirst({
+    where: {
+      creatorId: creatorId,
+      address: address,
+    },
+  });
+
+  return !!existingPlace;
 }
 
 export async function getPlacesForFeed(userId: string) {
