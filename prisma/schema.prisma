@@ -102,6 +102,7 @@ model Route {
   updatedAt   DateTime     @updatedAt @map("updated_at")
   creatorId   String       @map("creator_id")
   districtId  String?      @map("district_id")
+  purpose     RoutePurpose @default(ENTIRE)
   likes       Like[]
   places      RoutePlace[]
   creator     User         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
@@ -126,6 +127,14 @@ model RoutePlace {
   @@index([placeId])
   @@index([routeId, order])
   @@map("route_places")
+}
+
+enum RoutePurpose {
+  FAMILY
+  GATHERING
+  SOLO
+  COUPLE
+  ENTIRE
 }
 
 model Follow {
