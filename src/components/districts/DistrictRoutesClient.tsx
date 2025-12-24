@@ -2,7 +2,7 @@
 
 import { useState, useMemo, Suspense, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import KakaoMap from '~/src/components/common/KakaoMap';
 import { useSetAtom, useAtomValue } from 'jotai';
 import { modalAtom, isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
@@ -12,8 +12,9 @@ import { useQuery } from '@tanstack/react-query';
 import { usePaginatedQuery } from '~/src/hooks/usePaginatedQuery';
 import RouteContainerSkeleton from './RouteContainerSkeleton';
 import RestaurantRouteContainer from '~/src/components/districts/RestaurantRouteContainer';
-import DistrictViewToggle from './DistrictViewToggle'; // Import the new toggle component
+import DistrictViewToggle from './DistrictViewToggle';
 import { PlaceCategory } from '~/src/types/shared';
+import { RoutePurpose } from '@prisma/client';
 
 interface DistrictRoutesClientProps {
   districtId: string;
@@ -26,19 +27,21 @@ const RouteListDisplay = ({
   initialPage,
   selectedRouteId,
   onSelectRoute,
+  purpose,
 }: {
   districtId: string;
   initialPage: number;
   selectedRouteId: string | null;
   onSelectRoute: (routeId: string) => void;
+  purpose?: RoutePurpose;
 }) => {
   const { data: session } = useSession();
   const userId = session?.user?.id || '';
 
   const { data, page, setPage } = usePaginatedQuery<RouteWithPlaces>({
-    queryKey: ['allRoutes', districtId],
+    queryKey: ['allRoutes', districtId, purpose],
     apiEndpoint: `/api/routes/locations`,
-    queryParams: { districtId, limit: 5 },
+    queryParams: { districtId, limit: 5, purpose },
     initialPage: initialPage,
     suspense: true,
     enabled: !!userId,
@@ -67,10 +70,13 @@ export default function DistrictRoutesClient({
   center,
 }: DistrictRoutesClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const setModal = useSetAtom(modalAtom);
   const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
+
+  const purpose = searchParams.get('purpose') as RoutePurpose | null;
 
   useEffect(() => {
     if (!session) {
@@ -151,7 +157,7 @@ export default function DistrictRoutesClient({
           <h2 className="text-xl font-bold">
             {`${districtInfo?.name || districtId} 맛집 루트`}
           </h2>
-          <DistrictViewToggle districtId={districtId} /> {/* Use the toggle component */}
+          <DistrictViewToggle districtId={districtId} />
         </div>
         {session ? (
           <Suspense fallback={<RouteContainerSkeleton />}>
@@ -164,6 +170,7 @@ export default function DistrictRoutesClient({
                   prev === routeId ? null : routeId,
                 );
               }}
+              purpose={purpose ?? undefined}
             />
           </Suspense>
         ) : (

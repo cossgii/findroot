@@ -19,6 +19,7 @@ import Button from '~/src/components/common/Button';
 import RouteMap from './RouteMap';
 import Dropdown from '~/src/components/common/Dropdown';
 import DistrictDropdown from '~/src/components/navigation/DistrictSelectDropdown';
+import { RoutePurpose } from '@prisma/client';
 
 const routeStopLabelMap: Record<RouteStopLabel, string> = {
   MEAL: '식사',
@@ -31,11 +32,28 @@ const labelOptions = Object.entries(routeStopLabelMap).map(([id, name]) => ({
   name,
 }));
 
+const routePurposeMap: Record<Exclude<RoutePurpose, 'ENTIRE'>, string> = {
+  FAMILY: '가족',
+  GATHERING: '모임',
+  SOLO: '나홀로',
+  COUPLE: '커플',
+};
+
+const purposeOptions = Object.entries(routePurposeMap).map(([id, name]) => ({
+  id: id as Exclude<RoutePurpose, 'ENTIRE'>,
+  name,
+}));
+
 interface EditRouteFormProps {
-  form: UseFormReturn<{ name: string; description?: string | undefined }>;
+  form: UseFormReturn<{
+    name: string;
+    description?: string | undefined;
+    purpose: RoutePurpose;
+  }>;
   onSubmit: (values: {
     name: string;
     description?: string | undefined;
+    purpose: RoutePurpose;
   }) => void;
   onClose: () => void;
   stops: RouteStop[];
@@ -75,8 +93,6 @@ export default function EditRouteForm({
     }
   };
 
-  
-
   const filteredPlacesForDropdown = useMemo(() => {
     if (!selectedDistrict) {
       return [];
@@ -114,6 +130,26 @@ export default function EditRouteForm({
           />
           <FormField
             control={form.control}
+            name="purpose"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>루트 목적</FormLabel>
+                <FormControl>
+                  <Dropdown
+                    options={purposeOptions}
+                    value={purposeOptions.find((p) => p.id === field.value)}
+                    onChange={(option) => field.onChange(option.id)}
+                    getOptionLabel={(option) => option.name}
+                    placeholder="루트 목적을 선택하세요"
+                    triggerClassName="w-full"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="description"
             render={({ field }) => (
               <FormItem>
@@ -142,10 +178,7 @@ export default function EditRouteForm({
         {selectedDistrict && (
           <>
             <div className="my-6 h-[300px] w-full rounded-md overflow-hidden">
-              <RouteMap
-                stops={stops}
-                center={mapCenter}
-              />
+              <RouteMap stops={stops} center={mapCenter} />
             </div>
 
             <div className="space-y-2">

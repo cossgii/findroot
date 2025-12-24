@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
+import { RoutePurpose } from '@prisma/client';
 import { ClientPlace as Place, RouteStopLabel } from '~/src/types/shared';
 import { RouteStop } from '~/src/hooks/mypage/useAddRouteForm';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
@@ -32,11 +33,28 @@ const labelOptions = Object.entries(routeStopLabelMap).map(([id, name]) => ({
   name,
 }));
 
+const routePurposeMap: Record<Exclude<RoutePurpose, 'ENTIRE'>, string> = {
+  FAMILY: '가족',
+  GATHERING: '모임',
+  SOLO: '나홀로',
+  COUPLE: '커플',
+};
+
+const purposeOptions = Object.entries(routePurposeMap).map(([id, name]) => ({
+  id: id as Exclude<RoutePurpose, 'ENTIRE'>,
+  name,
+}));
+
 interface AddRouteFormProps {
-  form: UseFormReturn<{ name: string; description?: string | undefined }>;
+  form: UseFormReturn<{
+    name: string;
+    description?: string | undefined;
+    purpose: RoutePurpose;
+  }>;
   onSubmit: (values: {
     name: string;
     description?: string | undefined;
+    purpose: RoutePurpose;
   }) => void;
   onClose: () => void;
   stops: RouteStop[];
@@ -84,8 +102,6 @@ export default function AddRouteForm({
     }
   };
 
-  
-
   const filteredPlacesForDropdown = useMemo(() => {
     if (!selectedDistrict) {
       return [];
@@ -119,10 +135,7 @@ export default function AddRouteForm({
         {selectedDistrict && (
           <>
             <div className="my-6 h-[300px] w-full rounded-md overflow-hidden">
-              <RouteMap
-                stops={stops}
-                center={mapCenter}
-              />
+              <RouteMap stops={stops} center={mapCenter} />
             </div>
             <div className="space-y-2">
               <FormLabel>경유지 목록 (최대 5개)</FormLabel>
@@ -206,6 +219,26 @@ export default function AddRouteForm({
                     <FormLabel>루트 이름</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="예: 강남역 불금 루트" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="purpose"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>루트 목적</FormLabel>
+                    <FormControl>
+                      <Dropdown
+                        options={purposeOptions}
+                        value={purposeOptions.find((p) => p.id === field.value)}
+                        onChange={(option) => field.onChange(option.id)}
+                        getOptionLabel={(option) => option.name}
+                        placeholder="루트 목적을 선택하세요"
+                        triggerClassName="w-full"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

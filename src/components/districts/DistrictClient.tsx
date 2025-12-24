@@ -1,23 +1,16 @@
 'use client';
 
-import { useState, useMemo, Suspense, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import KakaoMap from '~/src/components/common/KakaoMap';
-import ToggleSwitch from '~/src/components/common/ToggleSwitch';
-import RestaurantRouteContainer from '~/src/components/districts/RestaurantRouteContainer';
 import { useSetAtom, useAtomValue } from 'jotai';
 import { modalAtom, isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
 import SortDropdown from '~/src/components/common/SortDropdown';
-import Pagination from '~/src/components/common/Pagination';
-import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { PlaceCategory } from '~/src/types/shared';
 import { cn } from '~/src/utils/class-name';
-import { usePaginatedQuery } from '~/src/hooks/usePaginatedQuery';
 import PlaceList from './PlaceList';
 import RestaurantListSkeletonGrid from './RestaurantListSkeletonGrid';
-import RouteContainerSkeleton from './RouteContainerSkeleton';
 import { Place } from '@prisma/client';
 import DistrictViewToggle from './DistrictViewToggle';
 
@@ -81,7 +74,6 @@ export default function DistrictClient({
 }: DistrictClientProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { data: session } = useSession();
   const setModal = useSetAtom(modalAtom);
   const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
 
@@ -171,11 +163,7 @@ export default function DistrictClient({
       longitude: p.longitude,
       category: p.category,
     }));
-  }, [
-    allPlaceLocations,
-    currentCategory,
-    isApiLoaded,
-  ]);
+  }, [allPlaceLocations, currentCategory, isApiLoaded]);
 
   const mapPolylines = useMemo(() => {
     return [];

@@ -3,14 +3,14 @@ import { useForm } from 'react-hook-form';
 import {
   ClientPlace,
   ClientRoute as Route,
-  RouteStopLabel,
   ClientRoutePlace,
 } from '~/src/types/shared';
 import { useSession } from 'next-auth/react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
-import { UpdateRouteApiSchema } from '~/src/schemas/route-schema';
+import { UpdateRouteInput } from '~/src/schemas/route-schema';
+import { RoutePurpose, RouteStopLabel } from '@prisma/client';
 
 export interface RouteStop {
   listId: string;
@@ -21,6 +21,7 @@ export interface RouteStop {
 const routeDetailsSchema = z.object({
   name: z.string().min(1, { message: '루트 이름을 입력해주세요.' }),
   description: z.string().optional(),
+  purpose: z.nativeEnum(RoutePurpose),
 });
 
 type RouteDetails = z.infer<typeof routeDetailsSchema>;
@@ -36,6 +37,7 @@ const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 };
 
 type RouteWithPlaces = Route & {
   places: ClientRoutePlace[];
+  purpose: RoutePurpose;
 };
 
 export const useEditRouteForm = ({
@@ -77,6 +79,7 @@ export const useEditRouteForm = ({
         form.reset({
           name: routeData.name,
           description: routeData.description || '',
+          purpose: routeData.purpose,
         });
 
         const initialStops = routeData.places.map((p) => ({
@@ -142,8 +145,10 @@ export const useEditRouteForm = ({
       return;
     }
 
-    const payload: z.infer<typeof UpdateRouteApiSchema> = {
-      ...data,
+    const payload: UpdateRouteInput = {
+      name: data.name,
+      description: data.description,
+      purpose: data.purpose,
       districtId: selectedDistrict || undefined,
       places: stops.map((stop, index) => ({
         placeId: stop.place.id,

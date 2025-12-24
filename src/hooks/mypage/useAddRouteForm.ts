@@ -3,28 +3,15 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ClientPlace as Place, RouteStopLabel } from '~/src/types/shared';
+import { ClientPlace as Place } from '~/src/types/shared';
 import { useSession } from 'next-auth/react';
 import { z } from 'zod';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSetAtom } from 'jotai';
 import { addToastAtom } from '~/src/stores/toast-store';
-
-const _apiPayloadSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
-  districtId: z.string().nullable(),
-  places: z.array(
-    z.object({
-      placeId: z.string(),
-      order: z.number().int(),
-      label: z.enum(['MEAL', 'CAFE', 'BAR']),
-    }),
-  ),
-});
-
-type ApiPayload = z.infer<typeof _apiPayloadSchema>;
+import { NewRouteApiSchema, NewRouteInput } from '~/src/schemas/route-schema';
+import { RoutePurpose, RouteStopLabel } from '@prisma/client';
 
 export interface RouteStop {
   listId: string;
@@ -35,6 +22,7 @@ export interface RouteStop {
 const routeDetailsSchema = z.object({
   name: z.string().min(1, { message: '루트 이름을 입력해주세요.' }),
   description: z.string().optional(),
+  purpose: z.nativeEnum(RoutePurpose),
 });
 
 type RouteDetails = z.infer<typeof routeDetailsSchema>;
@@ -47,7 +35,7 @@ interface UseAddRouteFormProps {
 const MAX_STOPS = 5;
 const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 };
 
-const createRouteApi = async (payload: ApiPayload) => {
+const createRouteApi = async (payload: NewRouteInput) => {
   const response = await fetch('/api/routes', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -84,6 +72,7 @@ export const useAddRouteForm = ({
     defaultValues: {
       name: '',
       description: '',
+      purpose: RoutePurpose.ENTIRE,
     },
   });
 
@@ -204,7 +193,7 @@ export const useAddRouteForm = ({
       return;
     }
 
-    const payload = {
+    const payload: NewRouteInput = {
       ...data,
       districtId: selectedDistrict,
       places: stops.map((stop, index) => ({
@@ -214,7 +203,14 @@ export const useAddRouteForm = ({
       })),
     };
 
-    addRouteMutation(payload);
+    const validationResult = NewRouteApiSchema.safeParse(payload);
+    if (!validationResult.success) {
+      console.error('API Payload validation failed:', validationResult.error);
+      addToast({ message: '입력 데이터가 올바르지 않습니다.' });
+      return;
+    }
+
+    addRouteMutation(validationResult.data);
   };
 
   return {

@@ -3,6 +3,7 @@ import RestaurantCard from '~/src/components/districts/RestaurantCard';
 import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 import { RouteStopLabel } from '~/src/types/shared';
+import Link from 'next/link';
 
 export interface RouteWithPlaces extends RouteWithLikeData {
   places: { place: Restaurant; label: RouteStopLabel }[];
@@ -36,22 +37,26 @@ export default function RestaurantRouteContainer({
       {routes.map((route) => (
         <div
           key={route.id}
-          className={`p-4 rounded-lg shadow-sm transition-all cursor-pointer ${
+          className={`p-4 rounded-lg shadow-sm transition-all ${
             selectedRouteId === route.id
               ? 'bg-blue-100 ring-2 ring-blue-500'
-              : 'bg-gray-50 hover:bg-gray-100'
+              : 'bg-gray-50'
           }`}
-          onClick={() => onSelectRoute(route.id)}
         >
-          <div className="flex justify-between items-start mb-2">
-            <div className="flex-grow pr-4">
-              <h3 className="text-xl font-bold">{route.name}</h3>
+          <div
+            className="cursor-pointer"
+            onClick={() => onSelectRoute(route.id)}
+          >
+            <div className="flex justify-between items-start mb-2">
+              <div className="flex-grow pr-4">
+                <h3 className="text-xl font-bold">{route.name}</h3>
+              </div>
+              <LikeButton
+                routeId={route.id}
+                initialIsLiked={route.isLiked}
+                initialLikesCount={route.likesCount}
+              />
             </div>
-            <LikeButton
-              routeId={route.id}
-              initialIsLiked={route.isLiked}
-              initialLikesCount={route.likesCount}
-            />
           </div>
 
           {selectedRouteId === route.id && (
@@ -61,9 +66,16 @@ export default function RestaurantRouteContainer({
                   {route.description}
                 </p>
               )}
-              <h4 className="text-lg font-semibold mt-2 mb-2">
-                루트 상세 장소
-              </h4>
+              <div className="flex justify-between items-center mb-2">
+                <h4 className="text-lg font-semibold">루트 상세 장소</h4>
+                <Link
+                  href={`/routes/${route.id}`}
+                  className="text-sm text-blue-600 hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  상세보기
+                </Link>
+              </div>
               <div className="flex flex-col space-y-4">
                 {route.places.map(({ place, label }) => (
                   <RestaurantCard

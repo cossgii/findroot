@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { RouteStopLabel } from '~/src/types/shared';
+import { RoutePurpose, RouteStopLabel } from '@prisma/client';
 
 const RoutePlaceSchema = z.object({
   placeId: z.string(),
   order: z.number().int(),
-  label: z.enum(Object.values(RouteStopLabel) as [RouteStopLabel, ...RouteStopLabel[]]),
+  label: z.nativeEnum(RouteStopLabel),
 });
 
 export const NewRouteApiSchema = z.object({
@@ -12,6 +12,7 @@ export const NewRouteApiSchema = z.object({
   description: z.string().min(1, { message: '설명을 입력해주세요.' }),
   districtId: z.string().nullable().optional(),
   places: z.array(RoutePlaceSchema),
+  purpose: z.nativeEnum(RoutePurpose),
 });
 
 export const UpdateRouteApiSchema = z.object({
@@ -22,6 +23,7 @@ export const UpdateRouteApiSchema = z.object({
     .optional(),
   districtId: z.string().optional(),
   places: z.array(RoutePlaceSchema).optional(),
+  purpose: z.nativeEnum(RoutePurpose).optional(),
 });
 
 export type NewRouteInput = z.infer<typeof NewRouteApiSchema>;

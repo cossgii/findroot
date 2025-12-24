@@ -1,5 +1,5 @@
 import { db } from '~/lib/db';
-import { Prisma } from '@prisma/client';
+import { Prisma, RoutePurpose } from '@prisma/client';
 import { NewRouteInput, UpdateRouteInput } from '~/src/schemas/route-schema';
 
 function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
@@ -16,7 +16,7 @@ function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
 }
 
 export async function createRoute(data: NewRouteInput, creatorId: string) {
-  const { name, description, districtId, places } = data;
+  const { name, description, districtId, places, purpose } = data;
 
   return db.$transaction(async (prisma) => {
     const newRoute = await prisma.route.create({
@@ -25,6 +25,7 @@ export async function createRoute(data: NewRouteInput, creatorId: string) {
         description,
         districtId,
         creatorId,
+        purpose,
       },
     });
 
@@ -200,6 +201,7 @@ export async function getPublicRoutesByDistrict(
   currentUserId?: string,
   page: number = 1,
   limit: number = 5,
+  purpose?: RoutePurpose,
 ) {
   const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
   if (!MAIN_ACCOUNT_ID) {
@@ -216,6 +218,10 @@ export async function getPublicRoutesByDistrict(
 
   if (districtId && districtId !== 'all') {
     whereClause.districtId = districtId;
+  }
+
+  if (purpose && purpose !== 'ENTIRE') {
+    whereClause.purpose = purpose;
   }
 
   const [routesWithLikes, totalCount] = await db.$transaction([
@@ -338,6 +344,7 @@ export async function updateRoute(
         name: data.name,
         description: data.description,
         districtId: data.districtId,
+        purpose: data.purpose,
       },
     });
 

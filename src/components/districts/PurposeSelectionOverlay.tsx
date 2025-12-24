@@ -1,0 +1,84 @@
+'use client';
+
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { RoutePurpose } from '@prisma/client';
+
+type Purpose = Exclude<RoutePurpose, 'ENTIRE'>;
+
+interface PurposeSelectionOverlayProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelectPurpose: (purpose: Purpose) => void;
+}
+
+const purposeMap: Record<Purpose, { title: string; description: string }> = {
+  COUPLE: { title: '커플', description: '연인과 함께하는 로맨틱한 데이트' },
+  FAMILY: { title: '가족', description: '온 가족이 함께 즐기는 나들이' },
+  GATHERING: { title: '모임', description: '친구, 동료와 함께하는 즐거운 시간' },
+  SOLO: { title: '나홀로', description: '혼자서 즐기는 여유로운 시간' },
+};
+
+const purposes = Object.keys(purposeMap) as Purpose[];
+
+const overlayVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+};
+
+const cardVariants = {
+  hidden: { y: 50, opacity: 0 },
+  visible: { y: 0, opacity: 1 },
+};
+
+export default function PurposeSelectionOverlay({
+  isOpen,
+  onClose,
+  onSelectPurpose,
+}: PurposeSelectionOverlayProps) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          variants={overlayVariants}
+          onClick={onClose}
+        >
+          <motion.div
+            className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-8"
+            onClick={(e) => e.stopPropagation()}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            variants={{
+              visible: { transition: { staggerChildren: 0.1 } },
+            }}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-3xl font-bold">어떤 목적의 루트를 찾으시나요?</h2>
+              <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 font-bold text-2xl">
+                &times;
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {purposes.map((purpose) => (
+                <motion.div
+                  key={purpose}
+                  className="border rounded-lg p-6 text-center cursor-pointer hover:shadow-lg hover:scale-105 transition-transform duration-200"
+                  variants={cardVariants}
+                  onClick={() => onSelectPurpose(purpose)}
+                >
+                  <h3 className="text-2xl font-semibold mb-2">{purposeMap[purpose].title}</h3>
+                  <p className="text-gray-600">{purposeMap[purpose].description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
