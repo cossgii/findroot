@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Dropdown from '~/src/components/common/Dropdown';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 
 const categoryOptions = [
   { id: PlaceCategory.MEAL, name: '식사 (MEAL)' },

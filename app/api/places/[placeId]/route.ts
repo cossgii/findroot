@@ -7,7 +7,7 @@ import {
   updatePlace,
 } from '~/src/services/place/placeService';
 import { z } from 'zod';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 
 const PlaceRouteParamsSchema = z.object({
   placeId: z.string({ message: '유효한 장소 ID가 필요합니다.' }),

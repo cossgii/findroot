@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { ClientPlace as Place, PlaceCategory } from '~/src/types/shared';
+import { ClientPlace as Place } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import Button from '~/src/components/common/Button';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 import Dropdown from '~/src/components/common/Dropdown';

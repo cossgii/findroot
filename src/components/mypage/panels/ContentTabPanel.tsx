@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import MyPageContentToolbar from '~/src/components/mypage/MyPageContentToolbar';
 import CreatedContentList from '~/src/components/mypage/content/CreatedContentList';
 import Pagination from '~/src/components/common/Pagination';
@@ -33,7 +33,14 @@ const CreatedPlaces = ({
   const { data: session } = useSession();
   const userId = session?.user?.id || '';
   const { data, page, setPage } = usePaginatedQuery<Restaurant>({
-    queryKey: ['user', userId, 'places', 'created', districtId, category || 'all'],
+    queryKey: [
+      'user',
+      userId,
+      'places',
+      'created',
+      districtId,
+      category || 'all',
+    ],
     apiEndpoint: `/api/users/${userId}/places`,
     queryParams: { districtId, category },
     suspense: true,
@@ -119,7 +126,9 @@ export default function ContentTabPanel({
   onCategoryChange,
   ...handlers
 }: ContentTabPanelProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'places' | 'routes'>('places');
+  const [activeSubTab, setActiveSubTab] = useState<'places' | 'routes'>(
+    'places',
+  );
 
   return (
     <div>

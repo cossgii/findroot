@@ -4,7 +4,7 @@ import { Suspense, useState, useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import MainContainer from '~/src/components/layout/MainContainer';
 import MyPageTabs, { type MyPageTab } from '~/src/components/mypage/MyPageTabs';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import { useMyPageModals } from '~/src/hooks/mypage/useMyPageModals';
 import ProfileTabPanel from '~/src/components/mypage/panels/ProfileTabPanel';
 import ContentTabPanel from '~/src/components/mypage/panels/ContentTabPanel';
@@ -16,7 +16,9 @@ import { useSession } from 'next-auth/react';
 const MyPageContent = ({ userId }: { userId: string }) => {
   const [activeTab, setActiveTab] = useState<MyPageTab>('profile');
   const [selectedDistrict, setSelectedDistrict] = useState('all');
-  const [selectedCategory, setSelectedCategory] = useState<PlaceCategory | undefined>();
+  const [selectedCategory, setSelectedCategory] = useState<
+    PlaceCategory | undefined
+  >();
   const queryClient = useQueryClient();
 
   const isInitialMount = useRef(true);
@@ -34,8 +36,12 @@ const MyPageContent = ({ userId }: { userId: string }) => {
     queryClient.invalidateQueries({ queryKey: ['user', userId] });
   }, [queryClient, userId]);
 
-  const { openAddPlaceModal, openAddRouteModal, openEditPlaceModal, openEditRouteModal } =
-    useMyPageModals(refreshContent);
+  const {
+    openAddPlaceModal,
+    openAddRouteModal,
+    openEditPlaceModal,
+    openEditRouteModal,
+  } = useMyPageModals(refreshContent);
 
   const handleDeletePlace = useCallback(
     async (placeId: string) => {
@@ -55,7 +61,9 @@ const MyPageContent = ({ userId }: { userId: string }) => {
           ],
         });
       } catch (e) {
-        alert(`장소 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`);
+        alert(
+          `장소 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`,
+        );
       }
     },
     [queryClient, userId, selectedDistrict, selectedCategory],
@@ -68,9 +76,13 @@ const MyPageContent = ({ userId }: { userId: string }) => {
         const res = await fetch(`/api/routes/${routeId}`, { method: 'DELETE' });
         if (!res.ok) throw new Error(await res.text());
         alert('루트가 삭제되었습니다.');
-        queryClient.invalidateQueries({ queryKey: ['user', 'me', 'routes', 'created'] });
+        queryClient.invalidateQueries({
+          queryKey: ['user', 'me', 'routes', 'created'],
+        });
       } catch (e) {
-        alert(`루트 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`);
+        alert(
+          `루트 삭제 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`,
+        );
       }
     },
     [queryClient],

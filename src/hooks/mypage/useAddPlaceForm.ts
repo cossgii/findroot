@@ -6,7 +6,7 @@ import { createPlaceSchema } from '~/src/schemas/place-schema';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSetAtom } from 'jotai';
 import { addToastAtom } from '~/src/stores/toast-store';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 
 type AddPlaceFormValues = z.infer<typeof createPlaceSchema>;
 

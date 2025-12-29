@@ -2,11 +2,12 @@
 import RestaurantCard from '~/src/components/districts/RestaurantCard';
 import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
-import { RouteStopLabel } from '~/src/types/shared';
+import { RouteStopLabel } from '@prisma/client';
 import Link from 'next/link';
 
 export interface RouteWithPlaces extends RouteWithLikeData {
   places: { place: Restaurant; label: RouteStopLabel }[];
+  commentsCount: number;
 }
 
 interface RestaurantRouteContainerProps {
@@ -28,7 +29,11 @@ export default function RestaurantRouteContainer({
 
   if (routes.length === 0) {
     return (
-      <p className="text-gray-500">이 지역에 생성된 사용자 루트가 없습니다.</p>
+      <div className="flex items-center justify-center h-40 rounded-lg bg-gray-50">
+        <p className="text-gray-500">
+          이 지역에 생성된 사용자 루트가 없습니다.
+        </p>
+      </div>
     );
   }
 
@@ -51,11 +56,19 @@ export default function RestaurantRouteContainer({
               <div className="flex-grow pr-4">
                 <h3 className="text-xl font-bold">{route.name}</h3>
               </div>
-              <LikeButton
-                routeId={route.id}
-                initialIsLiked={route.isLiked}
-                initialLikesCount={route.likesCount}
-              />
+              <div className="flex items-center space-x-2">
+                <div className="flex flex-col items-center justify-center text-center w-12 h-12">
+                  <span className="text-xl">💬</span>
+                  <span className="text-xs font-medium text-gray-600">
+                    {route.commentsCount}
+                  </span>
+                </div>
+                <LikeButton
+                  routeId={route.id}
+                  initialIsLiked={route.isLiked}
+                  initialLikesCount={route.likesCount}
+                />
+              </div>
             </div>
           </div>
 

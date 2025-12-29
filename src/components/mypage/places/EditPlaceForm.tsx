@@ -1,7 +1,7 @@
 import { UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
 import { createPlaceSchema } from '~/src/schemas/place-schema';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import {
   Form,
   FormField,
@@ -76,7 +76,10 @@ export default function EditPlaceForm({
             <FormItem>
               <FormLabel>링크 (선택 사항)</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="관련 웹사이트 링크를 입력하세요 (예: www.example.com)" />
+                <Input
+                  {...field}
+                  placeholder="관련 웹사이트 링크를 입력하세요 (예: www.example.com)"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

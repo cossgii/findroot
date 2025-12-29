@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPlacesByDistrict } from '~/src/services/place/placeService';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import { z } from 'zod';
 
 const placesQuerySchema = z.object({

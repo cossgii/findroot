@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { ClientPlace, RouteStopLabel } from '~/src/types/shared';
+import { ClientPlace } from '~/src/types/shared';
+import { RouteStopLabel } from '@prisma/client';
 import { RouteStop } from '~/src/hooks/mypage/useEditRouteForm';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 

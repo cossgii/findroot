@@ -24,6 +24,7 @@ model User {
   places           Place[]
   routes           Route[]
   sessions         Session[]
+  comments         Comment[]
 
   @@map("users")
 }
@@ -67,21 +68,22 @@ model VerificationToken {
 }
 
 model Place {
-  id          String        @id @default(cuid())
-  name        String
-  latitude    Float
-  longitude   Float
-  address     String?
-  description String
-  link        String?
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
-  creatorId   String        @map("creator_id")
-  district    String?
-  category    PlaceCategory
-  likes       Like[]
-  creator     User          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  routes      RoutePlace[]
+  id           String        @id @default(cuid())
+  name         String
+  latitude     Float
+  longitude    Float
+  address      String?
+  description  String
+  link         String?
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  creatorId    String        @map("creator_id")
+  district     String?
+  category     PlaceCategory
+  likes        Like[]
+  creator      User          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  routes       RoutePlace[]
+  alternatives Alternative[]
 
   @@index([district])
   @@index([creatorId])
@@ -106,6 +108,7 @@ model Route {
   likes       Like[]
   places      RoutePlace[]
   creator     User         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  comments    Comment[]
 
   @@index([districtId])
   @@index([creatorId])
@@ -115,18 +118,49 @@ model Route {
 }
 
 model RoutePlace {
-  id      String         @id @default(cuid())
-  routeId String         @map("route_id")
-  placeId String         @map("place_id")
-  order   Int
-  label   RouteStopLabel
-  place   Place          @relation(fields: [placeId], references: [id], onDelete: Cascade)
-  route   Route          @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  id           String        @id @default(cuid())
+  routeId      String        @map("route_id")
+  placeId      String        @map("place_id")
+  order        Int
+  label        RouteStopLabel
+  place        Place         @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  route        Route         @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  alternatives Alternative[]
 
   @@index([routeId])
   @@index([placeId])
   @@index([routeId, order])
   @@map("route_places")
+}
+
+model Alternative {
+  id           String     @id @default(cuid())
+  explanation  String
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  routePlaceId String     @map("route_place_id")
+  placeId      String     @map("place_id")
+  routePlace   RoutePlace @relation(fields: [routePlaceId], references: [id], onDelete: Cascade)
+  place        Place      @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@index([routePlaceId])
+  @@index([placeId])
+  @@map("alternatives")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  routeId   String   @map("route_id")
+  authorId  String   @map("author_id")
+  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([routeId])
+  @@index([authorId])
+  @@map("comments")
 }
 
 enum RoutePurpose {

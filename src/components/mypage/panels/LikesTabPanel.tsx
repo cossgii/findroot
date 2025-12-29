@@ -5,7 +5,7 @@ import MyPageContentToolbar from '~/src/components/mypage/MyPageContentToolbar';
 import LikedContentList from '~/src/components/mypage/content/LikedContentList';
 import Pagination from '~/src/components/common/Pagination';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import CategoryFilter from '~/src/components/mypage/CategoryFilter';
 import { usePaginatedQuery } from '~/src/hooks/usePaginatedQuery';
 import ListItemSkeleton from '../content/ListItemSkeleton';
@@ -97,7 +97,9 @@ export default function LikesTabPanel({
   selectedCategory,
   onCategoryChange,
 }: LikesTabPanelProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'places' | 'routes'>('places');
+  const [activeSubTab, setActiveSubTab] = useState<'places' | 'routes'>(
+    'places',
+  );
 
   return (
     <div>
@@ -133,4 +135,3 @@ export default function LikesTabPanel({
     </div>
   );
 }
-

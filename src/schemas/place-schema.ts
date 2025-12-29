@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 
 export const createPlaceSchema = z.object({
   name: z.string().min(1, { message: '이름을 입력해주세요.' }),

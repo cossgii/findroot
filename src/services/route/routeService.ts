@@ -56,6 +56,11 @@ const routeInclude = {
           _count: { select: { likes: true } },
         },
       },
+      alternatives: {
+        include: {
+          place: true,
+        },
+      },
     },
   },
 };
@@ -65,7 +70,7 @@ export async function getRouteById(id: string, userId?: string) {
     where: { id },
     include: {
       ...routeInclude,
-      _count: { select: { likes: true } },
+      _count: { select: { likes: true, comments: true } },
       likes: userId ? { where: { userId }, select: { userId: true } } : false,
     },
   });
@@ -74,7 +79,10 @@ export async function getRouteById(id: string, userId?: string) {
     return null;
   }
 
-  const allPlaceIds = (routeWithLikes.places || []).map((p) => p.place.id);
+  const allPlaceIds = (routeWithLikes.places || []).flatMap((p) => [
+    p.place.id,
+    ...p.alternatives.map((a) => a.place.id),
+  ]);
 
   const userLikes = userId
     ? await db.like.findMany({
@@ -87,6 +95,12 @@ export async function getRouteById(id: string, userId?: string) {
 
   const enrichedPlaces = routeWithLikes.places.map((routePlace) => {
     const { _count, ...place } = routePlace.place;
+
+    const serializedAlternatives = routePlace.alternatives.map((alt) => ({
+      ...alt,
+      place: serializeDatesInPlace(alt.place),
+    }));
+
     return {
       ...routePlace,
       place: {
@@ -94,6 +108,7 @@ export async function getRouteById(id: string, userId?: string) {
         likesCount: _count.likes,
         isLiked: userLikedPlaceIds.has(place.id),
       },
+      alternatives: serializedAlternatives,
     };
   });
 
@@ -106,6 +121,7 @@ export async function getRouteById(id: string, userId?: string) {
     ...serializeDatesInPlace(routeData),
     places: enrichedPlaces,
     likesCount: _count.likes,
+    commentsCount: _count.comments,
     isLiked: isRouteLiked,
   };
 }
@@ -128,7 +144,7 @@ export async function getRoutesByCreatorId(
       include: {
         ...routeInclude,
         _count: {
-          select: { likes: true },
+          select: { likes: true, comments: true },
         },
         likes: {
           where: {
@@ -183,6 +199,7 @@ export async function getRoutesByCreatorId(
     return {
       ...serializedRoute,
       likesCount: _count.likes,
+      commentsCount: _count.comments,
       isLiked: (likes || []).length > 0,
       places: serializedPlaces,
     };
@@ -230,7 +247,7 @@ export async function getPublicRoutesByDistrict(
       include: {
         ...routeInclude,
         _count: {
-          select: { likes: true },
+          select: { likes: true, comments: true },
         },
         likes: currentUserId
           ? {
@@ -287,6 +304,7 @@ export async function getPublicRoutesByDistrict(
     return {
       ...serializedRoute,
       likesCount: _count.likes,
+      commentsCount: _count.comments,
       isLiked: (likes || []).length > 0,
       places: serializedPlaces,
     };
@@ -366,5 +384,114 @@ export async function updateRoute(
     }
 
     return updatedRoute;
+  });
+}
+
+// Helper function for authorization
+async function verifyRouteOwnership(routePlaceId: string, userId: string) {
+  const routePlace = await db.routePlace.findUnique({
+    where: { id: routePlaceId },
+    select: { route: { select: { creatorId: true } } },
+  });
+
+  if (!routePlace) {
+    throw new Error('RoutePlace not found');
+  }
+
+  if (routePlace.route.creatorId !== userId) {
+    throw new Error('Unauthorized');
+  }
+  return true;
+}
+
+
+// --- Alternative Places Service Functions ---
+
+export async function getAlternativesByRoutePlaceId({ routePlaceId }: { routePlaceId: string }) {
+  return db.alternative.findMany({
+    where: { routePlaceId },
+    include: {
+      place: true,
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  });
+}
+
+interface CreateAlternativeProps {
+  routePlaceId: string;
+  placeId: string;
+  explanation: string;
+  userId: string;
+}
+
+export async function createAlternative({ routePlaceId, placeId, explanation, userId }: CreateAlternativeProps) {
+  await verifyRouteOwnership(routePlaceId, userId);
+
+  const existingAlternativesCount = await db.alternative.count({
+    where: { routePlaceId },
+  });
+
+  if (existingAlternativesCount >= 3) {
+    throw new Error('Maximum of 3 alternatives per route stop is allowed.');
+  }
+
+  return db.alternative.create({
+    data: {
+      routePlaceId,
+      placeId,
+      explanation,
+    },
+  });
+}
+
+interface UpdateAlternativeProps {
+  alternativeId: string;
+  explanation: string;
+  userId: string;
+}
+
+export async function updateAlternative({ alternativeId, explanation, userId }: UpdateAlternativeProps) {
+  const alternative = await db.alternative.findUnique({
+    where: { id: alternativeId },
+    select: { routePlace: { select: { route: { select: { creatorId: true } } } } },
+  });
+
+  if (!alternative) {
+    throw new Error('Alternative not found');
+  }
+
+  if (alternative.routePlace.route.creatorId !== userId) {
+    throw new Error('Unauthorized');
+  }
+
+  return db.alternative.update({
+    where: { id: alternativeId },
+    data: { explanation },
+  });
+}
+
+interface DeleteAlternativeProps {
+  alternativeId: string;
+  userId: string;
+}
+
+export async function deleteAlternative({ alternativeId, userId }: DeleteAlternativeProps) {
+  const alternative = await db.alternative.findUnique({
+    where: { id: alternativeId },
+    select: { routePlace: { select: { route: { select: { creatorId: true } } } } },
+  });
+
+  if (!alternative) {
+    throw new Error('Alternative not found');
+  }
+
+  if (alternative.routePlace.route.creatorId !== userId) {
+    throw new Error('Unauthorized');
+  }
+
+  return db.alternative.delete({
+    where: { id: alternativeId },
   });
 }

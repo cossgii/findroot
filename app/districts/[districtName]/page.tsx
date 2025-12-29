@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 import DistrictClient from '~/src/components/districts/DistrictClient';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 
 interface DistrictPageProps {
   params: Promise<{ districtName: string }>;

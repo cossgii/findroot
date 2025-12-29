@@ -2,7 +2,8 @@
 
 import { useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { ClientUser as User, PlaceCategory } from '~/src/types/shared';
+import { ClientUser as User } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import { MyPageTab } from '~/src/components/mypage/MyPageTabs';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 import { useQuery, useQueryClient } from '@tanstack/react-query';

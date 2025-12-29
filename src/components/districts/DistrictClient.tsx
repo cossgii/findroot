@@ -7,7 +7,7 @@ import { useSetAtom, useAtomValue } from 'jotai';
 import { modalAtom, isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
 import SortDropdown from '~/src/components/common/SortDropdown';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import { cn } from '~/src/utils/class-name';
 import PlaceList from './PlaceList';
 import RestaurantListSkeletonGrid from './RestaurantListSkeletonGrid';

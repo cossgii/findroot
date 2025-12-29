@@ -5,7 +5,7 @@ import {
 } from '~/src/services/place/placeService';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '~/src/services/auth/authOptions';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import { createPlaceSchema } from '~/src/schemas/place-schema';
 
 // 문자열이 PlaceCategory enum의 유효한 값인지 확인하는 타입 가드 함수
@@ -36,14 +36,14 @@ export async function GET(request: NextRequest) {
       page,
       12,
       sort,
-      category
+      category,
     );
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching places:', error);
     return NextResponse.json(
       { error: 'Failed to fetch places' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

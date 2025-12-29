@@ -1,24 +1,24 @@
 import { getRouteById } from '~/src/services/route/routeService';
-import { notFound } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
+import MainContainer from '~/src/components/layout/MainContainer';
 import RouteDetailClient from '~/src/components/routes/RouteDetailClient';
 
-interface RouteDetailPageProps {
-  params: {
-    routeId: string;
-  };
+interface RoutePageProps {
+  params: { routeId: string };
 }
 
-export default async function RouteDetailPage({ params }: RouteDetailPageProps) {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
-
-  const route = await getRouteById(params.routeId, userId);
+export default async function RoutePage({ params }: RoutePageProps) {
+  const { routeId } = params;
+  const route = await getRouteById(routeId);
 
   if (!route) {
-    notFound();
+    return <MainContainer>Route not found</MainContainer>;
   }
 
-  return <RouteDetailClient route={route} />;
+  return (
+    <MainContainer className="flex flex-col items-center">
+      <div className="w-full max-w-6xl mx-auto px-4 py-8">
+        <RouteDetailClient route={route} />
+      </div>
+    </MainContainer>
+  );
 }

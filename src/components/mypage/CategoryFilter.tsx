@@ -1,6 +1,6 @@
 'use client';
 
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import { cn } from '~/src/utils/class-name';
 
 interface CategoryFilterProps {

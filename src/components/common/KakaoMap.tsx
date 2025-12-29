@@ -1,7 +1,7 @@
 'use client';
 
 import { HTMLAttributes, useEffect, useRef } from 'react';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import { useAtomValue } from 'jotai';
 import { isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
 

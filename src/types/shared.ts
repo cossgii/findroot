@@ -1,13 +1,4 @@
-export enum PlaceCategory {
-  MEAL = 'MEAL',
-  DRINK = 'DRINK',
-}
-
-export enum RouteStopLabel {
-  MEAL = 'MEAL',
-  CAFE = 'CAFE',
-  BAR = 'BAR',
-}
+import { PlaceCategory, RouteStopLabel } from '@prisma/client';
 
 export interface ClientPlace {
   id: string;
