@@ -40,7 +40,7 @@ export default function UserMenuDropdown({
           </Link>
         </DropdownItem>
       )}
-      <DropdownItem onClick={() => signOut()}>로그아웃</DropdownItem>
+      <DropdownItem onClick={() => signOut({ callbackUrl: '/' })}>로그아웃</DropdownItem>
     </Dropdown>
   );
 }
