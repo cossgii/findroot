@@ -85,7 +85,7 @@ export default function DistrictRoutesClient({
           title: '로그인이 필요합니다',
           message:
             '로그인하고 다른 사용자들이 만든 다양한 루트를 확인해보세요!',
-          onConfirm: () => router.push('/login'),
+          onConfirm: () => router.push(`/login?callbackUrl=${encodeURIComponent(router.asPath)}`),
           onCancel: () => router.push(`/districts/${districtId}`),
         },
       });
