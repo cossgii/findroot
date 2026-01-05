@@ -1,22 +1,15 @@
-import type { Metadata } from 'next';
+'use client';
 import { Provider } from 'jotai';
 import AuthProvider from '~/src/components/auth/AuthProvider';
 import GlobalModalRenderer from '~/src/components/layout/GlobalModalRenderer';
 import Header from '~/src/components/layout/Header';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-
 import '~/src/styles/globals.css';
 
 import KakaoMapApiLoader from '~/src/components/common/KakaoMapApiLoader';
 import Toast from '~/src/components/common/Toast';
 
 import ReactQueryProvider from '~/src/providers/react-query-provider';
-
-export const metadata: Metadata = {
-  title: 'FindRoot',
-  description: 'This recommends Seoul places and routes to you',
-  keywords: ['next.js', 'app router', 'metadata'],
-};
 
 export default function RootLayout({
   children,
