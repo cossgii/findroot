@@ -23,6 +23,7 @@ interface AddAlternativeModalProps {
   routePlaceId: string;
   onAlternativeAdded: () => void;
   originalPlace: ClientPlace;
+  existingAlternatives?: { placeId: string }[];
 }
 
 export default function AddAlternativeModal({
@@ -32,6 +33,7 @@ export default function AddAlternativeModal({
   routePlaceId,
   onAlternativeAdded,
   originalPlace,
+  existingAlternatives,
 }: AddAlternativeModalProps) {
   const {
     form,
@@ -45,6 +47,7 @@ export default function AddAlternativeModal({
     onClose,
     onSuccess: onAlternativeAdded,
     originalPlace,
+    existingAlternatives,
   });
 
   return (
@@ -62,19 +65,19 @@ export default function AddAlternativeModal({
                   <FormControl>
                     <Dropdown<ClientPlace>
                       options={filteredUserPlaces}
-                      value={userPlaces.find((p) => p.id === field.value)}
+                      value={filteredUserPlaces.find((p) => p.id === field.value)}
                       onChange={(place) => field.onChange(place.id)}
                       getOptionLabel={(place) => `${place.name} (${place.address})`}
                       placeholder={
                         isLoadingUserPlaces
                           ? '장소 불러오는 중...'
-                          : userPlaces.length === 0
+                          : filteredUserPlaces.length === 0
                             ? '등록된 장소가 없습니다.'
                             : '장소를 선택하세요'
                       }
                       triggerClassName="w-full"
                       contentClassName="max-h-40 overflow-y-auto"
-                      disabled={isLoadingUserPlaces || userPlaces.length === 0}
+                      disabled={isLoadingUserPlaces || filteredUserPlaces.length === 0}
                     />
                   </FormControl>
                   <FormMessage />

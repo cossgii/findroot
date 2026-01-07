@@ -24,11 +24,13 @@ const CreatedPlaces = ({
   category,
   onEditPlace,
   onDeletePlace,
+  onContentUpdate,
 }: {
   districtId: string;
   category?: PlaceCategory;
   onEditPlace: (id: string) => void;
   onDeletePlace: (id: string) => void;
+  onContentUpdate: () => void;
 }) => {
   const { data: session } = useSession();
   const userId = session?.user?.id || '';
@@ -57,6 +59,7 @@ const CreatedPlaces = ({
         onDeletePlace={onDeletePlace}
         onEditRoute={() => {}}
         onDeleteRoute={() => {}}
+        onContentUpdate={onContentUpdate}
       />
       <Pagination
         currentPage={page}
@@ -71,10 +74,12 @@ const CreatedRoutes = ({
   districtId,
   onEditRoute,
   onDeleteRoute,
+  onContentUpdate,
 }: {
   districtId: string;
   onEditRoute: (id: string) => void;
   onDeleteRoute: (id: string) => void;
+  onContentUpdate: () => void;
 }) => {
   const { data: session } = useSession();
   const userId = session?.user?.id || '';
@@ -96,6 +101,7 @@ const CreatedRoutes = ({
         onDeletePlace={() => {}}
         onEditRoute={onEditRoute}
         onDeleteRoute={onDeleteRoute}
+        onContentUpdate={onContentUpdate}
       />
       <Pagination
         currentPage={page}
@@ -113,6 +119,7 @@ interface ContentTabPanelProps {
   onDeletePlace: (id: string) => void;
   onEditRoute: (id: string) => void;
   onDeleteRoute: (id: string) => void;
+  onContentUpdate: () => void;
   selectedDistrict: string;
   onDistrictChange: (districtId: string) => void;
   selectedCategory: PlaceCategory | undefined;
@@ -124,6 +131,7 @@ export default function ContentTabPanel({
   onDistrictChange,
   selectedCategory,
   onCategoryChange,
+  onContentUpdate,
   ...handlers
 }: ContentTabPanelProps) {
   const [activeSubTab, setActiveSubTab] = useState<'places' | 'routes'>(
@@ -154,12 +162,14 @@ export default function ContentTabPanel({
             category={selectedCategory}
             onEditPlace={handlers.onEditPlace}
             onDeletePlace={handlers.onDeletePlace}
+            onContentUpdate={onContentUpdate}
           />
         ) : (
           <CreatedRoutes
             districtId={selectedDistrict}
             onEditRoute={handlers.onEditRoute}
             onDeleteRoute={handlers.onDeleteRoute}
+            onContentUpdate={onContentUpdate}
           />
         )}
       </Suspense>

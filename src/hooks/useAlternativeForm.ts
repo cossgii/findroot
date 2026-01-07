@@ -20,6 +20,7 @@ interface UseAlternativeFormProps {
   routePlaceId: string;
   alternative?: { id: string; placeId: string; explanation: string }; // For edit mode
   originalPlace?: ClientPlace;
+  existingAlternatives?: { placeId: string }[];
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -37,6 +38,7 @@ export const useAlternativeForm = ({
   routePlaceId,
   alternative,
   originalPlace,
+  existingAlternatives = [],
   onClose,
   onSuccess,
 }: UseAlternativeFormProps) => {
@@ -65,13 +67,14 @@ export const useAlternativeForm = ({
     if (!originalPlace) {
       return userPlaces;
     }
+    const existingAlternativeIds = new Set(
+      existingAlternatives.map((alt) => alt.placeId),
+    );
     return userPlaces.filter(
       (place) =>
-        place.district === originalPlace.district &&
-        place.category === originalPlace.category &&
-        place.id !== originalPlace.id,
+        place.id !== originalPlace.id && !existingAlternativeIds.has(place.id),
     );
-  }, [userPlaces, originalPlace]);
+  }, [userPlaces, originalPlace, existingAlternatives]);
 
   const mutationFn = async (values: AlternativeFormValues) => {
     const url = alternative

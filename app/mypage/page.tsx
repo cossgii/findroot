@@ -105,6 +105,7 @@ const MyPageContent = ({ userId }: { userId: string }) => {
             onDistrictChange={setSelectedDistrict}
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
+            onContentUpdate={refreshContent}
           />
         );
       case 'likes':

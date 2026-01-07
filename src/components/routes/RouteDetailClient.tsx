@@ -1,21 +1,15 @@
 'use client';
 
-import React, { useState, useMemo, Suspense } from 'react';
+import { useMemo, Suspense } from 'react';
 import KakaoMap from '~/src/components/common/KakaoMap';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 
 import { getRouteById } from '~/src/services/route/routeService';
 import { PlaceCategory, RoutePurpose } from '@prisma/client';
-import Link from 'next/link';
-import Button from '~/src/components/common/Button';
 import CommentSection from '~/src/components/comments/CommentSection';
-import AddAlternativeModal from '~/src/components/routes/AddAlternativeModal';
-import EditAlternativeModal from '~/src/components/routes/EditAlternativeModal';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 type RouteDetail = NonNullable<Awaited<ReturnType<typeof getRouteById>>>;
-type RoutePlaceWithAlts = RouteDetail['places'][0];
-type AlternativeWithPlace = RoutePlaceWithAlts['alternatives'][0];
 
 interface RouteDetailClientProps {
   route: RouteDetail;
@@ -29,180 +23,9 @@ const purposeMap: Record<RoutePurpose, string> = {
   COUPLE: '커플',
 };
 
-// Internal component for managing and displaying alternatives for a single route stop
-const AlternativePlacesSection = ({
-  routePlace,
-  routeId,
-  onPreview,
-  onClearPreview,
-  isPreviewing,
-  previewOriginalPlaceId,
-  onAlternativeAdded,
-  onAlternativeUpdated,
-  onAlternativeDeleted,
-  isRouteOwner,
-}: {
-  routePlace: RoutePlaceWithAlts;
-  routeId: string;
-  onPreview: (alternative: AlternativeWithPlace) => void;
-  onClearPreview: () => void;
-  isPreviewing: boolean;
-  previewOriginalPlaceId: string | null;
-  onAlternativeAdded: () => void;
-  onAlternativeUpdated: () => void;
-  onAlternativeDeleted: () => void;
-  isRouteOwner: boolean;
-}) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingAlternative, setEditingAlternative] =
-    useState<AlternativeWithPlace | null>(null);
-
-  const queryClient = useQueryClient();
-  const deleteMutation = useMutation({
-    mutationFn: (alternativeId: string) =>
-      fetch(
-        `/api/routes/${routeId}/places/${routePlace.id}/alternatives/${alternativeId}`,
-        {
-          method: 'DELETE',
-        },
-      ),
-    onSuccess: () => {
-      onAlternativeDeleted();
-      queryClient.invalidateQueries({
-        queryKey: ['route', routeId],
-      });
-    },
-    onError: (error) => {
-      alert(`예비 장소 삭제 실패: ${error.message}`);
-    },
-  });
-
-  const handleDeleteAlternative = (alternativeId: string) => {
-    if (confirm('정말로 이 예비 장소를 삭제하시겠습니까?')) {
-      deleteMutation.mutate(alternativeId);
-    }
-  };
-
-  return (
-    <div className="mt-3 pl-12">
-      {(routePlace.alternatives && routePlace.alternatives.length > 0) ||
-      isRouteOwner ? (
-        <Button
-          variant="outlined"
-          size="small"
-          className="w-auto px-3"
-          onClick={() => setIsExpanded(!isExpanded)}
-        >
-          {isExpanded
-            ? '예비 장소 숨기기'
-            : `예비 장소 보기 (${routePlace.alternatives?.length || 0})`}
-        </Button>
-      ) : null}
-
-      {isExpanded && (
-        <div className="mt-2 space-y-3 border-l-2 border-gray-200 pl-4">
-          {routePlace.alternatives?.map((alt) => (
-            <div key={alt.id} className="p-3 bg-gray-50 rounded-md">
-              <p className="font-semibold text-gray-800">{alt.place.name}</p>
-              <p className="text-sm text-gray-600 my-1">{alt.explanation}</p>
-              <div className="flex space-x-2 mt-2">
-                <Button
-                  size="small"
-                  className="w-auto px-2 py-1 text-xs"
-                  onClick={() =>
-                    isPreviewing && previewOriginalPlaceId === routePlace.id
-                      ? onClearPreview()
-                      : onPreview(alt)
-                  }
-                >
-                  {isPreviewing && previewOriginalPlaceId === routePlace.id
-                    ? '원래 루트 보기'
-                    : '지도에서 보기'}
-                </Button>
-                {isRouteOwner && (
-                  <>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      className="w-auto px-2 py-1 text-xs"
-                      onClick={() => {
-                        setEditingAlternative(alt);
-                        setIsEditModalOpen(true);
-                      }}
-                    >
-                      수정
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      className="w-auto px-2 py-1 text-xs"
-                      onClick={() => handleDeleteAlternative(alt.id)}
-                    >
-                      삭제
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-          {isRouteOwner && routePlace.alternatives.length < 3 && (
-            <Button
-              size="small"
-              className="w-full mt-2"
-              onClick={() => setIsAddModalOpen(true)}
-            >
-              예비 장소 추가
-            </Button>
-          )}
-        </div>
-      )}
-
-      {isRouteOwner && (
-        <>
-          <AddAlternativeModal
-            isOpen={isAddModalOpen}
-            onClose={() => setIsAddModalOpen(false)}
-            routeId={routeId}
-            routePlaceId={routePlace.id}
-            onAlternativeAdded={onAlternativeAdded}
-            originalPlace={routePlace.place}
-          />
-          {editingAlternative && (
-            <EditAlternativeModal
-              isOpen={isEditModalOpen}
-              onClose={() => {
-                setIsEditModalOpen(false);
-                setEditingAlternative(null);
-              }}
-              routeId={routeId}
-              routePlaceId={routePlace.id}
-              alternative={editingAlternative}
-              onAlternativeUpdated={onAlternativeUpdated}
-            />
-          )}
-        </>
-      )}
-    </div>
-  );
-};
-
 export default function RouteDetailClient({ route }: RouteDetailClientProps) {
   const { data: session } = useSession();
   const isRouteOwner = session?.user?.id === route.creatorId;
-
-  const [previewAlternative, setPreviewAlternative] =
-    useState<AlternativeWithPlace | null>(null);
-  const [previewOriginalPlaceId, setPreviewOriginalPlaceId] = useState<
-    string | null
-  >(null);
-
-  const queryClient = useQueryClient();
-
-  const onAlternativeChange = () => {
-    queryClient.invalidateQueries({ queryKey: ['route', route.id] });
-  };
 
   const mainPolyline = useMemo(
     () => [
@@ -215,35 +38,6 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
     ],
     [route.places],
   );
-
-  const previewPolyline = useMemo(() => {
-    if (!previewAlternative || !previewOriginalPlaceId) return null;
-
-    const newPath = route.places.map((p) => {
-      if (p.id === previewOriginalPlaceId) {
-        return {
-          lat: previewAlternative.place.latitude,
-          lng: previewAlternative.place.longitude,
-        };
-      }
-      return { lat: p.place.latitude, lng: p.place.longitude };
-    });
-
-    return [{ path: newPath, strokeColor: '#0000FF' }]; // Different color for preview
-  }, [route.places, previewAlternative, previewOriginalPlaceId]);
-
-  const handlePreview = (
-    originalRoutePlaceId: string,
-    alternative: AlternativeWithPlace,
-  ) => {
-    setPreviewOriginalPlaceId(originalRoutePlaceId);
-    setPreviewAlternative(alternative);
-  };
-
-  const handleClearPreview = () => {
-    setPreviewOriginalPlaceId(null);
-    setPreviewAlternative(null);
-  };
 
   const mapMarkers = route.places.map((p) => ({
     id: p.place.id,
@@ -300,18 +94,20 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
                   <h3 className="text-xl font-semibold">{rp.place.name}</h3>
                 </div>
                 <p className="text-gray-500 ml-12">{rp.place.description}</p>
-                <AlternativePlacesSection
-                  routePlace={rp}
-                  routeId={route.id}
-                  onPreview={(alt) => handlePreview(rp.id, alt)}
-                  onClearPreview={handleClearPreview}
-                  isPreviewing={previewOriginalPlaceId === rp.id}
-                  previewOriginalPlaceId={previewOriginalPlaceId}
-                  onAlternativeAdded={onAlternativeChange}
-                  onAlternativeUpdated={onAlternativeChange}
-                  onAlternativeDeleted={onAlternativeChange}
-                  isRouteOwner={isRouteOwner}
-                />
+                {rp.alternatives && rp.alternatives.length > 0 && (
+                  <div className="mt-3 pl-12">
+                    <p className="font-semibold text-sm text-gray-700">
+                      예비 장소:
+                    </p>
+                    <ul className="space-y-1 mt-1">
+                      {rp.alternatives.map((alt) => (
+                        <li key={alt.id} className="text-sm text-gray-600">
+                          - {alt.place.name} ({alt.explanation})
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -321,7 +117,7 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
             latitude={center.lat}
             longitude={center.lng}
             markers={mapMarkers}
-            polylines={previewPolyline || mainPolyline}
+            polylines={mainPolyline}
           />
         </div>
       </div>
