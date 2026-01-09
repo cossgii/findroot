@@ -26,9 +26,13 @@ export default function DistrictViewToggle({
   const inactiveStyles =
     'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300';
 
-  const handleSelectPurpose = (purpose: Exclude<RoutePurpose, 'ENTIRE'>) => {
+  const handleSelectPurpose = (purpose: RoutePurpose) => {
     setIsOverlayOpen(false);
-    router.push(`/districts/${districtId}/routes?purpose=${purpose}`);
+    if (purpose === 'ENTIRE') {
+      router.push(`/districts/${districtId}/routes`);
+    } else {
+      router.push(`/districts/${districtId}/routes?purpose=${purpose}`);
+    }
   };
 
   return (
