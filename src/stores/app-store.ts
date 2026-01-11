@@ -8,7 +8,8 @@ export type ModalType =
   | 'EDIT_PLACE'
   | 'EDIT_ROUTE'
   | 'CONFIRMATION'
-  | 'LOGIN_PROMPT';
+  | 'LOGIN_PROMPT'
+  | 'ROUTE_PREVIEW';
 
 export interface ConfirmationModalProps {
   title: string;
@@ -41,6 +42,10 @@ export interface RestaurantDetailModalProps {
   restaurantId: string;
 }
 
+export interface RoutePreviewModalProps {
+  routeId: string;
+}
+
 export interface InfoMessageModalProps {
   title: string;
   message: string;
@@ -57,6 +62,7 @@ export interface ModalState {
     | EditRouteModalProps
     | ConfirmationModalProps
     | LoginPromptModalProps
+    | RoutePreviewModalProps
     | Record<string, never>;
 }
 
@@ -79,3 +85,9 @@ export const closeModalAtom = atom(null, (get, set) => {
 });
 
 export const isKakaoMapApiLoadedAtom = atom<boolean>(false);
+
+export type ContentCreator =
+  | { type: 'recommended' }
+  | { type: 'user'; userId: string; userName: string };
+
+export const contentCreatorAtom = atom<ContentCreator>({ type: 'recommended' });

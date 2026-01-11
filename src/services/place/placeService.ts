@@ -1,10 +1,8 @@
 import { db } from '~/lib/db';
 import { CreatePlaceInput } from '~/src/schemas/place-schema';
 import { Place, Prisma } from '@prisma/client';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
-
-
 
 function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
   place: T,
@@ -73,19 +71,23 @@ export async function getPlacesByDistrict(
   limit: number = 12,
   sort: 'recent' | 'likes' = 'recent',
   category?: PlaceCategory,
+  targetUserId?: string,
 ) {
-  const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
-  if (!MAIN_ACCOUNT_ID) {
-    console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
-    return { places: [], totalCount: 0, totalPages: 0, currentPage: page };
-  }
+  const whereClause: Prisma.PlaceWhereInput = {};
 
-  const whereClause: Prisma.PlaceWhereInput = {
-    OR: [
+  if (targetUserId) {
+    whereClause.creatorId = targetUserId;
+  } else {
+    const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
+    if (!MAIN_ACCOUNT_ID) {
+      console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
+      return { places: [], totalCount: 0, totalPages: 0, currentPage: page };
+    }
+    whereClause.OR = [
       { creatorId: MAIN_ACCOUNT_ID },
       ...(userId ? [{ creatorId: userId }] : []),
-    ],
-  };
+    ];
+  }
 
   if (districtName !== '전체') {
     whereClause.district = districtName;
@@ -119,7 +121,7 @@ export async function getPlacesByDistrict(
                 userId: true,
               },
             }
-          : false,
+          : undefined,
       },
       orderBy: orderByClause,
       skip: (page - 1) * limit,
@@ -162,7 +164,7 @@ export async function getPlaceById(id: string, userId?: string) {
               userId: true,
             },
           }
-        : false,
+        : undefined,
     },
   });
 
@@ -223,7 +225,7 @@ export async function getPlacesByCreatorId(
                 userId: true,
               },
             }
-          : false,
+          : undefined,
       },
       orderBy: {
         createdAt: 'desc',
@@ -295,19 +297,23 @@ export async function updatePlace(
 export async function getPlaceLocationsByDistrict(
   districtName: string,
   currentUserId?: string,
+  targetUserId?: string,
 ) {
-  const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
-  if (!MAIN_ACCOUNT_ID) {
-    console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
-    return [];
-  }
+  const whereClause: Prisma.PlaceWhereInput = {};
 
-  const whereClause: Prisma.PlaceWhereInput = {
-    OR: [
+  if (targetUserId) {
+    whereClause.creatorId = targetUserId;
+  } else {
+    const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
+    if (!MAIN_ACCOUNT_ID) {
+      console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
+      return [];
+    }
+    whereClause.OR = [
       { creatorId: MAIN_ACCOUNT_ID },
       ...(currentUserId ? [{ creatorId: currentUserId }] : []),
-    ],
-  };
+    ];
+  }
 
   if (districtName && districtName !== '전체') {
     whereClause.district = districtName;

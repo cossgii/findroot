@@ -219,19 +219,23 @@ export async function getPublicRoutesByDistrict(
   page: number = 1,
   limit: number = 5,
   purpose?: RoutePurpose,
+  targetUserId?: string,
 ) {
-  const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
-  if (!MAIN_ACCOUNT_ID) {
-    console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
-    return { routes: [], totalCount: 0, totalPages: 0, currentPage: page };
-  }
+  const whereClause: Prisma.RouteWhereInput = {};
 
-  const whereClause: Prisma.RouteWhereInput = {
-    OR: [
+  if (targetUserId) {
+    whereClause.creatorId = targetUserId;
+  } else {
+    const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
+    if (!MAIN_ACCOUNT_ID) {
+      console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
+      return { routes: [], totalCount: 0, totalPages: 0, currentPage: page };
+    }
+    whereClause.OR = [
       { creatorId: MAIN_ACCOUNT_ID },
       ...(currentUserId ? [{ creatorId: currentUserId }] : []),
-    ],
-  };
+    ];
+  }
 
   if (districtId && districtId !== 'all') {
     whereClause.districtId = districtId;

@@ -4,7 +4,11 @@ import { useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import KakaoMap from '~/src/components/common/KakaoMap';
 import { useSetAtom, useAtomValue } from 'jotai';
-import { modalAtom, isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
+import {
+  modalAtom,
+  isKakaoMapApiLoadedAtom,
+  contentCreatorAtom,
+} from '~/src/stores/app-store';
 import SortDropdown from '~/src/components/common/SortDropdown';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { PlaceCategory } from '@prisma/client';
@@ -45,11 +49,14 @@ interface PlaceLocation {
 
 const fetchAllPlaceLocations = async (
   districtName: string | undefined,
+  targetUserId?: string,
 ): Promise<PlaceLocation[]> => {
   if (!districtName) return [];
-  const response = await fetch(
-    `/api/places/locations?district=${districtName}`,
-  );
+  const params = new URLSearchParams({ district: districtName });
+  if (targetUserId) {
+    params.set('targetUserId', targetUserId);
+  }
+  const response = await fetch(`/api/places/locations?${params.toString()}`);
   if (!response.ok) {
     throw new Error('Failed to fetch all place locations');
   }
@@ -76,10 +83,14 @@ export default function DistrictClient({
   const pathname = usePathname();
   const setModal = useSetAtom(modalAtom);
   const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
+  const contentCreator = useAtomValue(contentCreatorAtom);
+
+  const targetUserId =
+    contentCreator.type === 'user' ? contentCreator.userId : undefined;
 
   const { data: allPlaceLocations = [] } = useQuery<PlaceLocation[], Error>({
-    queryKey: ['placeLocations', districtInfo?.name],
-    queryFn: () => fetchAllPlaceLocations(districtInfo?.name),
+    queryKey: ['placeLocations', districtInfo?.name, targetUserId],
+    queryFn: () => fetchAllPlaceLocations(districtInfo?.name, targetUserId),
     enabled: !!districtInfo?.name,
   });
 
@@ -126,18 +137,24 @@ export default function DistrictClient({
       currentSort,
       currentCategory,
       currentPage,
+      targetUserId,
     ],
     queryFn: async () => {
       const params = new URLSearchParams({
-        district: districtInfo?.name || '전체',
+        districtName: districtInfo?.name || '전체',
         sort: currentSort,
         page: currentPage.toString(),
       });
       if (currentCategory) {
         params.set('category', currentCategory);
       }
+      if (targetUserId) {
+        params.set('targetUserId', targetUserId);
+      }
 
-      const response = await fetch(`/api/places?${params.toString()}`);
+      const response = await fetch(
+        `/api/districts/places?${params.toString()}`,
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch places on client');
       }
@@ -169,6 +186,11 @@ export default function DistrictClient({
     return [];
   }, []);
 
+  const creatorName =
+    contentCreator.type === 'user'
+      ? `${contentCreator.userName}님의`
+      : '추천';
+
   return (
     <div className="flex flex-col desktop:flex-row h-full desktop:gap-4 desktop:items-center">
       <div className="w-full mobile:w-[375px] tablet:w-[744px] desktop:w-1/2 mx-auto h-[440px] aspect-video desktop:h-full relative">
@@ -184,7 +206,7 @@ export default function DistrictClient({
       <div className="flex-grow desktop:w-1/2 p-4 overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">
-            {`${districtInfo?.name || districtId} 맛집 정보`}
+            {`${districtInfo?.name || districtId} ${creatorName} 맛집 정보`}
           </h2>
           <DistrictViewToggle districtId={districtId} />
         </div>
@@ -232,3 +254,4 @@ export default function DistrictClient({
     </div>
   );
 }
+

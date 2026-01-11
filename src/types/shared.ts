@@ -1,5 +1,13 @@
 import { PlaceCategory, RouteStopLabel } from '@prisma/client';
 
+export type { PlaceCategory, RouteStopLabel } from '@prisma/client';
+
+export interface ClientUserSummary {
+  id: string;
+  name: string | null;
+  image: string | null;
+}
+
 export interface ClientPlace {
   id: string;
   name: string;
@@ -10,6 +18,7 @@ export interface ClientPlace {
   link: string | null;
   district: string | null;
   category: PlaceCategory;
+  creator: ClientUserSummary; // Add creator info
 }
 
 export interface ClientRoute {
@@ -17,6 +26,7 @@ export interface ClientRoute {
   name: string;
   description: string;
   districtId: string | null;
+  creator: ClientUserSummary; // Add creator info
 }
 
 export interface ClientUser {
