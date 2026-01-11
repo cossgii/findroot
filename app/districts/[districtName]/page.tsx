@@ -22,16 +22,21 @@ export default async function DistrictPage({
 }: DistrictPageProps) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
+  const { districtName } = params;
+  const {
+    sort = 'recent',
+    page: pageParam = '1',
+    category,
+  } = searchParams;
 
-  const districtId = params.districtName;
+  const districtId = districtName;
   const districtInfo = SEOUL_DISTRICTS.find((d) => d.id === districtId);
   const center = districtInfo
     ? { lat: districtInfo.lat, lng: districtInfo.lng }
     : { lat: 37.5665, lng: 126.978 };
 
-  const sort = searchParams.sort || 'recent';
-  const page = parseInt(searchParams.page || '1', 10);
-  const category = searchParams.category;
+  const page = parseInt(pageParam, 10);
+
   const initialPlacesResult = await getPlacesByDistrict(
     districtInfo?.name || '전체',
     userId,

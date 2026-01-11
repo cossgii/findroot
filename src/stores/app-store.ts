@@ -88,6 +88,7 @@ export const isKakaoMapApiLoadedAtom = atom<boolean>(false);
 
 export type ContentCreator =
   | { type: 'recommended' }
+  | { type: 'me' }
   | { type: 'user'; userId: string; userName: string };
 
 export const contentCreatorAtom = atom<ContentCreator>({ type: 'recommended' });

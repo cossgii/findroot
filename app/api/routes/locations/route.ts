@@ -12,6 +12,7 @@ const routeLocationQuerySchema = z.object({
   page: z.preprocess((val) => parseInt(z.string().parse(val), 10), z.number().min(1).default(1)),
   limit: z.preprocess((val) => parseInt(z.string().parse(val), 10), z.number().min(1).default(5)),
   purpose: z.nativeEnum(RoutePurpose).optional(),
+  targetUserId: z.string().optional(),
 });
 
 export async function GET(request: Request) {
@@ -21,13 +22,16 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
   try {
-    const { districtId, page, limit, purpose } = routeLocationQuerySchema.parse(Object.fromEntries(searchParams));
+    const validatedParams = routeLocationQuerySchema.parse(Object.fromEntries(searchParams));
+    const { districtId, page, limit, purpose, targetUserId } = validatedParams;
+
     const paginatedData = await getPublicRoutesByDistrict(
       districtId,
       currentUserId,
       page,
       limit,
       purpose,
+      targetUserId,
     );
     return NextResponse.json(paginatedData);
   } catch (error) {

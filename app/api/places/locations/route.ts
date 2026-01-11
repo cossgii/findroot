@@ -12,6 +12,7 @@ const locationQuerySchema = z.object({
     .refine((val) => districtNames.includes(val) || val === '전체', {
       message: 'Invalid district name',
     }),
+  targetUserId: z.string().optional(),
 });
 
 export async function GET(request: Request) {
@@ -21,12 +22,15 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
   try {
-    const { district } = locationQuerySchema.parse(
+    const validatedParams = locationQuerySchema.parse(
       Object.fromEntries(searchParams),
     );
+    const { district, targetUserId } = validatedParams;
+
     const locations = await getPlaceLocationsByDistrict(
       district,
       currentUserId,
+      targetUserId,
     );
     return NextResponse.json(locations);
   } catch (error) {

@@ -40,7 +40,11 @@ export default function Header() {
   const showDistrictDropdown = !hideDistrictDropdown;
 
   const creatorName =
-    contentCreator.type === 'user' ? contentCreator.userName : '추천';
+    contentCreator.type === 'user'
+      ? contentCreator.userName
+      : contentCreator.type === 'me'
+        ? '내 콘텐츠'
+        : '추천';
 
   return (
     <>

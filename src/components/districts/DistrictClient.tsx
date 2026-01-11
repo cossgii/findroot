@@ -17,6 +17,7 @@ import PlaceList from './PlaceList';
 import RestaurantListSkeletonGrid from './RestaurantListSkeletonGrid';
 import { Place } from '@prisma/client';
 import DistrictViewToggle from './DistrictViewToggle';
+import { useSession } from 'next-auth/react';
 
 type SerializablePlace = Omit<Place, 'createdAt' | 'updatedAt'> & {
   createdAt: string;
@@ -83,10 +84,15 @@ export default function DistrictClient({
   const pathname = usePathname();
   const setModal = useSetAtom(modalAtom);
   const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
+  const { data: session } = useSession();
   const contentCreator = useAtomValue(contentCreatorAtom);
 
   const targetUserId =
-    contentCreator.type === 'user' ? contentCreator.userId : undefined;
+    contentCreator.type === 'user'
+      ? contentCreator.userId
+      : contentCreator.type === 'me' && session?.user?.id
+        ? session.user.id
+        : undefined;
 
   const { data: allPlaceLocations = [] } = useQuery<PlaceLocation[], Error>({
     queryKey: ['placeLocations', districtInfo?.name, targetUserId],

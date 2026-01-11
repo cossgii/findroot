@@ -71,7 +71,11 @@ export default function DistrictRoutesClient({
   const contentCreator = useAtomValue(contentCreatorAtom);
 
   const targetUserId =
-    contentCreator.type === 'user' ? contentCreator.userId : undefined;
+    contentCreator.type === 'user'
+      ? contentCreator.userId
+      : contentCreator.type === 'me' && session?.user?.id
+        ? session.user.id
+        : undefined;
   const creatorName =
     contentCreator.type === 'user' ? `${contentCreator.userName}님의` : '추천';
 
