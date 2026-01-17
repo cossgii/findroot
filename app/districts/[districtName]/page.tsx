@@ -8,43 +8,41 @@ import { PlaceCategory } from '@prisma/client';
 export const dynamic = 'force-dynamic';
 
 interface DistrictPageProps {
-  params: { districtName: string };
-  searchParams: {
+  params: Promise<{ districtName: string }>;
+  searchParams: Promise<{
     sort?: 'recent' | 'likes';
     page?: string;
     category?: PlaceCategory;
-  };
+  }>;
 }
-
 export default async function DistrictPage({
   params,
   searchParams,
 }: DistrictPageProps) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
-  const { districtName } = params;
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  const { districtName } = resolvedParams;
   const {
     sort = 'recent',
     page: pageParam = '1',
     category,
-  } = searchParams;
-
+  } = resolvedSearchParams;
   const districtId = districtName;
   const districtInfo = SEOUL_DISTRICTS.find((d) => d.id === districtId);
   const center = districtInfo
     ? { lat: districtInfo.lat, lng: districtInfo.lng }
     : { lat: 37.5665, lng: 126.978 };
-
   const page = parseInt(pageParam, 10);
-
   const initialPlacesResult = await getPlacesByDistrict(
     districtInfo?.name || '전체',
     userId,
     page,
-    12, // 페이지 당 아이템 수
+    12,
     sort,
     category,
-    undefined, // No targetUserId for initial server-side fetch
+    undefined,
   );
 
   return (

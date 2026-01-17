@@ -2,8 +2,8 @@
 import * as React from 'react';
 import Image from 'next/image';
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
+import { User } from 'lucide-react';
 
-import profilelarge from '../../../public/assets/profile-large.png';
 import { cn } from '~/src/utils/class-name';
 
 const Avatar = React.forwardRef<
@@ -55,12 +55,12 @@ const AvatarFallback = React.forwardRef<
   <AvatarPrimitive.Fallback
     ref={ref}
     className={cn(
-      'bg-muted flex h-full w-full items-center justify-center rounded-full',
+      'bg-muted flex h-full w-full items-center justify-center rounded-full bg-gray-200',
       className,
     )}
     {...props}
   >
-    <Image src={profilelarge} alt="profile_img" className="object-cover" />
+    <User className="h-3/5 w-3/5 text-gray-500" />
   </AvatarPrimitive.Fallback>
 ));
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;

@@ -1,15 +1,19 @@
 'use client';
 
-import { useMemo, Suspense, useState } from 'react';
+import { useMemo, Suspense, useState, useEffect } from 'react';
 import KakaoMap from '~/src/components/common/KakaoMap';
 import Link from 'next/link';
 import React from 'react';
 import { useSpring, animated } from '@react-spring/web';
+import { useSession } from 'next-auth/react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useSetAtom } from 'jotai';
+import { modalAtom } from '~/src/stores/app-store';
 
 import { getRouteById } from '~/src/services/route/routeService';
 import { PlaceCategory, RoutePurpose } from '@prisma/client';
 import CommentSection from '~/src/components/comments/CommentSection';
-import ArrowDownIcon from '~/public/assets/arrow-down.svg';
+import { ArrowDown } from 'lucide-react';
 import { cn } from '~/src/utils/class-name';
 
 type RouteDetail = NonNullable<Awaited<ReturnType<typeof getRouteById>>>;
@@ -48,8 +52,8 @@ const WaypointCard = ({
   const selectedPlace =
     rp.place.id === selectedPlaceId
       ? rp.place
-      : rp.alternatives.find((alt) => alt.place.id === selectedPlaceId)?.place ||
-        rp.place;
+      : rp.alternatives.find((alt) => alt.place.id === selectedPlaceId)
+          ?.place || rp.place;
 
   const handleFlip = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -69,7 +73,6 @@ const WaypointCard = ({
       className="relative w-full min-h-[12rem]"
       style={{ transformStyle: 'preserve-3d' }}
     >
-      {/* Back Side */}
       <animated.div
         className="absolute w-full h-full cursor-default"
         style={{
@@ -111,8 +114,6 @@ const WaypointCard = ({
           </div>
         </div>
       </animated.div>
-
-      {/* Front Side */}
       <animated.div
         className={cn(
           'absolute w-full h-full border p-4 rounded-lg bg-white shadow-sm',
@@ -143,11 +144,35 @@ const WaypointCard = ({
 };
 
 export default function RouteDetailClient({ route }: RouteDetailClientProps) {
+  const { status } = useSession();
+  const router = useRouter();
+  const pathname = usePathname();
+  const setModal = useSetAtom(modalAtom);
+
   const [selectedAlternatives, setSelectedAlternatives] = useState<
     Record<string, string>
   >({});
 
-  const handleAlternativeChange = (routePlaceId: string, newPlaceId: string) => {
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      setModal({
+        type: 'LOGIN_PROMPT',
+        props: {
+          title: '로그인이 필요합니다',
+          message: '루트 상세 정보를 보려면 로그인이 필요합니다.',
+          onConfirm: () =>
+            router.push(`/login?callbackUrl=${encodeURIComponent(pathname)}`),
+          onCancel: () =>
+            router.push(`/districts/${route.districtId || 'all'}/routes`),
+        },
+      });
+    }
+  }, [status, setModal, router, pathname, route.districtId]);
+
+  const handleAlternativeChange = (
+    routePlaceId: string,
+    newPlaceId: string,
+  ) => {
     setSelectedAlternatives((prev) => ({
       ...prev,
       [routePlaceId]: newPlaceId,
@@ -203,6 +228,14 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
     return { lat: 37.5665, lng: 126.978 };
   }, [currentPlaces]);
 
+  if (status !== 'authenticated') {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <p>로그인 정보를 확인하는 중...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
@@ -236,7 +269,9 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
                   key={rp.id}
                   rp={rp}
                   index={index}
-                  onSelect={(placeId) => handleAlternativeChange(rp.id, placeId)}
+                  onSelect={(placeId) =>
+                    handleAlternativeChange(rp.id, placeId)
+                  }
                   selectedPlaceId={selectedAlternatives[rp.id] || rp.place.id}
                 />
               );
@@ -246,12 +281,8 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
               }
 
               const arrow = (
-                <li
-                  key={`arrow-${rp.id}`}
-                  aria-hidden="true"
-                  className="my-2"
-                >
-                  <ArrowDownIcon className="h-6 w-6 text-gray-400" />
+                <li key={`arrow-${rp.id}`} aria-hidden="true" className="my-2">
+                  <ArrowDown className="h-6 w-6 text-gray-400" />
                 </li>
               );
 

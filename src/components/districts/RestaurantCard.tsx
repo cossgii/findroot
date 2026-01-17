@@ -6,7 +6,6 @@ import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant } from '~/src/types/restaurant';
 import { RouteStopLabel } from '@prisma/client';
 import { cn } from '~/src/utils/class-name';
-import Link from 'next/link';
 
 interface RestaurantCardProps {
   place: Restaurant;
@@ -56,15 +55,6 @@ export default function RestaurantCard({
             </span>
           )}
         </div>
-        {place.creator && (
-          <Link
-            href={`/users/${place.creator.id}`}
-            className="text-sm text-gray-500 hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {place.creator.name || 'Unknown User'}
-          </Link>
-        )}
         {!label && place.district && (
           <p className="text-gray-400 text-xs mt-1">{place.district}</p>
         )}
