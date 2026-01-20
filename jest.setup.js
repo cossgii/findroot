@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/extend-expect'; // Changed import
 
 // Mock environment variables for tests
 process.env.MAIN_ACCOUNT_ID = 'test-main-account-id';
