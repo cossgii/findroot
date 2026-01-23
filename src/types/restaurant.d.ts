@@ -11,6 +11,8 @@ export type Restaurant = Omit<ClientPlace, 'createdAt' | 'updatedAt'> & {
 export type RouteWithLikeData = ClientRoute & {
   likesCount: number;
   isLiked: boolean;
+  isRepresentative: boolean;
+  commentsCount: number;
 };
 
 export interface Category {

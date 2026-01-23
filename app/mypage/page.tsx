@@ -88,6 +88,31 @@ const MyPageContent = ({ userId }: { userId: string }) => {
     [queryClient],
   );
 
+  const handleToggleIsRepresentative = useCallback(
+    async (routeId: string, isRepresentative: boolean) => {
+      try {
+        const res = await fetch(`/api/routes/${routeId}/representative`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ isRepresentative }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        alert('루트 대표 설정이 업데이트되었습니다.');
+        queryClient.invalidateQueries({
+          queryKey: ['user', 'me', 'routes', 'created'],
+        });
+        refreshContent();
+      } catch (e) {
+        alert(
+          `대표 루트 설정 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`,
+        );
+      }
+    },
+    [queryClient, refreshContent],
+  );
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'profile':
@@ -101,6 +126,7 @@ const MyPageContent = ({ userId }: { userId: string }) => {
             onEditRoute={openEditRouteModal}
             onDeletePlace={handleDeletePlace}
             onDeleteRoute={handleDeleteRoute}
+            onToggleIsRepresentative={handleToggleIsRepresentative}
             selectedDistrict={selectedDistrict}
             onDistrictChange={setSelectedDistrict}
             selectedCategory={selectedCategory}

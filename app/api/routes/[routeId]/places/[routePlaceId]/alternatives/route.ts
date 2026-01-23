@@ -4,7 +4,7 @@ import { authOptions } from '~/src/services/auth/authOptions';
 import {
   getAlternativesByRoutePlaceId,
   createAlternative,
-} from '~/src/services/route/routeService';
+} from '~/src/services/route/alternativeService';
 import { z } from 'zod';
 
 export async function GET(

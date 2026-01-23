@@ -18,7 +18,7 @@ export interface ClientPlace {
   link: string | null;
   district: string | null;
   category: PlaceCategory;
-  creator: ClientUserSummary; // Add creator info
+  creator: ClientUserSummary;
 }
 
 export interface ClientRoute {
@@ -26,7 +26,11 @@ export interface ClientRoute {
   name: string;
   description: string;
   districtId: string | null;
-  creator: ClientUserSummary; // Add creator info
+  creator: ClientUserSummary;
+  isRepresentative: boolean;
+  likesCount: number;
+  isLiked: boolean;
+  commentsCount: number;
 }
 
 export interface ClientUser {

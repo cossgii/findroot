@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import Button from '~/src/components/common/Button';
 import { type MyPageSubTab } from '../MyPageTabs';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
@@ -11,8 +11,8 @@ import { RouteStopLabel } from '@prisma/client';
 import { cn } from '~/src/utils/class-name';
 import AddAlternativeModal from '~/src/components/routes/AddAlternativeModal';
 import EditAlternativeModal from '~/src/components/routes/EditAlternativeModal';
+import { useSession } from 'next-auth/react';
 
-// Types for detailed route data
 interface AlternativeWithPlace {
   id: string;
   explanation: string;
@@ -41,9 +41,12 @@ interface CreatedContentListProps {
   onDeletePlace: (id: string) => void;
   onEditRoute: (id: string) => void;
   onDeleteRoute: (id: string) => void;
+  onToggleIsRepresentative: (
+    routeId: string,
+    isRepresentative: boolean,
+  ) => void; // New prop
   onContentUpdate: () => void;
 }
-
 const routeStopLabelMap: Record<
   RouteStopLabel,
   { text: string; className: string }
@@ -52,8 +55,6 @@ const routeStopLabelMap: Record<
   CAFE: { text: '카페', className: 'bg-green-100 text-green-800' },
   BAR: { text: '주점', className: 'bg-red-100 text-red-800' },
 };
-
-// Function to fetch detailed route info
 const fetchRouteDetails = async (
   routeId: string,
 ): Promise<RouteWithPlacesAndAlts> => {
@@ -72,6 +73,7 @@ export default function CreatedContentList({
   onDeletePlace,
   onEditRoute,
   onDeleteRoute,
+  onToggleIsRepresentative,
   onContentUpdate,
 }: CreatedContentListProps) {
   const queryClient = useQueryClient();
@@ -95,6 +97,40 @@ export default function CreatedContentList({
   const [hoveredRoutePlaceId, setHoveredRoutePlaceId] = useState<string | null>(
     null,
   );
+  const { data: session } = useSession();
+
+  const handleToggleIsRepresentative = onToggleIsRepresentative;
+
+  const toggleRepresentativeMutation = useMutation({
+    mutationFn: async ({
+      routeId,
+      isRepresentative,
+    }: {
+      routeId: string;
+      isRepresentative: boolean;
+    }) => {
+      const res = await fetch(`/api/routes/${routeId}/representative`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isRepresentative }),
+      });
+      if (!res.ok) {
+        throw new Error('Failed to update representative status');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['user', session?.user?.id, 'routes', 'created'],
+      });
+      onContentUpdate();
+    },
+    onError: (error) => {
+      alert(`대표 루트 설정 실패: ${error.message}`);
+    },
+  });
 
   const { data: detailedRoute, isLoading: isLoadingRouteDetails } = useQuery<
     RouteWithPlacesAndAlts,
@@ -107,7 +143,7 @@ export default function CreatedContentList({
 
   const handleRouteClick = (routeId: string) => {
     setExpandedRouteId((prev) => (prev === routeId ? null : routeId));
-    setExpandedRoutePlaceId(null); // Reset waypoint expansion
+    setExpandedRoutePlaceId(null);
   };
 
   const handleRoutePlaceClick = (routePlaceId: string) => {
@@ -249,6 +285,26 @@ export default function CreatedContentList({
                 )}
               </div>
               <div className="flex space-x-2 flex-shrink-0">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleIsRepresentative(
+                      route.id,
+                      !route.isRepresentative,
+                    );
+                  }}
+                  variant="outlined"
+                  size="small"
+                  className={cn(
+                    'w-auto px-3 py-1 text-xs',
+                    route.isRepresentative
+                      ? 'text-primary-500 border-primary-500'
+                      : 'text-gray-400 border-gray-400 hover:text-primary-400 hover:border-primary-400',
+                  )}
+                  disabled={toggleRepresentativeMutation.isPending}
+                >
+                  📌
+                </Button>
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();

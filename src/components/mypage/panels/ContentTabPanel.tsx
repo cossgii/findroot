@@ -59,6 +59,7 @@ const CreatedPlaces = ({
         onDeletePlace={onDeletePlace}
         onEditRoute={() => {}}
         onDeleteRoute={() => {}}
+        onToggleIsRepresentative={() => {}}
         onContentUpdate={onContentUpdate}
       />
       <Pagination
@@ -74,11 +75,16 @@ const CreatedRoutes = ({
   districtId,
   onEditRoute,
   onDeleteRoute,
+  onToggleIsRepresentative,
   onContentUpdate,
 }: {
   districtId: string;
   onEditRoute: (id: string) => void;
   onDeleteRoute: (id: string) => void;
+  onToggleIsRepresentative: (
+    routeId: string,
+    isRepresentative: boolean,
+  ) => void;
   onContentUpdate: () => void;
 }) => {
   const { data: session } = useSession();
@@ -101,6 +107,7 @@ const CreatedRoutes = ({
         onDeletePlace={() => {}}
         onEditRoute={onEditRoute}
         onDeleteRoute={onDeleteRoute}
+        onToggleIsRepresentative={onToggleIsRepresentative}
         onContentUpdate={onContentUpdate}
       />
       <Pagination
@@ -119,6 +126,10 @@ interface ContentTabPanelProps {
   onDeletePlace: (id: string) => void;
   onEditRoute: (id: string) => void;
   onDeleteRoute: (id: string) => void;
+  onToggleIsRepresentative: (
+    routeId: string,
+    isRepresentative: boolean,
+  ) => void;
   onContentUpdate: () => void;
   selectedDistrict: string;
   onDistrictChange: (districtId: string) => void;
@@ -169,6 +180,7 @@ export default function ContentTabPanel({
             districtId={selectedDistrict}
             onEditRoute={handlers.onEditRoute}
             onDeleteRoute={handlers.onDeleteRoute}
+            onToggleIsRepresentative={handlers.onToggleIsRepresentative}
             onContentUpdate={onContentUpdate}
           />
         )}

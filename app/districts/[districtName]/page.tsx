@@ -1,9 +1,10 @@
 import { getPlacesByDistrict } from '~/src/services/place/placeService';
+import { getRoutes } from '~/src/services/route/routeService';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 import DistrictClient from '~/src/components/districts/DistrictClient';
-import { PlaceCategory } from '@prisma/client';
+import { PlaceCategory, RoutePurpose } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,8 @@ interface DistrictPageProps {
     sort?: 'recent' | 'likes';
     page?: string;
     category?: PlaceCategory;
+    purpose?: RoutePurpose;
+    targetUserId?: string;
   }>;
 }
 export default async function DistrictPage({
@@ -28,6 +31,8 @@ export default async function DistrictPage({
     sort = 'recent',
     page: pageParam = '1',
     category,
+    purpose,
+    targetUserId,
   } = resolvedSearchParams;
   const districtId = districtName;
   const districtInfo = SEOUL_DISTRICTS.find((d) => d.id === districtId);
@@ -39,10 +44,23 @@ export default async function DistrictPage({
     districtInfo?.name || '전체',
     userId,
     page,
-    12,
+    10,
     sort,
     category,
     undefined,
+  );
+
+  const isAllDistricts = districtId === 'all';
+
+  const initialRoutesResult = await getRoutes(
+    districtId,
+    userId,
+    page,
+    10,
+    purpose,
+    targetUserId,
+    isAllDistricts ? true : undefined,
+    isAllDistricts ? true : sort === 'likes',
   );
 
   return (
@@ -55,6 +73,8 @@ export default async function DistrictPage({
       currentPage={page}
       initialPlaces={initialPlacesResult.places}
       initialTotalPages={initialPlacesResult.totalPages}
+      initialRoutes={initialRoutesResult.routes}
+      initialTotalRoutePages={initialRoutesResult.totalPages}
     />
   );
 }

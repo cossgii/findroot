@@ -56,11 +56,6 @@ const routeInclude = {
           _count: { select: { likes: true } },
         },
       },
-      alternatives: {
-        include: {
-          place: true,
-        },
-      },
     },
   },
 };
@@ -72,6 +67,23 @@ export async function getRouteById(id: string, userId?: string) {
       ...routeInclude,
       _count: { select: { likes: true, comments: true } },
       likes: userId ? { where: { userId }, select: { userId: true } } : false,
+      places: {
+        orderBy: {
+          order: 'asc' as const,
+        },
+        include: {
+          place: {
+            include: {
+              _count: { select: { likes: true } },
+            },
+          },
+          alternatives: {
+            include: {
+              place: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -81,7 +93,7 @@ export async function getRouteById(id: string, userId?: string) {
 
   const allPlaceIds = (routeWithLikes.places || []).flatMap((p) => [
     p.place.id,
-    ...p.alternatives.map((a) => a.place.id),
+    ...(p.alternatives || []).map((a) => a.place.id),
   ]);
 
   const userLikes = userId
@@ -96,10 +108,12 @@ export async function getRouteById(id: string, userId?: string) {
   const enrichedPlaces = routeWithLikes.places.map((routePlace) => {
     const { _count, ...place } = routePlace.place;
 
-    const serializedAlternatives = routePlace.alternatives.map((alt) => ({
-      ...alt,
-      place: serializeDatesInPlace(alt.place),
-    }));
+    const serializedAlternatives = (routePlace.alternatives || []).map(
+      (alt) => ({
+        ...alt,
+        place: serializeDatesInPlace(alt.place),
+      }),
+    );
 
     return {
       ...routePlace,
@@ -213,28 +227,20 @@ export async function getRoutesByCreatorId(
   };
 }
 
-export async function getPublicRoutesByDistrict(
-  districtId: string,
+export async function getRoutes(
+  districtId?: string,
   currentUserId?: string,
   page: number = 1,
   limit: number = 5,
   purpose?: RoutePurpose,
   targetUserId?: string,
+  isRepresentative?: boolean,
+  orderByLikes?: boolean,
 ) {
   const whereClause: Prisma.RouteWhereInput = {};
 
   if (targetUserId) {
     whereClause.creatorId = targetUserId;
-  } else {
-    const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
-    if (!MAIN_ACCOUNT_ID) {
-      console.error('MAIN_ACCOUNT_ID is not defined in environment variables.');
-      return { routes: [], totalCount: 0, totalPages: 0, currentPage: page };
-    }
-    whereClause.OR = [
-      { creatorId: MAIN_ACCOUNT_ID },
-      ...(currentUserId ? [{ creatorId: currentUserId }] : []),
-    ];
   }
 
   if (districtId && districtId !== 'all') {
@@ -244,6 +250,14 @@ export async function getPublicRoutesByDistrict(
   if (purpose && purpose !== 'ENTIRE') {
     whereClause.purpose = purpose;
   }
+
+  if (isRepresentative !== undefined) {
+    whereClause.isRepresentative = isRepresentative;
+  }
+
+  const orderBy: Prisma.RouteOrderByWithRelationInput = orderByLikes
+    ? { likes: { _count: 'desc' } }
+    : { createdAt: 'desc' };
 
   const [routesWithLikes, totalCount] = await db.$transaction([
     db.route.findMany({
@@ -264,9 +278,7 @@ export async function getPublicRoutesByDistrict(
             }
           : undefined,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: orderBy,
       skip: (page - 1) * limit,
       take: limit,
     }),
@@ -274,7 +286,7 @@ export async function getPublicRoutesByDistrict(
   ]);
 
   const allPlaceIds = routesWithLikes.flatMap((route) =>
-    (route.places || []).map((rp) => rp.place.id),
+    (route.places || []).filter((rp) => rp.place).map((rp) => rp.place.id),
   );
 
   const likeCounts = await db.like.groupBy({
@@ -297,14 +309,16 @@ export async function getPublicRoutesByDistrict(
 
   const routes = routesWithLikes.map(({ _count, likes, ...route }) => {
     const serializedRoute = serializeDatesInPlace(route);
-    const serializedPlaces = route.places.map((rp) => ({
-      ...rp,
-      place: {
-        ...serializeDatesInPlace(rp.place),
-        likesCount: placeIdToLikeCountMap.get(rp.place.id) || 0,
-        isLiked: userLikedPlaceIds.has(rp.place.id),
-      },
-    }));
+    const serializedPlaces = (route.places || [])
+      .filter((rp) => rp.place)
+      .map((rp) => ({
+        ...rp,
+        place: {
+          ...serializeDatesInPlace(rp.place),
+          likesCount: placeIdToLikeCountMap.get(rp.place.id) || 0,
+          isLiked: userLikedPlaceIds.has(rp.place.id),
+        },
+      }));
     return {
       ...serializedRoute,
       likesCount: _count.likes,
@@ -320,6 +334,180 @@ export async function getPublicRoutesByDistrict(
     totalPages: Math.ceil(totalCount / limit),
     currentPage: page,
   };
+}
+
+export async function getAllPublicRoutes(
+  districtId?: string,
+  currentUserId?: string,
+  page: number = 1,
+  limit: number = 5,
+  purpose?: RoutePurpose,
+  orderByLikes?: boolean,
+) {
+  const whereClause: Prisma.RouteWhereInput = {};
+
+  if (districtId && districtId !== 'all') {
+    whereClause.districtId = districtId;
+  }
+
+  if (purpose && purpose !== 'ENTIRE') {
+    whereClause.purpose = purpose;
+  }
+
+  const orderBy: Prisma.RouteOrderByWithRelationInput = orderByLikes
+    ? { likes: { _count: 'desc' } }
+    : { createdAt: 'desc' };
+
+  const [routesWithLikes, totalCount] = await db.$transaction([
+    db.route.findMany({
+      where: whereClause,
+      include: {
+        ...routeInclude,
+        _count: {
+          select: { likes: true, comments: true },
+        },
+        likes: currentUserId
+          ? {
+              where: {
+                userId: currentUserId,
+              },
+              select: {
+                userId: true,
+              },
+            }
+          : undefined,
+      },
+      orderBy: orderBy,
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    db.route.count({ where: whereClause }),
+  ]);
+
+  const allPlaceIds = routesWithLikes.flatMap((route) =>
+    (route.places || []).filter((rp) => rp.place).map((rp) => rp.place.id),
+  );
+
+  const likeCounts = await db.like.groupBy({
+    by: ['placeId'],
+    where: { placeId: { in: allPlaceIds } },
+    _count: { placeId: true },
+  });
+
+  const userLikes = currentUserId
+    ? await db.like.findMany({
+        where: { userId: currentUserId, placeId: { in: allPlaceIds } },
+        select: { placeId: true },
+      })
+    : [];
+
+  const userLikedPlaceIds = new Set(userLikes.map((like) => like.placeId));
+  const placeIdToLikeCountMap = new Map(
+    likeCounts.map((item) => [item.placeId, item._count.placeId]),
+  );
+
+  const routes = routesWithLikes.map(({ _count, likes, ...route }) => {
+    const serializedRoute = serializeDatesInPlace(route);
+    const serializedPlaces = (route.places || [])
+      .filter((rp) => rp.place)
+      .map((rp) => ({
+        ...rp,
+        place: {
+          ...serializeDatesInPlace(rp.place),
+          likesCount: placeIdToLikeCountMap.get(rp.place.id) || 0,
+          isLiked: userLikedPlaceIds.has(rp.place.id),
+        },
+      }));
+    return {
+      ...serializedRoute,
+      likesCount: _count.likes,
+      commentsCount: _count.comments,
+      isLiked: (likes || []).length > 0,
+      places: serializedPlaces,
+    };
+  });
+
+  return {
+    routes,
+    totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+    currentPage: page,
+  };
+}
+
+export async function getFeaturedRoutes(
+  districtId: string,
+  creatorId?: string,
+  currentUserId?: string,
+  purpose?: RoutePurpose,
+) {
+  const targetCreatorId = creatorId || process.env.MAIN_ACCOUNT_ID;
+  const limit = 3;
+
+  if (districtId && districtId !== 'all') {
+    const { routes: districtRepresentativeRoutes } = await getRoutes(
+      districtId,
+      currentUserId,
+      1,
+      limit,
+      purpose,
+      targetCreatorId,
+      true,
+      true,
+    );
+    if (districtRepresentativeRoutes.length > 0) {
+      return {
+        routes: districtRepresentativeRoutes,
+        type: 'creator_representative',
+      };
+    }
+
+    const { routes: districtFallbackRoutes } = await getRoutes(
+      districtId,
+      currentUserId,
+      1,
+      limit,
+      purpose,
+      targetCreatorId,
+      undefined,
+      true,
+    );
+
+    return { routes: districtFallbackRoutes, type: 'creator_fallback' };
+  }
+
+  const { routes: overallRepresentativeRoutes } = await getRoutes(
+    undefined, // 모든 자치구
+    currentUserId,
+    1,
+    limit,
+    purpose,
+    targetCreatorId,
+    true,
+    true,
+  );
+  if (overallRepresentativeRoutes.length > 0) {
+    return {
+      routes: overallRepresentativeRoutes,
+      type: 'creator_representative_overall',
+    };
+  }
+
+  const { routes: overallFallbackRoutes } = await getRoutes(
+    undefined, // 모든 자치구
+    currentUserId,
+    1,
+    limit,
+    purpose,
+    targetCreatorId,
+    undefined, // isRepresentative = undefined (전체)
+    true,
+  );
+  console.log(
+    '--- getFeaturedRoutes returning overallFallbackRoutes ---',
+    overallFallbackRoutes.length,
+  );
+  return { routes: overallFallbackRoutes, type: 'creator_fallback' };
 }
 
 export async function deleteRoute(routeId: string, userId: string) {
@@ -391,111 +579,50 @@ export async function updateRoute(
   });
 }
 
-// Helper function for authorization
-async function verifyRouteOwnership(routePlaceId: string, userId: string) {
-  const routePlace = await db.routePlace.findUnique({
-    where: { id: routePlaceId },
-    select: { route: { select: { creatorId: true } } },
+export async function updateRouteIsRepresentative(
+  routeId: string,
+  userId: string,
+  isRepresentative: boolean,
+) {
+  const routeToUpdate = await db.route.findUnique({
+    where: { id: routeId },
+    select: { id: true, creatorId: true, districtId: true }, // Select districtId
   });
 
-  if (!routePlace) {
-    throw new Error('RoutePlace not found');
+  if (!routeToUpdate) {
+    throw new Error('Route not found.');
   }
 
-  if (routePlace.route.creatorId !== userId) {
-    throw new Error('Unauthorized');
-  }
-  return true;
-}
-
-
-// --- Alternative Places Service Functions ---
-
-export async function getAlternativesByRoutePlaceId({ routePlaceId }: { routePlaceId: string }) {
-  return db.alternative.findMany({
-    where: { routePlaceId },
-    include: {
-      place: true,
-    },
-    orderBy: {
-      createdAt: 'asc',
-    },
-  });
-}
-
-interface CreateAlternativeProps {
-  routePlaceId: string;
-  placeId: string;
-  explanation: string;
-  userId: string;
-}
-
-export async function createAlternative({ routePlaceId, placeId, explanation, userId }: CreateAlternativeProps) {
-  await verifyRouteOwnership(routePlaceId, userId);
-
-  const existingAlternativesCount = await db.alternative.count({
-    where: { routePlaceId },
-  });
-
-  if (existingAlternativesCount >= 3) {
-    throw new Error('Maximum of 3 alternatives per route stop is allowed.');
+  if (routeToUpdate.creatorId !== userId) {
+    throw new Error('Unauthorized to update this route.');
   }
 
-  return db.alternative.create({
+  if (isRepresentative) {
+    if (!routeToUpdate.districtId) {
+      throw new Error('대표 루트는 자치구가 설정된 루트만 가능합니다.');
+    }
+
+    const representativeRoutesCount = await db.route.count({
+      where: {
+        creatorId: userId,
+        districtId: routeToUpdate.districtId,
+        isRepresentative: true,
+      },
+    });
+
+    if (representativeRoutesCount >= 3) {
+      throw new Error(
+        `해당 자치구에는 대표 루트를 최대 3개까지 설정할 수 있습니다. (현재 ${representativeRoutesCount}개)`,
+      );
+    }
+  }
+
+  const updatedRoute = await db.route.update({
+    where: { id: routeId },
     data: {
-      routePlaceId,
-      placeId,
-      explanation,
+      isRepresentative: isRepresentative,
     },
   });
-}
 
-interface UpdateAlternativeProps {
-  alternativeId: string;
-  explanation: string;
-  userId: string;
-}
-
-export async function updateAlternative({ alternativeId, explanation, userId }: UpdateAlternativeProps) {
-  const alternative = await db.alternative.findUnique({
-    where: { id: alternativeId },
-    select: { routePlace: { select: { route: { select: { creatorId: true } } } } },
-  });
-
-  if (!alternative) {
-    throw new Error('Alternative not found');
-  }
-
-  if (alternative.routePlace.route.creatorId !== userId) {
-    throw new Error('Unauthorized');
-  }
-
-  return db.alternative.update({
-    where: { id: alternativeId },
-    data: { explanation },
-  });
-}
-
-interface DeleteAlternativeProps {
-  alternativeId: string;
-  userId: string;
-}
-
-export async function deleteAlternative({ alternativeId, userId }: DeleteAlternativeProps) {
-  const alternative = await db.alternative.findUnique({
-    where: { id: alternativeId },
-    select: { routePlace: { select: { route: { select: { creatorId: true } } } } },
-  });
-
-  if (!alternative) {
-    throw new Error('Alternative not found');
-  }
-
-  if (alternative.routePlace.route.creatorId !== userId) {
-    throw new Error('Unauthorized');
-  }
-
-  return db.alternative.delete({
-    where: { id: alternativeId },
-  });
+  return updatedRoute;
 }

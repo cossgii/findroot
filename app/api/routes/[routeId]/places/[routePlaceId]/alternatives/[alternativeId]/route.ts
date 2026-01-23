@@ -4,7 +4,7 @@ import { authOptions } from '~/src/services/auth/authOptions';
 import {
   updateAlternative,
   deleteAlternative,
-} from '~/src/services/route/routeService';
+} from '~/src/services/route/alternativeService';
 import { z } from 'zod';
 
 const putBodySchema = z.object({
@@ -36,7 +36,10 @@ export async function PUT(
     return NextResponse.json(updatedAlternative);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ message: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { message: 'Invalid request body' },
+        { status: 400 },
+      );
     }
     if (error instanceof Error && error.message === 'Unauthorized') {
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
@@ -65,7 +68,7 @@ export async function DELETE(
 
     await deleteAlternative({ alternativeId, userId });
 
-    return new NextResponse(null, { status: 204 }); // No Content
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 });

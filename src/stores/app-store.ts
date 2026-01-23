@@ -92,3 +92,7 @@ export type ContentCreator =
   | { type: 'user'; userId: string; userName: string };
 
 export const contentCreatorAtom = atom<ContentCreator>({ type: 'recommended' });
+
+export type RouteView = 'districts' | 'routes';
+
+export const routeViewAtom = atom<RouteView>('districts');
