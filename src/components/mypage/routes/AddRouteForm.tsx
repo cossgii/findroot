@@ -1,12 +1,16 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useSpring, animated } from '@react-spring/web';
+import useMeasure from 'react-use-measure';
 import { UseFormReturn } from 'react-hook-form';
 import { RoutePurpose } from '@prisma/client';
 import { ClientPlace as Place } from '~/src/types/shared';
 import { RouteStopLabel } from '@prisma/client';
 import { RouteStop } from '~/src/hooks/mypage/useAddRouteForm';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+import { useSetAtom } from 'jotai';
+import { modalAtom } from '~/src/stores/app-store';
 
 import {
   Form,
@@ -95,6 +99,21 @@ export default function AddRouteForm({
   const [labelForNewStop, setLabelForNewStop] = useState<RouteStopLabel>(
     RouteStopLabel.MEAL,
   );
+  const setModal = useSetAtom(modalAtom);
+
+  const [contentRef, { height }] = useMeasure();
+  const springProps = useSpring({
+    height: selectedDistrict ? height : 0,
+    opacity: selectedDistrict ? 1 : 0,
+    config: { tension: 280, friction: 40 },
+  });
+
+  const handleGoToAddPlace = () => {
+    onClose();
+    setTimeout(() => {
+      setModal({ type: 'ADD_PLACE', props: { onPlaceAdded: () => {} } });
+    }, 150);
+  };
 
   const handleAddStop = () => {
     if (placeToAdd) {
@@ -133,137 +152,165 @@ export default function AddRouteForm({
             showAll={false}
           />
         </div>
-        {selectedDistrict && (
-          <>
-            <div className="my-6 h-[300px] w-full rounded-md overflow-hidden">
-              <RouteMap stops={stops} center={mapCenter} />
-            </div>
-            <div className="space-y-2">
-              <FormLabel>경유지 목록 (최대 5개)</FormLabel>
-              {stops.length > 0 ? (
-                <ul className="space-y-2 rounded-md border p-2">
-                  {stops.map((stop, index) => (
-                    <li
-                      key={stop.listId}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-lg text-blue-600">
-                          {index + 1}
-                        </span>
-                        <div>
-                          <p className="font-semibold">{stop.place.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {routeStopLabelMap[stop.label]}
-                          </p>
-                        </div>
+        <animated.div style={{ ...springProps }}>
+          <div ref={contentRef}>
+            {selectedDistrict && (
+              <>
+                <div className="my-6 h-[300px] w-full rounded-md overflow-hidden">
+                  <RouteMap stops={stops} center={mapCenter} />
+                </div>
+                <div className="space-y-2">
+                  <FormLabel>경유지 목록 (최대 5개)</FormLabel>
+                  {stops.length > 0 ? (
+                    <ul className="space-y-2 rounded-md border p-2">
+                      {stops.map((stop, index) => (
+                        <li
+                          key={stop.listId}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-lg text-blue-600">
+                              {index + 1}
+                            </span>
+                            <div>
+                              <p className="font-semibold">{stop.place.name}</p>
+                              <p className="text-xs text-gray-500">
+                                {routeStopLabelMap[stop.label]}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={() => removeStop(stop.listId)}
+                            variant="outlined"
+                            size="small"
+                            className="w-auto px-2 py-1 text-xs"
+                          >
+                            삭제
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      아래에서 경유지를 추가해주세요.
+                    </p>
+                  )}
+                </div>
+                {stops.length < 5 && filteredPlacesForDropdown.length > 0 && (
+                  <div className="p-4 space-y-3 border rounded-md bg-gray-50">
+                    <h3 className="font-semibold">새 경유지 추가</h3>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="w-full sm:w-auto sm:flex-grow">
+                        <Dropdown<Place>
+                          options={filteredPlacesForDropdown}
+                          value={placeToAdd || undefined}
+                          onChange={(place) => setPlaceToAdd(place)}
+                          getOptionLabel={(place) => place.name}
+                          placeholder="장소를 선택하세요"
+                          triggerClassName="w-full min-w-0"
+                          contentClassName="max-h-40 overflow-y-auto"
+                        />
                       </div>
+                      <div className="w-[120px] sm:flex-shrink-0">
+                        <Dropdown
+                          options={labelOptions}
+                          value={labelOptions.find(
+                            (l) => l.id === labelForNewStop,
+                          )}
+                          onChange={(label) => setLabelForNewStop(label.id)}
+                          getOptionLabel={(label) => label.name}
+                          triggerClassName="w-full sm:w-[120px]"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={handleAddStop}
+                      disabled={!placeToAdd}
+                      className="w-full"
+                    >
+                      추가
+                    </Button>
+                  </div>
+                )}
+                {selectedDistrict &&
+                  !isLoading &&
+                  filteredPlacesForDropdown.length === 0 && (
+                    <div className="p-4 text-center border rounded-md bg-gray-50">
+                      <h3 className="font-semibold text-gray-700">
+                        등록된 장소가 없습니다
+                      </h3>
+
                       <Button
                         type="button"
-                        onClick={() => removeStop(stop.listId)}
-                        variant="outlined"
-                        size="small"
-                        className="w-auto px-2 py-1 text-xs"
+                        onClick={handleGoToAddPlace}
+                        className="mt-4 w-fit mx-auto"
                       >
-                        삭제
+                        장소 추가하러 가기
                       </Button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-4">
-                  아래에서 경유지를 추가해주세요.
-                </p>
-              )}
-            </div>
-            {stops.length < 5 && filteredPlacesForDropdown.length > 0 && (
-              <div className="p-4 space-y-3 border rounded-md bg-gray-50">
-                <h3 className="font-semibold">새 경유지 추가</h3>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="w-full sm:w-auto sm:flex-grow">
-                    <Dropdown<Place>
-                      options={filteredPlacesForDropdown}
-                      value={placeToAdd || undefined}
-                      onChange={(place) => setPlaceToAdd(place)}
-                      getOptionLabel={(place) => place.name}
-                      placeholder="장소를 선택하세요"
-                      triggerClassName="w-full min-w-0"
-                      contentClassName="max-h-40 overflow-y-auto"
-                    />
-                  </div>
-                  <div className="w-[120px] sm:flex-shrink-0">
-                    <Dropdown
-                      options={labelOptions}
-                      value={labelOptions.find((l) => l.id === labelForNewStop)}
-                      onChange={(label) => setLabelForNewStop(label.id)}
-                      getOptionLabel={(label) => label.name}
-                      triggerClassName="w-full sm:w-[120px]"
-                    />
-                  </div>
+                    </div>
+                  )}
+                <div className="space-y-4 pt-4 border-t">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>루트 이름</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="예: 강남역 불금 루트"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="purpose"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>루트 목적</FormLabel>
+                        <FormControl>
+                          <Dropdown
+                            options={purposeOptions}
+                            value={purposeOptions.find(
+                              (p) => p.id === field.value,
+                            )}
+                            onChange={(option) => field.onChange(option.id)}
+                            getOptionLabel={(option) => option.name}
+                            placeholder="루트 목적을 선택하세요"
+                            triggerClassName="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>설명</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="이 루트에 대한 설명을 적어주세요"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <Button
-                  type="button"
-                  onClick={handleAddStop}
-                  disabled={!placeToAdd}
-                  className="w-full"
-                >
-                  추가
-                </Button>
-              </div>
+              </>
             )}
-            <div className="space-y-4 pt-4 border-t">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>루트 이름</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="예: 강남역 불금 루트" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="purpose"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>루트 목적</FormLabel>
-                    <FormControl>
-                      <Dropdown
-                        options={purposeOptions}
-                        value={purposeOptions.find((p) => p.id === field.value)}
-                        onChange={(option) => field.onChange(option.id)}
-                        getOptionLabel={(option) => option.name}
-                        placeholder="루트 목적을 선택하세요"
-                        triggerClassName="w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>설명</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="이 루트에 대한 설명을 적어주세요"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </>
-        )}
+          </div>
+        </animated.div>
         <div className="flex justify-end space-x-2 pt-6 border-t">
           <Button type="button" variant="outlined" onClick={onClose}>
             취소

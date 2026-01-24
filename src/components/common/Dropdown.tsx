@@ -57,6 +57,7 @@ interface DropdownProps<T> {
   children?: React.ReactNode;
   contentClassName?: string;
   align?: 'left' | 'right';
+  renderInFlow?: boolean;
 }
 
 export default function Dropdown<T>({
@@ -70,6 +71,7 @@ export default function Dropdown<T>({
   children,
   contentClassName,
   align = 'right',
+  renderInFlow = false,
 }: DropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -138,8 +140,10 @@ export default function Dropdown<T>({
         {isOpen && (
           <div
             className={cn(
-              'absolute mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg z-20',
-              align === 'left' ? 'left-0' : 'right-0',
+              renderInFlow
+                ? 'bg-white border border-gray-200 rounded-md shadow-lg mt-2 max-h-[150px] overflow-y-auto'
+                : 'absolute mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg z-20',
+              renderInFlow ? '' : align === 'left' ? 'left-0' : 'right-0',
               contentClassName,
             )}
           >
