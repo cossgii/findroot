@@ -40,7 +40,7 @@ export default function RestaurantCard({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between cursor-pointer transition-all hover:shadow-lg hover:bg-gray-50">
+    <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 card-hover-effect">
       <div className="flex-grow pr-4" onClick={handleOpenModal}>
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold">{place.name}</h3>

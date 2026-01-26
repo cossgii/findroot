@@ -16,7 +16,7 @@ export async function GET() {
   }
 
   try {
-    const user = await getUserById(session.user.id);
+    const user = session.user;
     if (!user) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }

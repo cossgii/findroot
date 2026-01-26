@@ -12,13 +12,15 @@ interface RouteCardProps {
 export default function RouteCard({ route }: RouteCardProps) {
   return (
     <Link href={`/routes/${route.id}`} className="block">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden card-hover-effect h-full flex flex-col">
         <div className="relative h-48 w-full bg-gray-200">
           <Image
-            src="/assets/route-placeholder.png"
+            src={`/api/routes/${route.id}/image`}
             alt={route.name}
-            layout="fill"
-            objectFit="cover"
+            fill
+            className="object-cover"
+            unoptimized
+            priority
           />
         </div>
         <div className="p-4 flex-grow">

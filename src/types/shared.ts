@@ -33,6 +33,10 @@ export interface ClientRoute {
   commentsCount: number;
 }
 
+export interface RouteWithPlaces extends ClientRoute {
+  places: ClientRoutePlace[];
+}
+
 export interface ClientUser {
   id: string;
   name: string | null;

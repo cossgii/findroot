@@ -100,7 +100,7 @@ export default function DistrictClient({
   const searchParams = useSearchParams();
   const setModal = useSetAtom(modalAtom);
   const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const contentCreator = useAtomValue(contentCreatorAtom);
 
   const initialPurposeFromUrl = searchParams.get('purpose') as
@@ -276,7 +276,8 @@ export default function DistrictClient({
         currentPage,
         10,
         currentPurpose,
-        currentSort === 'likes',
+        targetUserId, // Pass targetUserId
+        currentSort === 'likes', // Pass orderByLikes
       );
     },
     initialData: {
@@ -353,6 +354,19 @@ export default function DistrictClient({
                   purpose: undefined,
                 });
               } else {
+                if (sessionStatus !== 'authenticated' || !session?.user?.id) {
+                  setModal({
+                    type: 'LOGIN_PROMPT',
+                    props: {
+                      title: '로그인이 필요합니다',
+                      message: '로그인하고 루트를 확인해보세요!',
+                      onConfirm: () =>
+                        router.push(`/login?callbackUrl=${pathname}`),
+                      onCancel: () => {},
+                    },
+                  });
+                  return;
+                }
                 setIsPurposeOverlayOpen(true);
               }
             }}

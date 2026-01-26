@@ -18,3 +18,19 @@
   display: flex;
   flex-direction: column;
 }
+
+@layer components {
+  .card-hover-effect {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  .card-hover-effect:hover {
+    @apply -translate-y-1 shadow-lg;
+  }
+
+  .list-item-hover-effect {
+    @apply transition-all duration-150 ease-in-out;
+  }
+  .list-item-hover-effect:hover {
+    @apply -translate-y-0.5;
+  }
+}

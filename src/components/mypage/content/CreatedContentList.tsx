@@ -41,10 +41,10 @@ interface CreatedContentListProps {
   onDeletePlace: (id: string) => void;
   onEditRoute: (id: string) => void;
   onDeleteRoute: (id: string) => void;
-  onToggleIsRepresentative: (
+  onToggleIsRepresentative?: ( // Make it optional
     routeId: string,
     isRepresentative: boolean,
-  ) => void; // New prop
+  ) => void;
   onContentUpdate: () => void;
 }
 const routeStopLabelMap: Record<
@@ -224,7 +224,7 @@ export default function CreatedContentList({
         {places.map((place) => (
           <li
             key={place.id}
-            className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between"
+            className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between card-hover-effect"
           >
             <div>
               <p className="font-semibold">{place.name}</p>
@@ -270,10 +270,10 @@ export default function CreatedContentList({
           <li
             key={route.id}
             className={cn(
-              'bg-white rounded-lg shadow-md p-4 cursor-pointer transition-all duration-200',
+              'bg-white rounded-lg shadow-md p-4 cursor-pointer card-hover-effect',
               isRouteExpanded
                 ? 'shadow-lg ring-2 ring-primary-500'
-                : 'hover:shadow-lg hover:bg-gray-50',
+                : 'hover:bg-gray-50',
             )}
             onClick={() => handleRouteClick(route.id)}
           >
@@ -288,10 +288,12 @@ export default function CreatedContentList({
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleToggleIsRepresentative(
-                      route.id,
-                      !route.isRepresentative,
-                    );
+                    if (handleToggleIsRepresentative) { // Add this check
+                      handleToggleIsRepresentative(
+                        route.id,
+                        !route.isRepresentative,
+                      );
+                    }
                   }}
                   variant="outlined"
                   size="small"

@@ -32,7 +32,7 @@ export default function UserListItem({
     <li
       onClick={onClick}
       className={cn(
-        'p-2 rounded-md cursor-pointer flex items-center justify-between gap-3 transition-colors',
+        'p-2 rounded-md cursor-pointer flex items-center justify-between gap-3 list-item-hover-effect',
         isSelected ? 'bg-primary-100' : 'hover:bg-gray-100',
       )}
     >

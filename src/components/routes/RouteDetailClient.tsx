@@ -241,7 +241,7 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">{route.name}</h1>
         <Link
-          href={`/districts/${route.districtId || 'all'}/routes`}
+          href={`/districts/${route.districtId || 'all'}?purpose=${route.purpose}`}
           className="p-2 rounded-md hover:bg-gray-100 text-sm"
         >
           목록으로

@@ -61,7 +61,7 @@ export default function MessageInbox() {
         receivedMessages.map((message) => (
           <div
             key={message.id}
-            className="bg-gray-100 p-4 rounded-lg shadow-sm"
+            className="bg-gray-100 p-4 rounded-lg shadow-sm list-item-hover-effect"
           >
             <p className="text-sm text-gray-600">
               <span className="font-semibold">

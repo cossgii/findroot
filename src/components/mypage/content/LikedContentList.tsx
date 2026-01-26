@@ -9,6 +9,7 @@ import { useSetAtom } from 'jotai';
 import { addToastAtom, removeToastAtom } from '~/src/stores/toast-store';
 import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+import { cn } from '~/src/utils/class-name';
 
 interface LikedContentListProps {
   activeSubTab: MyPageSubTab;
@@ -113,11 +114,12 @@ export default function LikedContentList({
         return (
           <li
             key={route.id}
-            className={`bg-white rounded-lg shadow-md p-4 cursor-pointer transition-all hover:shadow-lg ${
+            className={cn(
+              'bg-white rounded-lg shadow-md p-4 cursor-pointer card-hover-effect',
               expandedRouteId === route.id
                 ? 'bg-blue-100 ring-2 ring-blue-500'
-                : 'hover:bg-gray-50'
-            }`}
+                : 'hover:bg-gray-50',
+            )}
             onClick={() =>
               setExpandedRouteId((prev) =>
                 prev === route.id ? null : route.id || null,

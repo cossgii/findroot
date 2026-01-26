@@ -97,10 +97,12 @@ export default function FeaturedRouteCarousel({
               <div className="bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col">
                 <div className="relative h-40 w-full bg-gray-200">
                   <Image
-                    src="/assets/route-placeholder.png"
+                    src={`/api/routes/${route.id}/image`}
                     alt={route.name}
-                    layout="fill"
-                    objectFit="cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                    priority
                   />
                 </div>
                 <div className="p-4 flex-grow">

@@ -33,19 +33,29 @@ const Avatar = React.forwardRef<
 });
 Avatar.displayName = AvatarPrimitive.Root.displayName;
 
-const AvatarImage = React.forwardRef<
-  HTMLImageElement,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image
-    ref={ref}
-    className={cn(
-      'aspect-square h-full w-full overflow-hidden rounded-full',
-      className,
-    )}
-    {...props}
-  />
-));
+interface AvatarImageProps extends Omit<
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>,
+  'src'
+> {
+  src?: string;
+}
+
+const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
+  ({ className, src, alt }, ref) => (
+    <Image
+      ref={ref}
+      src={typeof src === 'string' ? src : '/default-avatar.png'}
+      alt={alt || 'User Avatar'}
+      fill
+      className={cn(
+        'aspect-square h-full w-full overflow-hidden rounded-full object-cover',
+        className,
+      )}
+      sizes="48px"
+      unoptimized
+    />
+  ),
+);
 AvatarImage.displayName = AvatarPrimitive.Image.displayName;
 
 const AvatarFallback = React.forwardRef<

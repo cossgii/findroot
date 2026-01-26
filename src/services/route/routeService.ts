@@ -342,6 +342,7 @@ export async function getAllPublicRoutes(
   page: number = 1,
   limit: number = 5,
   purpose?: RoutePurpose,
+  targetUserId?: string, // Add targetUserId
   orderByLikes?: boolean,
 ) {
   const whereClause: Prisma.RouteWhereInput = {};
@@ -352,6 +353,10 @@ export async function getAllPublicRoutes(
 
   if (purpose && purpose !== 'ENTIRE') {
     whereClause.purpose = purpose;
+  }
+
+  if (targetUserId) { // Add this condition
+    whereClause.creatorId = targetUserId;
   }
 
   const orderBy: Prisma.RouteOrderByWithRelationInput = orderByLikes
