@@ -1,3 +1,5 @@
+'server-only';
+
 import { db } from '~/lib/db';
 import { Prisma, RoutePurpose } from '@prisma/client';
 import { NewRouteInput, UpdateRouteInput } from '~/src/schemas/route-schema';
@@ -22,7 +24,7 @@ export async function createRoute(data: NewRouteInput, creatorId: string) {
     const newRoute = await prisma.route.create({
       data: {
         name,
-        description,
+        description: description || '',
         districtId,
         creatorId,
         purpose,
@@ -355,7 +357,8 @@ export async function getAllPublicRoutes(
     whereClause.purpose = purpose;
   }
 
-  if (targetUserId) { // Add this condition
+  if (targetUserId) {
+    // Add this condition
     whereClause.creatorId = targetUserId;
   }
 
@@ -591,7 +594,7 @@ export async function updateRouteIsRepresentative(
 ) {
   const routeToUpdate = await db.route.findUnique({
     where: { id: routeId },
-    select: { id: true, creatorId: true, districtId: true }, // Select districtId
+    select: { id: true, creatorId: true, districtId: true },
   });
 
   if (!routeToUpdate) {

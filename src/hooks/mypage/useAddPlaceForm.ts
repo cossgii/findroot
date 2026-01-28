@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
@@ -31,7 +31,11 @@ const createPlaceApi = async (payload: AddPlaceFormValues) => {
 export const useAddPlaceForm = ({
   onClose,
   onPlaceAdded,
-}: UseAddPlaceFormProps) => {
+}: UseAddPlaceFormProps): {
+  form: UseFormReturn<AddPlaceFormValues>;
+  onSubmit: (values: AddPlaceFormValues) => void;
+  isPending: boolean;
+} => {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const addToast = useSetAtom(addToastAtom);
@@ -46,6 +50,7 @@ export const useAddPlaceForm = ({
       district: '',
       description: '',
       category: PlaceCategory.MEAL,
+      link: null,
     },
   });
 

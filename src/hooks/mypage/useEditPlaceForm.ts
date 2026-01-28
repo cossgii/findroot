@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
@@ -43,7 +43,14 @@ export const useEditPlaceForm = ({
   placeId,
   onClose,
   onPlaceUpdated,
-}: UseEditPlaceFormProps) => {
+}: UseEditPlaceFormProps): {
+  form: UseFormReturn<EditPlaceFormValues>;
+  onSubmit: (values: EditPlaceFormValues) => Promise<void>;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  placeData: Place | undefined;
+} => {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const form = useForm<EditPlaceFormValues>({

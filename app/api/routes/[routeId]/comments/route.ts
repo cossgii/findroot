@@ -20,7 +20,7 @@ const searchParamsSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params: awaitedParams }: { params: { routeId: string } },
+  { params: awaitedParams }: { params: Promise<{ routeId: string }> },
 ) {
   try {
     const params = await awaitedParams;
@@ -50,7 +50,7 @@ const postBodySchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params: awaitedParams }: { params: { routeId: string } },
+  { params: awaitedParams }: { params: Promise<{ routeId: string }> },
 ) {
   const params = await awaitedParams;
   const session = await getServerSession(authOptions);

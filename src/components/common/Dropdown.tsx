@@ -58,6 +58,7 @@ interface DropdownProps<T> {
   contentClassName?: string;
   align?: 'left' | 'right';
   renderInFlow?: boolean;
+  disabled?: boolean;
 }
 
 export default function Dropdown<T>({

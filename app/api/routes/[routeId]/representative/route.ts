@@ -5,8 +5,9 @@ import { updateRouteIsRepresentative } from '~/src/services/route/routeService';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { routeId: string } },
+  { params: awaitedParams }: { params: Promise<{ routeId: string }> },
 ) {
+  const params = await awaitedParams;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });

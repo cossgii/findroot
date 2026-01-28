@@ -19,7 +19,6 @@ export default function RouteCard({ route }: RouteCardProps) {
             alt={route.name}
             fill
             className="object-cover"
-            unoptimized
             priority
           />
         </div>

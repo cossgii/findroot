@@ -9,7 +9,7 @@ const RoutePlaceSchema = z.object({
 
 export const NewRouteApiSchema = z.object({
   name: z.string().min(1),
-  description: z.string().min(1, { message: '설명을 입력해주세요.' }),
+  description: z.string().min(1, { message: '설명을 입력해주세요.' }).optional(),
   districtId: z.string().nullable().optional(),
   places: z.array(RoutePlaceSchema).min(2, {
     message: '경유지는 최소 2개 이상 선택해야 합니다.',

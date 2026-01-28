@@ -101,7 +101,6 @@ export default function FeaturedRouteCarousel({
                     alt={route.name}
                     fill
                     className="object-cover"
-                    unoptimized
                     priority
                   />
                 </div>

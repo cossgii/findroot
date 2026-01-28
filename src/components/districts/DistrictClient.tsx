@@ -23,10 +23,6 @@ import FeaturedRouteCarousel from '~/src/components/routes/FeaturedRouteCarousel
 import { ClientRoute } from '~/src/types/shared';
 import RouteListSkeletonGrid from '~/src/components/routes/RouteListSkeletonGrid';
 import RouteList from '~/src/components/routes/RouteList';
-import {
-  getAllPublicRoutes,
-  getRoutesByCreatorId,
-} from '~/src/services/route/routeService';
 import PurposeSelectionOverlay from './PurposeSelectionOverlay';
 import PurposeDropdown from '~/src/components/common/PurposeDropdown';
 
@@ -266,19 +262,28 @@ export default function DistrictClient({
       targetUserId,
       currentPurpose,
     ],
-    queryFn: () => {
-      if (targetUserId) {
-        return getRoutesByCreatorId(targetUserId, currentPage, 10, districtId);
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: '10',
+        sort: currentSort,
+      });
+
+      if (districtId && districtId !== 'all') {
+        params.set('districtId', districtId);
       }
-      return getAllPublicRoutes(
-        districtId,
-        session?.user?.id,
-        currentPage,
-        10,
-        currentPurpose,
-        targetUserId, // Pass targetUserId
-        currentSort === 'likes', // Pass orderByLikes
-      );
+      if (currentPurpose) {
+        params.set('purpose', currentPurpose);
+      }
+      if (targetUserId) {
+        params.set('targetUserId', targetUserId);
+      }
+
+      const response = await fetch(`/api/routes/locations?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch routes on client');
+      }
+      return response.json();
     },
     initialData: {
       routes: initialRoutes,

@@ -13,8 +13,9 @@ const putBodySchema = z.object({
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { commentId: string } },
+  { params: awaitedParams }: { params: Promise<{ routeId: string; commentId: string }> },
 ) {
+  const params = await awaitedParams;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -46,8 +47,9 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { commentId: string } },
+  { params: awaitedParams }: { params: Promise<{ routeId: string; commentId: string }> },
 ) {
+  const params = await awaitedParams;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });

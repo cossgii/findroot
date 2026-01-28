@@ -8,12 +8,13 @@ import UserProfileClient from './UserProfileClient';
 import { getFollowStatus } from '~/src/services/user/followService';
 
 interface UserProfilePageProps {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }
 
 export default async function UserProfilePage({
-  params,
+  params: awaitedParams,
 }: UserProfilePageProps) {
+  const params = await awaitedParams;
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id;
   const profileUserId = params.userId;
@@ -34,7 +35,7 @@ export default async function UserProfilePage({
     1, // page
     5, // limit
     undefined, // district
-    currentUserId, // currentUserId for like status
+    currentUserId,
   );
 
   const initialRoutesResult = await getRoutesByCreatorId(

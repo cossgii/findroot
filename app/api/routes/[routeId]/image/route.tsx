@@ -21,10 +21,11 @@ const routeStopLabelTextMap: Record<RouteStopLabel, string> = {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ routeId: string }> },
+  { params: awaitedParams }: { params: Promise<{ routeId: string }> },
 ) {
   try {
-    const { routeId } = await params;
+    const params = await awaitedParams;
+    const { routeId } = params;
     const routeApiUrl = `${new URL(req.url).origin}/api/routes/${routeId}`;
     const response = await fetch(routeApiUrl, { cache: 'no-store' });
 

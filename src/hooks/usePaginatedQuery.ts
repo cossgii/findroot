@@ -10,7 +10,6 @@ export interface PaginatedResponse<T> {
   totalCount?: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface UsePaginatedQueryProps<T> {
   queryKey: (string | number | object)[];
   apiEndpoint: string;
@@ -19,6 +18,7 @@ interface UsePaginatedQueryProps<T> {
   limit?: number;
   enabled?: boolean;
   suspense?: boolean;
+  initialData?: PaginatedResponse<T>;
 }
 const fetchPaginatedData = async <T>(
   apiEndpoint: string,
@@ -56,6 +56,7 @@ export function usePaginatedQuery<T>({
   limit = 5,
   enabled = true,
   suspense = false,
+  initialData, // Destructure initialData
 }: UsePaginatedQueryProps<T>) {
   const [page, setPage] = useState(initialPage);
 
@@ -70,6 +71,7 @@ export function usePaginatedQuery<T>({
     queryFn: () =>
       fetchPaginatedData<T>(apiEndpoint, { ...queryParams, page, limit }),
     enabled,
+    initialData, // Pass initialData to useQuery
   };
 
   const queryResult = suspense

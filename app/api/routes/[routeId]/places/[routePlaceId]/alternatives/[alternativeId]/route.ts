@@ -13,7 +13,7 @@ const putBodySchema = z.object({
 
 export async function PUT(
   request: NextRequest,
-  { params: awaitedParams }: { params: { alternativeId: string } },
+  { params: awaitedParams }: { params: Promise<{ routeId: string; routePlaceId: string; alternativeId: string }> },
 ) {
   const params = await awaitedParams;
   const session = await getServerSession(authOptions);
@@ -54,7 +54,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params: awaitedParams }: { params: { alternativeId: string } },
+  { params: awaitedParams }: { params: Promise<{ routeId: string; routePlaceId: string; alternativeId: string }> },
 ) {
   const params = await awaitedParams;
   const session = await getServerSession(authOptions);

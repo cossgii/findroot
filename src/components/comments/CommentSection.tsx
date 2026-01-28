@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePaginatedQuery } from '~/src/hooks/usePaginatedQuery';

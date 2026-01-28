@@ -9,22 +9,12 @@ export const createPlaceSchema = z.object({
   district: z.string().optional(),
   description: z.string().min(1, { message: '설명을 입력해주세요.' }),
   link: z
-    .preprocess(
-      (arg) => {
-        if (typeof arg === 'string' && arg.trim() && !arg.startsWith('http')) {
-          return `https://` + arg;
-        }
-        if (arg === '') return null;
-        return arg;
-      },
-      z
-        .string()
-        .url({
-          message: '유효한 웹사이트 주소를 입력해주세요.',
-        })
-        .optional()
-        .nullable(),
-    ),
+    .string()
+    .url({
+      message: '유효한 웹사이트 주소를 입력해주세요.',
+    })
+    .optional()
+    .nullable(),
   category: z.nativeEnum(PlaceCategory),
 });
 
