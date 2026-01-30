@@ -19,11 +19,13 @@ const purposeOptions: readonly PurposeOption[] = [
 interface PurposeDropdownProps {
   currentPurpose: RoutePurpose | undefined;
   onPurposeChange: (purposeOption: RoutePurpose) => void;
+  maxVisibleItems?: number;
 }
 
 export default function PurposeDropdown({
   currentPurpose,
   onPurposeChange,
+  maxVisibleItems,
 }: PurposeDropdownProps) {
   const selectedOption = purposeOptions.find(
     (option) => option.id === currentPurpose,
@@ -37,6 +39,7 @@ export default function PurposeDropdown({
         onChange={(option) => onPurposeChange(option.id)}
         getOptionLabel={(option) => option.name}
         placeholder="목적 선택"
+        maxVisibleItems={maxVisibleItems}
       />
     </div>
   );

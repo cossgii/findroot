@@ -150,6 +150,8 @@ export default function AddRouteForm({
             onChange={handleDistrictChange}
             className="mt-1"
             showAll={false}
+            maxVisibleItems={4} // Apply the new prop
+            renderInFlow={true}
           />
         </div>
         <animated.div style={{ ...springProps }}>
@@ -209,7 +211,7 @@ export default function AddRouteForm({
                           getOptionLabel={(place) => place.name}
                           placeholder="장소를 선택하세요"
                           triggerClassName="w-full min-w-0"
-                          contentClassName="max-h-40 overflow-y-auto"
+                          maxVisibleItems={10}
                         />
                       </div>
                       <div className="w-[120px] sm:flex-shrink-0">
@@ -221,6 +223,7 @@ export default function AddRouteForm({
                           onChange={(label) => setLabelForNewStop(label.id)}
                           getOptionLabel={(label) => label.name}
                           triggerClassName="w-full sm:w-[120px]"
+                          maxVisibleItems={3}
                         />
                       </div>
                     </div>
@@ -284,6 +287,7 @@ export default function AddRouteForm({
                             getOptionLabel={(option) => option.name}
                             placeholder="루트 목적을 선택하세요"
                             triggerClassName="w-full"
+                            maxVisibleItems={5}
                           />
                         </FormControl>
                         <FormMessage />

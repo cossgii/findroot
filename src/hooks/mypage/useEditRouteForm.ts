@@ -119,6 +119,13 @@ export const useEditRouteForm = ({
       alert(`경유지는 최대 ${MAX_STOPS}개까지 추가할 수 있습니다.`);
       return;
     }
+
+    const isDuplicate = stops.some(stop => stop.place.id === place.id);
+    if (isDuplicate) {
+      alert('이미 추가된 장소입니다.');
+      return;
+    }
+
     setStops((prev) => [
       ...prev,
       { listId: Date.now().toString(), place, label },

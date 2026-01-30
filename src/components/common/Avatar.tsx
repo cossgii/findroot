@@ -41,20 +41,25 @@ interface AvatarImageProps extends Omit<
 }
 
 const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
-  ({ className, src, alt }, ref) => (
-    <Image
-      ref={ref}
-      src={typeof src === 'string' ? src : '/default-avatar.png'}
-      alt={alt || 'User Avatar'}
-      fill
-      className={cn(
-        'aspect-square h-full w-full overflow-hidden rounded-full object-cover',
-        className,
-      )}
-      sizes="48px"
-      unoptimized
-    />
-  ),
+  ({ className, src, alt }, ref) => {
+    if (!src) {
+      return null;
+    }
+    return (
+      <Image
+        ref={ref}
+        src={src}
+        alt={alt || 'User Avatar'}
+        fill
+        className={cn(
+          'aspect-square h-full w-full overflow-hidden rounded-full object-cover',
+          className,
+        )}
+        sizes="48px"
+        unoptimized
+      />
+    );
+  },
 );
 AvatarImage.displayName = AvatarPrimitive.Image.displayName;
 

@@ -19,7 +19,6 @@ import Input from '~/src/components/common/Input';
 import Button from '~/src/components/common/Button';
 import RouteMap from './RouteMap';
 import Dropdown from '~/src/components/common/Dropdown';
-import DistrictDropdown from '~/src/components/navigation/DistrictSelectDropdown';
 import { RoutePurpose } from '@prisma/client';
 
 const routeStopLabelMap: Record<RouteStopLabel, string> = {
@@ -80,7 +79,6 @@ export default function EditRouteForm({
   removeStop,
   selectedDistrict,
   mapCenter,
-  handleDistrictChange,
 }: EditRouteFormProps) {
   const [placeToAdd, setPlaceToAdd] = useState<ClientPlace | null>(null);
   const [labelForNewStop, setLabelForNewStop] = useState<RouteStopLabel>(
@@ -143,6 +141,7 @@ export default function EditRouteForm({
                     getOptionLabel={(option) => option.name}
                     placeholder="루트 목적을 선택하세요"
                     triggerClassName="w-full"
+                    maxVisibleItems={5}
                   />
                 </FormControl>
                 <FormMessage />
@@ -164,15 +163,6 @@ export default function EditRouteForm({
                 <FormMessage />
               </FormItem>
             )}
-          />
-        </div>
-
-        <div>
-          <FormLabel>지도에서 장소 확인</FormLabel>
-          <DistrictDropdown
-            value={selectedDistrict || 'all'}
-            onChange={handleDistrictChange}
-            className="mt-1"
           />
         </div>
 
@@ -232,7 +222,7 @@ export default function EditRouteForm({
                     getOptionLabel={(place) => place.name}
                     placeholder="장소를 선택하세요"
                     triggerClassName="w-full flex-grow"
-                    contentClassName="max-h-40 overflow-y-auto"
+                    maxVisibleItems={4}
                   />
                   <Dropdown
                     options={labelOptions}
@@ -240,6 +230,7 @@ export default function EditRouteForm({
                     onChange={(label) => setLabelForNewStop(label.id)}
                     getOptionLabel={(label) => label.name}
                     triggerClassName="w-full sm:w-auto"
+                    maxVisibleItems={3}
                   />
                 </div>
                 <Button

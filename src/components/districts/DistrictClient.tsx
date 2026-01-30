@@ -402,6 +402,7 @@ export default function DistrictClient({
             <SortDropdown
               currentSort={currentSort}
               onSortChange={handleSortChange}
+              maxVisibleItems={5}
             />
             {isLoadingPlaces ? (
               <RestaurantListSkeletonGrid />
@@ -432,10 +433,12 @@ export default function DistrictClient({
                     purpose: purpose,
                   });
                 }}
+                maxVisibleItems={5}
               />
               <SortDropdown
                 currentSort={currentSort}
                 onSortChange={handleSortChange}
+                maxVisibleItems={5}
               />
             </div>
             {isLoadingRoutes ? (

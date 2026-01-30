@@ -75,6 +75,7 @@ export default function Header() {
               value={districtId}
               onChange={handleDistrictChange}
               triggerClassName="w-[100px] min-w-0"
+              maxVisibleItems={5}
             />
           )}
           <AuthHeaderControls />

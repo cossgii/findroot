@@ -3,10 +3,9 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import pluginReact from 'eslint-plugin-react';
 import pluginNext from '@next/eslint-plugin-next';
-import { defineConfig } from 'eslint/config';
 import prettierConfig from 'eslint-config-prettier';
 
-export default defineConfig([
+export default [
   {
     ignores: [
       '.next/**',
@@ -34,21 +33,23 @@ export default defineConfig([
       'jest.setup.js',
     ],
   },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     languageOptions: {
-      globals: { ...globals.browser, ...globals.node },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
       parser: tseslint.parser,
       parserOptions: {
-        project: ['./tsconfig.json'],
-        ecmaFeatures: { jsx: true },
+        project: './tsconfig.json',
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
     },
-    plugins: {
-      js,
-      '@typescript-eslint': tseslint.plugin,
-    },
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'warn',
@@ -92,6 +93,7 @@ export default defineConfig([
     rules: {
       ...pluginReact.configs.flat.recommended.rules,
       ...pluginNext.configs.recommended.rules,
+      ...pluginNext.configs['core-web-vitals'].rules,
       '@next/next/no-img-element': 'warn',
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
@@ -103,4 +105,4 @@ export default defineConfig([
     },
   },
   prettierConfig,
-]);
+];

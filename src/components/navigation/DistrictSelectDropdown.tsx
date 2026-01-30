@@ -12,6 +12,9 @@ interface DistrictDropdownProps {
   showAll?: boolean;
   triggerClassName?: string;
   placeholder?: string;
+  contentClassName?: string;
+  maxVisibleItems?: number;
+  renderInFlow?: boolean;
 }
 
 export default function DistrictDropdown({
@@ -21,6 +24,9 @@ export default function DistrictDropdown({
   showAll = true,
   triggerClassName,
   placeholder,
+  contentClassName,
+  maxVisibleItems,
+  renderInFlow,
 }: DistrictDropdownProps) {
   const districtOptions = showAll
     ? SEOUL_DISTRICTS
@@ -35,8 +41,10 @@ export default function DistrictDropdown({
         onChange={district => onChange(district.id)}
         getOptionLabel={district => district.name}
         placeholder={placeholder}
-        renderInFlow={true}
+        renderInFlow={renderInFlow}
         triggerClassName={triggerClassName}
+        contentClassName={contentClassName}
+        maxVisibleItems={maxVisibleItems}
       />
     </div>
   );

@@ -14,6 +14,7 @@ interface CategoryDropdownProps {
   onChange: (value: PlaceCategory) => void;
   placeholder?: string;
   triggerClassName?: string;
+  maxVisibleItems?: number;
 }
 
 export default function CategoryDropdown({
@@ -21,6 +22,7 @@ export default function CategoryDropdown({
   onChange,
   placeholder = '카테고리를 선택하세요',
   triggerClassName,
+  maxVisibleItems,
 }: CategoryDropdownProps) {
   const selectedOption = categoryOptions.find((c) => c.id === value);
 
@@ -32,6 +34,7 @@ export default function CategoryDropdown({
       getOptionLabel={(option) => option.name}
       placeholder={placeholder}
       triggerClassName={triggerClassName}
+      maxVisibleItems={maxVisibleItems}
     />
   );
 }

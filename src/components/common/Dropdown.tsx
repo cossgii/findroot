@@ -59,6 +59,7 @@ interface DropdownProps<T> {
   align?: 'left' | 'right';
   renderInFlow?: boolean;
   disabled?: boolean;
+  maxVisibleItems?: number; // Added prop
 }
 
 export default function Dropdown<T>({
@@ -73,6 +74,7 @@ export default function Dropdown<T>({
   contentClassName,
   align = 'right',
   renderInFlow = false,
+  maxVisibleItems, // Destructured prop
 }: DropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -141,12 +143,19 @@ export default function Dropdown<T>({
         {isOpen && (
           <div
             className={cn(
-              renderInFlow
-                ? 'bg-white border border-gray-200 rounded-md shadow-lg mt-2 max-h-[150px] overflow-y-auto'
-                : 'absolute mt-2 w-full bg-white border border-gray-200 rounded-md shadow-lg z-20',
+              'bg-white border border-gray-200 rounded-md shadow-lg mt-2',
+              renderInFlow ? '' : 'absolute min-w-full z-20',
               renderInFlow ? '' : align === 'left' ? 'left-0' : 'right-0',
               contentClassName,
             )}
+            style={
+              maxVisibleItems
+                ? {
+                    maxHeight: `${maxVisibleItems * 36 + 8}px`,
+                    overflowY: 'auto',
+                  }
+                : {}
+            }
           >
             {options && getOptionLabel && onChange ? (
               <ul className="py-1">
@@ -155,7 +164,7 @@ export default function Dropdown<T>({
                     key={index}
                     onClick={() => handleSelect(option)}
                     className={cn(
-                      'px-4 py-2 text-sm cursor-pointer',
+                      'px-4 py-2 text-sm cursor-pointer whitespace-nowrap',
                       value && JSON.stringify(option) === JSON.stringify(value)
                         ? 'bg-primary-100 text-primary-700 font-bold'
                         : 'text-gray-700',

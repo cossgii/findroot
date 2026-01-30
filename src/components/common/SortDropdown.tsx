@@ -15,9 +15,14 @@ const sortOptions: readonly SortOption[] = [
 interface SortDropdownProps {
   currentSort: 'recent' | 'likes';
   onSortChange: (sortOption: 'recent' | 'likes') => void;
+  maxVisibleItems?: number;
 }
 
-export default function SortDropdown({ currentSort, onSortChange }: SortDropdownProps) {
+export default function SortDropdown({
+  currentSort,
+  onSortChange,
+  maxVisibleItems,
+}: SortDropdownProps) {
   const selectedOption = sortOptions.find(option => option.id === currentSort);
 
   return (
@@ -27,6 +32,7 @@ export default function SortDropdown({ currentSort, onSortChange }: SortDropdown
         value={selectedOption}
         onChange={(option) => onSortChange(option.id)}
         getOptionLabel={(option) => option.name}
+        maxVisibleItems={maxVisibleItems}
       />
     </div>
   );

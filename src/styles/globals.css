@@ -33,4 +33,20 @@
   .list-item-hover-effect:hover {
     @apply -translate-y-0.5;
   }
+
+  .svg-text-shadow {
+    text-shadow: 0px 0px 4px white;
+  }
+
+  /* New SVG path styling classes */
+  .svg-district-path {
+    stroke: #FFFFFF;
+    stroke-width: 2px;
+    transition: transform 0.2s ease-in-out;
+    cursor: pointer; /* Add cursor pointer here */
+  }
+
+  .svg-district-path-hover {
+    transform: scale(1.1);
+  }
 }

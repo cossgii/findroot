@@ -75,6 +75,7 @@ export default function MyPageContentToolbar({
         <DistrictDropdown
           value={selectedDistrict}
           onChange={onDistrictChange}
+          maxVisibleItems={5}
         />
       </div>
     </div>

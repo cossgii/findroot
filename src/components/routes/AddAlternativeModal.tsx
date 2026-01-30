@@ -76,7 +76,7 @@ export default function AddAlternativeModal({
                             : '장소를 선택하세요'
                       }
                       triggerClassName="w-full"
-                      contentClassName="max-h-40 overflow-y-auto"
+                      maxVisibleItems={10}
                       disabled={isLoadingUserPlaces || filteredUserPlaces.length === 0}
                     />
                   </FormControl>

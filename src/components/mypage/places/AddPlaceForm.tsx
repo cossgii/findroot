@@ -247,6 +247,7 @@ export default function AddPlaceForm({
                       value={field.value as PlaceCategory}
                       onChange={field.onChange}
                       triggerClassName="w-full"
+                      maxVisibleItems={5}
                     />
                   </FormControl>
                   <FormMessage />

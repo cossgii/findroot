@@ -121,6 +121,15 @@ export const useAddRouteForm = ({
       });
       return;
     }
+
+    const isDuplicate = stops.some(stop => stop.place.id === place.id);
+    if (isDuplicate) {
+      addToast({
+        message: '이미 추가된 장소입니다.',
+      });
+      return;
+    }
+
     setStops((prev) => {
       const newStops = [
         ...prev,

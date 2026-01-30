@@ -93,9 +93,10 @@ export default function EditPlaceForm({
               <FormLabel>카테고리</FormLabel>
               <FormControl>
                 <CategoryDropdown
-                  value={field.value as PlaceCategory}
+                  value={form.watch('category') as PlaceCategory}
                   onChange={field.onChange}
                   triggerClassName="w-full"
+                  maxVisibleItems={5}
                 />
               </FormControl>
               <FormMessage />

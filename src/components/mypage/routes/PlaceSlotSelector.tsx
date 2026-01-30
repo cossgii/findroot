@@ -73,7 +73,7 @@ export default function PlaceSlotSelector({
               : '장소를 선택하세요'
           }
           triggerClassName="w-full"
-          contentClassName="max-h-48 overflow-y-auto"
+          maxVisibleItems={12}
         />
       )}
     </div>
