@@ -12,7 +12,8 @@ const routeLocationQuerySchema = z.object({
     .string()
     .refine((val) => districtIds.includes(val) || val === 'all', {
       message: 'Invalid district ID',
-    }),
+    })
+    .optional(),
   page: z.preprocess(
     (val) => parseInt(z.string().parse(val), 10),
     z.number().min(1).default(1),

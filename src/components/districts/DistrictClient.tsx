@@ -318,7 +318,7 @@ export default function DistrictClient({
 
   return (
     <div className="flex flex-col desktop:flex-row h-full desktop:gap-4 desktop:items-center">
-      <div className="w-full mobile:w-[375px] tablet:w-[744px] desktop:w-1/2 mx-auto h-[440px] aspect-video desktop:h-full relative">
+      <div className="w-full mobile:w-[375px] tablet:w-[744px] desktop:w-1/2 mx-auto h-[440px] relative">
         {routeView === 'districts' ? (
           <KakaoMap
             latitude={center.lat}

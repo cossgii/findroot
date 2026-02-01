@@ -20,6 +20,7 @@ export default function RouteCard({ route }: RouteCardProps) {
             fill
             className="object-cover"
             priority
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         </div>
         <div className="p-4 flex-grow">

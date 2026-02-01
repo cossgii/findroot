@@ -38,15 +38,23 @@
     text-shadow: 0px 0px 4px white;
   }
 
-  /* New SVG path styling classes */
   .svg-district-path {
-    stroke: #FFFFFF;
+    stroke: #ffffff;
     stroke-width: 2px;
     transition: transform 0.2s ease-in-out;
-    cursor: pointer; /* Add cursor pointer here */
+    cursor: pointer;
   }
 
   .svg-district-path-hover {
     transform: scale(1.1);
+  }
+
+  .scroll-hidden-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scroll-hidden-bar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
