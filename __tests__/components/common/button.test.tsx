@@ -1,6 +1,5 @@
 /// <reference types="@testing-library/jest-dom" />
 
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Button from '~/src/components/common/Button';
 
@@ -19,7 +18,9 @@ describe('Button', () => {
 
   it('disabled 상태를 올바르게 처리해야 한다', () => {
     render(<Button disabled>비활성화 버튼</Button>);
-    const buttonElement = screen.getByRole('button', { name: /비활성화 버튼/i });
+    const buttonElement = screen.getByRole('button', {
+      name: /비활성화 버튼/i,
+    });
     expect(buttonElement).toBeDisabled();
   });
 
@@ -40,11 +41,11 @@ describe('Button', () => {
   it('size prop에 따라 올바른 스타일을 적용해야 한다', () => {
     const { rerender } = render(<Button size="small">Small</Button>);
     let buttonElement = screen.getByText(/Small/i);
-    expect(buttonElement).toHaveClass('h-[40px]');
+    expect(buttonElement).toHaveClass('h-10');
 
     rerender(<Button size="large">Large</Button>);
     buttonElement = screen.getByText(/Large/i);
-    expect(buttonElement).toHaveClass('h-[44px]');
+    expect(buttonElement).toHaveClass('h-11');
   });
 
   it('클릭 이벤트를 올바르게 처리해야 한다', () => {

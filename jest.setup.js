@@ -1,4 +1,7 @@
-import '@testing-library/jest-dom/extend-expect'; // Changed import
+import '@testing-library/jest-dom'; // Changed import
+import { TextEncoder } from 'util';
+
+global.TextEncoder = TextEncoder;
 
 // Mock environment variables for tests
 process.env.MAIN_ACCOUNT_ID = 'test-main-account-id';

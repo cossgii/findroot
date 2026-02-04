@@ -15,9 +15,12 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { loginId, email } = requestResetSchema.parse(body);
 
-    const user = await db.user.findFirst({ where: { loginId, email } });
+    const user = await db.user.findFirst({
+      where: { loginId, email },
+    });
 
     if (!user) {
+      // 보안을 위해 사용자를 찾을 수 없어도 성공 메시지를 반환하지만, 실제 작업은 수행하지 않습니다.
       return NextResponse.json(
         {
           message:

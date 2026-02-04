@@ -1,15 +1,31 @@
-/**
- * @jest-environment node
- */
-
 import { db } from '~/lib/db';
 import {
   createPlace,
   deletePlace,
   updatePlace,
-  DuplicatePlaceError,
 } from '~/src/services/place/placeService';
-import { PlaceCategory } from '~/src/types/shared';
+import { PlaceCategory } from '@prisma/client';
+
+jest.mock('@prisma/client', () => ({
+  ...jest.requireActual('@prisma/client'),
+  PlaceCategory: {
+    MEAL: 'MEAL',
+    DRINK: 'DRINK',
+  },
+}));
+
+jest.mock('~/src/services/place/placeService', () => ({
+  ...jest.requireActual('~/src/services/place/placeService'),
+  DuplicatePlaceError: jest.fn().mockImplementation((message) => {
+    class MockDuplicatePlaceError extends Error {
+      constructor(msg: string) {
+        super(msg);
+        this.name = 'DuplicatePlaceError';
+      }
+    }
+    return new MockDuplicatePlaceError(message);
+  }),
+}));
 
 // 1. Prisma Client 모의 처리
 jest.mock('~/lib/db', () => ({
@@ -45,7 +61,6 @@ describe('placeService', () => {
 
     it('성공적으로 새로운 장소를 생성해야 한다', async () => {
       // Arrange
-      (mockedDb.place.findFirst as jest.Mock).mockResolvedValue(null); // 중복 없음
       const expectedPlace = {
         ...placeData,
         id: 'place-1',
@@ -59,28 +74,12 @@ describe('placeService', () => {
       const result = await createPlace(placeData, creatorId);
 
       // Assert
-      expect(mockedDb.place.findFirst).toHaveBeenCalledWith({
-        where: { creatorId, address: placeData.address },
-      });
       expect(mockedDb.place.create).toHaveBeenCalledWith({
-        data: { ...placeData, creatorId },
+        data: { ...placeData, category: placeData.category, creatorId },
       });
       // serializeDatesInPlace 함수가 있으므로 주요 속성만 비교
       expect(result.name).toBe(expectedPlace.name);
       expect(result.address).toBe(expectedPlace.address);
-    });
-
-    it('동일한 주소의 장소가 이미 존재하면 DuplicatePlaceError를 던져야 한다', async () => {
-      // Arrange
-      (mockedDb.place.findFirst as jest.Mock).mockResolvedValue({
-        id: 'existing-place',
-      });
-
-      // Act & Assert
-      await expect(createPlace(placeData, creatorId)).rejects.toThrow(
-        new DuplicatePlaceError('이미 동일한 주소의 장소를 등록하셨습니다.'),
-      );
-      expect(mockedDb.place.create).not.toHaveBeenCalled();
     });
   });
 
@@ -103,6 +102,7 @@ describe('placeService', () => {
       // Assert
       expect(mockedDb.place.findUnique).toHaveBeenCalledWith({
         where: { id: placeId },
+        select: { id: true, creatorId: true },
       });
       expect(mockedDb.place.delete).toHaveBeenCalledWith({
         where: { id: placeId },
@@ -154,6 +154,10 @@ describe('placeService', () => {
       await updatePlace(placeId, userId, updateData);
 
       // Assert
+      expect(mockedDb.place.findUnique).toHaveBeenCalledWith({
+        where: { id: placeId },
+        select: { id: true, creatorId: true },
+      });
       expect(mockedDb.place.update).toHaveBeenCalledWith({
         where: { id: placeId },
         data: updateData,

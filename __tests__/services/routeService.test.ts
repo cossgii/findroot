@@ -8,7 +8,26 @@ import {
   deleteRoute,
   updateRoute, // updateRoute import 추가
 } from '~/src/services/route/routeService';
-import { RouteStopLabel } from '~/src/types/shared';
+import { RouteStopLabel, RoutePurpose } from '@prisma/client';
+
+jest.mock('@prisma/client', () => ({
+  PlaceCategory: {
+    MEAL: 'MEAL',
+    DRINK: 'DRINK',
+  },
+  RouteStopLabel: {
+    MEAL: 'MEAL',
+    CAFE: 'CAFE',
+    BAR: 'BAR',
+  },
+  RoutePurpose: {
+    FAMILY: 'FAMILY',
+    GATHERING: 'GATHERING',
+    SOLO: 'SOLO',
+    COUPLE: 'COUPLE',
+    ENTIRE: 'ENTIRE',
+  },
+}));
 
 // Prisma Client 모의 처리
 jest.mock('~/lib/db', () => ({
@@ -47,20 +66,23 @@ describe('routeService', () => {
           { placeId: 'place-1', order: 1, label: RouteStopLabel.MEAL },
           { placeId: 'place-2', order: 2, label: RouteStopLabel.CAFE },
         ],
+        purpose: RoutePurpose.ENTIRE, // purpose 속성 추가
       };
       const createdRoute = { id: 'route-1', ...routeData };
 
-      (mockedDb.$transaction as jest.Mock).mockImplementation(async (callback) => {
-        const prisma = {
-          route: {
-            create: jest.fn().mockResolvedValue(createdRoute),
-          },
-          routePlace: {
-            createMany: jest.fn().mockResolvedValue({ count: 2 }),
-          },
-        };
-        return callback(prisma);
-      });
+      (mockedDb.$transaction as jest.Mock).mockImplementation(
+        async (callback) => {
+          const prisma = {
+            route: {
+              create: jest.fn().mockResolvedValue(createdRoute),
+            },
+            routePlace: {
+              createMany: jest.fn().mockResolvedValue({ count: 2 }),
+            },
+          };
+          return callback(prisma);
+        },
+      );
 
       // Act
       const result = await createRoute(routeData, creatorId);
@@ -83,15 +105,26 @@ describe('routeService', () => {
 
     it('사용자가 루트의 소유자일 경우, 성공적으로 루트를 수정해야 한다', async () => {
       // Arrange
-      (mockedDb.route.findUnique as jest.Mock).mockResolvedValue({ id: routeId, creatorId: userId });
-      (mockedDb.$transaction as jest.Mock).mockImplementation(async (callback) => callback(mockedDb));
-      (mockedDb.route.update as jest.Mock).mockResolvedValue({ id: routeId, ...updateData });
+      (mockedDb.route.findUnique as jest.Mock).mockResolvedValue({
+        id: routeId,
+        creatorId: userId,
+      });
+      (mockedDb.$transaction as jest.Mock).mockImplementation(
+        async (callback) => callback(mockedDb),
+      );
+      (mockedDb.route.update as jest.Mock).mockResolvedValue({
+        id: routeId,
+        ...updateData,
+      });
 
       // Act
       const result = await updateRoute(routeId, userId, updateData);
 
       // Assert
-      expect(mockedDb.route.findUnique).toHaveBeenCalledWith({ where: { id: routeId } });
+      expect(mockedDb.route.findUnique).toHaveBeenCalledWith({
+        where: { id: routeId },
+        select: { id: true, creatorId: true },
+      });
       expect(mockedDb.route.update).toHaveBeenCalledWith({
         where: { id: routeId },
         data: updateData,
@@ -104,15 +137,22 @@ describe('routeService', () => {
       (mockedDb.route.findUnique as jest.Mock).mockResolvedValue(null);
 
       // Act & Assert
-      await expect(updateRoute(routeId, userId, updateData)).rejects.toThrow('Route not found.');
+      await expect(updateRoute(routeId, userId, updateData)).rejects.toThrow(
+        'Route not found.',
+      );
     });
 
     it('사용자가 소유자가 아니면 에러를 던져야 한다', async () => {
       // Arrange
-      (mockedDb.route.findUnique as jest.Mock).mockResolvedValue({ id: routeId, creatorId: 'another-user' });
+      (mockedDb.route.findUnique as jest.Mock).mockResolvedValue({
+        id: routeId,
+        creatorId: 'another-user',
+      });
 
       // Act & Assert
-      await expect(updateRoute(routeId, userId, updateData)).rejects.toThrow('Unauthorized to update this route.');
+      await expect(updateRoute(routeId, userId, updateData)).rejects.toThrow(
+        'Unauthorized to update this route.',
+      );
       expect(mockedDb.route.update).not.toHaveBeenCalled();
     });
   });
@@ -124,15 +164,23 @@ describe('routeService', () => {
 
     it('사용자가 루트의 소유자일 경우, 성공적으로 루트를 삭제해야 한다', async () => {
       // Arrange
-      (mockedDb.route.findUnique as jest.Mock).mockResolvedValue({ id: routeId, creatorId: userId });
+      (mockedDb.route.findUnique as jest.Mock).mockResolvedValue({
+        id: routeId,
+        creatorId: userId,
+      });
       (mockedDb.route.delete as jest.Mock).mockResolvedValue({ id: routeId });
 
       // Act
       await deleteRoute(routeId, userId);
 
       // Assert
-      expect(mockedDb.route.findUnique).toHaveBeenCalledWith({ where: { id: routeId } });
-      expect(mockedDb.route.delete).toHaveBeenCalledWith({ where: { id: routeId } });
+      expect(mockedDb.route.findUnique).toHaveBeenCalledWith({
+        where: { id: routeId },
+        select: { id: true, creatorId: true },
+      });
+      expect(mockedDb.route.delete).toHaveBeenCalledWith({
+        where: { id: routeId },
+      });
     });
 
     it('루트가 존재하지 않으면 에러를 던져야 한다', async () => {
@@ -140,15 +188,22 @@ describe('routeService', () => {
       (mockedDb.route.findUnique as jest.Mock).mockResolvedValue(null);
 
       // Act & Assert
-      await expect(deleteRoute(routeId, userId)).rejects.toThrow('Route not found.');
+      await expect(deleteRoute(routeId, userId)).rejects.toThrow(
+        'Route not found.',
+      );
     });
 
     it('사용자가 소유자가 아니면 에러를 던져야 한다', async () => {
       // Arrange
-      (mockedDb.route.findUnique as jest.Mock).mockResolvedValue({ id: routeId, creatorId: 'another-user' });
+      (mockedDb.route.findUnique as jest.Mock).mockResolvedValue({
+        id: routeId,
+        creatorId: 'another-user',
+      });
 
       // Act & Assert
-      await expect(deleteRoute(routeId, userId)).rejects.toThrow('Unauthorized to delete this route.');
+      await expect(deleteRoute(routeId, userId)).rejects.toThrow(
+        'Unauthorized to delete this route.',
+      );
     });
   });
 });
