@@ -9,7 +9,6 @@ import { useMyPageModals } from '~/src/hooks/mypage/useMyPageModals';
 import ProfileTabPanel from '~/src/components/mypage/panels/ProfileTabPanel';
 import ContentTabPanel from '~/src/components/mypage/panels/ContentTabPanel';
 import LikesTabPanel from '~/src/components/mypage/panels/LikesTabPanel';
-import MessagesTabPanel from '~/src/components/mypage/panels/MessagesTabPanel';
 import MyPageSkeleton from '~/src/components/mypage/MyPageSkeleton';
 import { useSession } from 'next-auth/react';
 
@@ -144,8 +143,6 @@ const MyPageContent = ({ userId }: { userId: string }) => {
             onCategoryChange={setSelectedCategory}
           />
         );
-      case 'messages':
-        return <MessagesTabPanel />;
       default:
         return null;
     }

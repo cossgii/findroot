@@ -7,15 +7,23 @@
     --height-header: 56px;
   }
 
+  html,
   body {
+    height: 100%;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     transform: unset !important; /* body의 transform 속성 초기화 */
   }
 }
 
 #root-content {
   position: relative;
-  height: 100vh; /* 뷰포트 전체 높이 */
-  display: flex;
+  flex-grow: 1; /* This will make root-content take all available space, pushing footer down */
+  display: flex; /* Keep it as flex to manage its children */
   flex-direction: column;
 }
 

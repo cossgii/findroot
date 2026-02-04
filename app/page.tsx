@@ -5,8 +5,8 @@ import { SeoulMap } from '~/src/components/common/SeoulMap';
 
 export default function Page() {
   return (
-    <div className="h-[calc(100vh-var(--height-header))] w-full bg-gray-100">
-      <Parallax pages={3} style={{ top: '0', left: '0' }}>
+    <div className="h-full w-full bg-gray-100">
+      <Parallax pages={3} style={{ top: '0', left: '0', width: '100%', height: '100%' }}>
         <ParallaxLayer offset={0} speed={1}>
           <div className="h-full w-full">
             <SeoulMap />
