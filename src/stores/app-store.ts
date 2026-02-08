@@ -8,8 +8,7 @@ export type ModalType =
   | 'EDIT_PLACE'
   | 'EDIT_ROUTE'
   | 'CONFIRMATION'
-  | 'LOGIN_PROMPT'
-  | 'ROUTE_PREVIEW';
+  | 'LOGIN_PROMPT';
 
 export interface ConfirmationModalProps {
   title: string;
@@ -42,9 +41,7 @@ export interface RestaurantDetailModalProps {
   restaurantId: string;
 }
 
-export interface RoutePreviewModalProps {
-  routeId: string;
-}
+
 
 export interface InfoMessageModalProps {
   title: string;
@@ -62,7 +59,6 @@ export interface ModalState {
     | EditRouteModalProps
     | ConfirmationModalProps
     | LoginPromptModalProps
-    | RoutePreviewModalProps
     | Record<string, never>;
 }
 

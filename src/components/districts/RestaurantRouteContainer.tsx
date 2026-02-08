@@ -1,6 +1,6 @@
 'use client';
-import { useSetAtom } from 'jotai';
-import { modalAtom } from '~/src/stores/app-store';
+
+import Link from 'next/link';
 import LikeButton from '~/src/components/common/LikeButton';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 import { RouteStopLabel } from '@prisma/client';
@@ -19,12 +19,6 @@ export default function RestaurantRouteContainer({
   routes,
   isLoading,
 }: RestaurantRouteContainerProps) {
-  const setModal = useSetAtom(modalAtom);
-
-  const handleRouteClick = (routeId: string) => {
-    setModal({ type: 'ROUTE_PREVIEW', props: { routeId } });
-  };
-
   if (isLoading) {
     return <p className="text-gray-500">사용자 루트를 불러오는 중...</p>;
   }
@@ -42,33 +36,31 @@ export default function RestaurantRouteContainer({
   return (
     <div className="flex flex-col space-y-4">
       {routes.map((route) => (
-        <div
-          key={route.id}
-          className="p-4 rounded-lg shadow-sm transition-all bg-gray-50 hover:bg-blue-50 hover:shadow-md cursor-pointer"
-          onClick={() => handleRouteClick(route.id)}
-        >
-          <div className="flex justify-between items-start mb-2">
-            <div className="flex-grow pr-4">
-              <h3 className="text-xl font-bold">{route.name}</h3>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="flex flex-col items-center justify-center text-center w-12 h-12">
-                <span className="text-xl">💬</span>
-                <span className="text-xs font-medium text-gray-600">
-                  {route.commentsCount}
-                </span>
+        <Link href={`/routes/${route.id}`} key={route.id}>
+          <div className="p-4 rounded-lg shadow-sm transition-all bg-gray-50 hover:bg-blue-50 hover:shadow-md cursor-pointer">
+            <div className="flex justify-between items-start mb-2">
+              <div className="flex-grow pr-4">
+                <h3 className="text-xl font-bold">{route.name}</h3>
               </div>
-              <LikeButton
-                routeId={route.id}
-                initialIsLiked={route.isLiked}
-                initialLikesCount={route.likesCount}
-              />
+              <div className="flex items-center space-x-2">
+                <div className="flex flex-col items-center justify-center text-center w-12 h-12">
+                  <span className="text-xl">💬</span>
+                  <span className="text-xs font-medium text-gray-600">
+                    {route.commentsCount}
+                  </span>
+                </div>
+                <LikeButton
+                  routeId={route.id}
+                  initialIsLiked={route.isLiked}
+                  initialLikesCount={route.likesCount}
+                />
+              </div>
             </div>
+            <p className="text-sm text-gray-600 mt-1 truncate">
+              {route.description}
+            </p>
           </div>
-          <p className="text-sm text-gray-600 mt-1 truncate">
-            {route.description}
-          </p>
-        </div>
+        </Link>
       ))}
     </div>
   );

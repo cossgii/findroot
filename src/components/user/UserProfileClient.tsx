@@ -52,7 +52,7 @@ export default function UserProfileClient({
     apiEndpoint: `/api/users/${profileUser.id}/places`,
     initialData: {
       data: initialPlaces,
-      totalPages: 1, // Placeholder, will be updated by actual API response
+      totalPages: 1, // Placeholder
       currentPage: 1,
     },
   });
@@ -78,13 +78,21 @@ export default function UserProfileClient({
     <MainContainer className="py-8">
       <div className="flex flex-col items-center space-y-4 mb-8">
         <Avatar size="large">
-          <AvatarImage src={profileUser.image || ''} alt={profileUser.name || 'User Avatar'} />
+          <AvatarImage
+            src={profileUser.image || ''}
+            alt={profileUser.name || 'User Avatar'}
+          />
           <AvatarFallback>{profileUser.name?.charAt(0) || 'U'}</AvatarFallback>
         </Avatar>
-        <h1 className="text-3xl font-bold">{profileUser.name || '이름 없음'}</h1>
+        <h1 className="text-3xl font-bold">
+          {profileUser.name || '이름 없음'}
+        </h1>
         <p className="text-gray-600">{profileUser.loginId}</p>
         {!isMyProfile && currentUserId && (
-          <FollowButton targetUserId={profileUser.id} initialIsFollowing={initialIsFollowing} />
+          <FollowButton
+            targetUserId={profileUser.id}
+            initialIsFollowing={initialIsFollowing}
+          />
         )}
       </div>
 

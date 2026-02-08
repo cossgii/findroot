@@ -27,6 +27,8 @@ import ConfirmationDialog from '~/src/components/common/ConfirmationDialog';
 import Dropdown from '~/src/components/common/Dropdown';
 import DistrictDropdown from '~/src/components/navigation/DistrictSelectDropdown';
 
+import { PURPOSE_FORM_OPTIONS } from '@/constants/purpose';
+
 const routeStopLabelMap: Record<RouteStopLabel, string> = {
   MEAL: '식사',
   CAFE: '카페',
@@ -35,18 +37,6 @@ const routeStopLabelMap: Record<RouteStopLabel, string> = {
 
 const labelOptions = Object.entries(routeStopLabelMap).map(([id, name]) => ({
   id: id as RouteStopLabel,
-  name,
-}));
-
-const routePurposeMap: Record<Exclude<RoutePurpose, 'ENTIRE'>, string> = {
-  FAMILY: '가족',
-  GATHERING: '모임',
-  SOLO: '나홀로',
-  COUPLE: '커플',
-};
-
-const purposeOptions = Object.entries(routePurposeMap).map(([id, name]) => ({
-  id: id as Exclude<RoutePurpose, 'ENTIRE'>,
   name,
 }));
 
@@ -262,10 +252,7 @@ export default function AddRouteForm({
                       <FormItem>
                         <FormLabel>루트 이름</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="예: 강남역 불금 루트"
-                          />
+                          <Input {...field} placeholder="예: 성수동 빵지순례" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -279,8 +266,8 @@ export default function AddRouteForm({
                         <FormLabel>루트 목적</FormLabel>
                         <FormControl>
                           <Dropdown
-                            options={purposeOptions}
-                            value={purposeOptions.find(
+                            options={PURPOSE_FORM_OPTIONS}
+                            value={PURPOSE_FORM_OPTIONS.find(
                               (p) => p.id === field.value,
                             )}
                             onChange={(option) => field.onChange(option.id)}

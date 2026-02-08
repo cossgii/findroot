@@ -13,7 +13,7 @@ import {
   EditPlaceModalProps,
   EditRouteModalProps,
   LoginPromptModalProps,
-  RoutePreviewModalProps,
+  
 } from '~/src/stores/app-store';
 import { Restaurant } from '~/src/types/restaurant';
 
@@ -51,13 +51,7 @@ const EditRouteModal = dynamic(
     loading: () => <div className="p-6">로딩 중...</div>,
   },
 );
-const RoutePreviewModal = dynamic(
-  () => import('~/src/components/routes/RoutePreviewModal'),
-  {
-    ssr: false,
-    loading: () => <div className="p-6">로딩 중...</div>,
-  },
-);
+
 
 const RestaurantDetailModal = ({
   restaurantId,
@@ -192,14 +186,7 @@ export default function GlobalModalRenderer() {
           }}
         />
       );
-    case 'ROUTE_PREVIEW':
-      return (
-        <RoutePreviewModal
-          isOpen={true}
-          {...(modal.props as RoutePreviewModalProps)}
-          onClose={closeModal}
-        />
-      );
+    
     default:
       return null;
   }

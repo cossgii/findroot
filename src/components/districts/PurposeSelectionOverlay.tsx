@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTransition, animated } from '@react-spring/web';
 import { RoutePurpose } from '@prisma/client';
+import { PURPOSE_MAP } from '@/constants/purpose';
 
 interface PurposeSelectionOverlayProps {
   isOpen: boolean;
@@ -10,15 +11,7 @@ interface PurposeSelectionOverlayProps {
   onSelectPurpose: (purpose: RoutePurpose) => void;
 }
 
-const purposeMap: Record<RoutePurpose, { title: string; description: string }> = {
-  ENTIRE: { title: '전체', description: '모든 목적의 루트 보기' },
-  COUPLE: { title: '커플', description: '연인과 함께하는 로맨틱한 데이트' },
-  FAMILY: { title: '가족', description: '온 가족이 함께 즐기는 나들이' },
-  GATHERING: { title: '모임', description: '친구, 동료와 함께하는 즐거운 시간' },
-  SOLO: { title: '나홀로', description: '혼자서 즐기는 여유로운 시간' },
-};
-
-const purposes = Object.keys(purposeMap) as RoutePurpose[];
+const purposes = Object.keys(PURPOSE_MAP) as RoutePurpose[];
 
 export default function PurposeSelectionOverlay({
   isOpen,
@@ -88,10 +81,10 @@ export default function PurposeSelectionOverlay({
                         onClick={() => onSelectPurpose(purpose)}
                       >
                         <h3 className="text-2xl font-semibold mb-2">
-                          {purposeMap[purpose].title}
+                          {PURPOSE_MAP[purpose].title}
                         </h3>
                         <p className="text-gray-600">
-                          {purposeMap[purpose].description}
+                          {PURPOSE_MAP[purpose].description}
                         </p>
                       </animated.div>
                     ))}

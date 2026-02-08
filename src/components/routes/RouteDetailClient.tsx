@@ -11,10 +11,11 @@ import { useSetAtom } from 'jotai';
 import { modalAtom } from '~/src/stores/app-store';
 
 import { getRouteById } from '~/src/services/route/routeService';
-import { PlaceCategory, RoutePurpose } from '@prisma/client';
+import { PlaceCategory } from '@prisma/client';
 import CommentSection from '~/src/components/comments/CommentSection';
 import { ArrowDown } from 'lucide-react';
 import { cn } from '~/src/utils/class-name';
+import { PURPOSE_MAP } from '@/constants/purpose';
 
 type RouteDetail = NonNullable<Awaited<ReturnType<typeof getRouteById>>>;
 type Waypoint = RouteDetail['places'][0];
@@ -22,14 +23,6 @@ type Waypoint = RouteDetail['places'][0];
 interface RouteDetailClientProps {
   route: RouteDetail;
 }
-
-const purposeMap: Record<RoutePurpose, string> = {
-  ENTIRE: '전체',
-  FAMILY: '가족',
-  GATHERING: '모임',
-  SOLO: '나홀로',
-  COUPLE: '커플',
-};
 
 const WaypointCard = ({
   rp,
@@ -85,12 +78,6 @@ const WaypointCard = ({
         <div className="bg-gray-100 rounded-lg shadow-lg p-4 h-full flex flex-col">
           <div className="flex justify-between items-center mb-2">
             <h4 className="font-bold text-gray-800">장소 변경</h4>
-            <button
-              onClick={handleFlip}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              (앞면으로)
-            </button>
           </div>
           <div className="space-y-2 overflow-y-auto flex-grow">
             {[
@@ -248,7 +235,9 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
         </Link>
       </div>
       <div className="flex items-center space-x-4 mb-4">
-        <span className="font-semibold">목적: {purposeMap[route.purpose]}</span>
+        <span className="font-semibold">
+          목적: {PURPOSE_MAP[route.purpose].title}
+        </span>
         <a
           href="#comments"
           className="flex items-center text-gray-600 hover:underline"

@@ -21,6 +21,8 @@ import RouteMap from './RouteMap';
 import Dropdown from '~/src/components/common/Dropdown';
 import { RoutePurpose } from '@prisma/client';
 
+import { PURPOSE_FORM_OPTIONS } from '@/constants/purpose';
+
 const routeStopLabelMap: Record<RouteStopLabel, string> = {
   MEAL: '식사',
   CAFE: '카페',
@@ -29,18 +31,6 @@ const routeStopLabelMap: Record<RouteStopLabel, string> = {
 
 const labelOptions = Object.entries(routeStopLabelMap).map(([id, name]) => ({
   id: id as RouteStopLabel,
-  name,
-}));
-
-const routePurposeMap: Record<Exclude<RoutePurpose, 'ENTIRE'>, string> = {
-  FAMILY: '가족',
-  GATHERING: '모임',
-  SOLO: '나홀로',
-  COUPLE: '커플',
-};
-
-const purposeOptions = Object.entries(routePurposeMap).map(([id, name]) => ({
-  id: id as Exclude<RoutePurpose, 'ENTIRE'>,
   name,
 }));
 
@@ -135,8 +125,8 @@ export default function EditRouteForm({
                 <FormLabel>루트 목적</FormLabel>
                 <FormControl>
                   <Dropdown
-                    options={purposeOptions}
-                    value={purposeOptions.find((p) => p.id === field.value)}
+                    options={PURPOSE_FORM_OPTIONS}
+                    value={PURPOSE_FORM_OPTIONS.find((p) => p.id === field.value)}
                     onChange={(option) => field.onChange(option.id)}
                     getOptionLabel={(option) => option.name}
                     placeholder="루트 목적을 선택하세요"

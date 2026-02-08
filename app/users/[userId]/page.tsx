@@ -4,7 +4,7 @@ import { authOptions } from '~/src/services/auth/authOptions';
 import { getUserById } from '~/src/services/user/userService';
 import { getPlacesByCreatorId } from '~/src/services/place/placeService';
 import { getRoutesByCreatorId } from '~/src/services/route/routeService';
-import UserProfileClient from './UserProfileClient';
+import UserProfileClient from '~/src/components/user/UserProfileClient';
 import { getFollowStatus } from '~/src/services/user/followService';
 
 interface UserProfilePageProps {
