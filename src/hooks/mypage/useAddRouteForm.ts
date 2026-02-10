@@ -48,13 +48,16 @@ const createRouteApi = async (payload: NewRouteInput) => {
   return response.json();
 };
 
-const fetchAllUserPlaces = async (userId: string): Promise<Place[]> => {
-  if (!userId) return [];
-  const response = await fetch(`/api/users/${userId}/places/all`);
+const fetchPlacesByDistrict = async (
+  districtId: string | null,
+): Promise<Place[]> => {
+  if (!districtId) return [];
+  const response = await fetch(`/api/places?district=${districtId}&limit=200`);
   if (!response.ok) {
-    throw new Error('Failed to fetch user places');
+    throw new Error('Failed to fetch places');
   }
-  return response.json();
+  const data = await response.json();
+  return data.places;
 };
 
 export const useAddRouteForm = ({
@@ -90,9 +93,9 @@ export const useAddRouteForm = ({
     isLoading,
     error,
   } = useQuery<Place[], Error>({
-    queryKey: ['user', userId, 'places', 'all'],
-    queryFn: () => fetchAllUserPlaces(userId),
-    enabled: !!userId,
+    queryKey: ['places', selectedDistrict],
+    queryFn: () => fetchPlacesByDistrict(selectedDistrict),
+    enabled: !!selectedDistrict,
   });
 
   const { mutate: addRouteMutation, isPending } = useMutation({

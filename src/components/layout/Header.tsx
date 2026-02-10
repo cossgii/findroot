@@ -50,7 +50,7 @@ export default function Header() {
     <>
       <header
         className={cn(
-          'fixed top-0 left-0 right-0 z-30', // 패널 아래로 하기 위한 z인덱스
+          'fixed top-0 left-0 right-0 z-30',
           'flex items-center justify-between',
           'h-header px-4 tablet:px-6 desktop:px-[6.25rem]',
           'bg-white shadow-sm',

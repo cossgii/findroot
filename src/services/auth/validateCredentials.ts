@@ -1,8 +1,3 @@
-/**
- * 로그인 인증 헬퍼 함수
- * authOptions의 authorize 로직을 재사용 가능하도록 분리
- */
-
 import * as bcrypt from 'bcryptjs';
 import { db } from '~/lib/db';
 

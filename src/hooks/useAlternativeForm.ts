@@ -25,12 +25,16 @@ interface UseAlternativeFormProps {
   onSuccess: () => void;
 }
 
-const fetchUserPlaces = async (userId: string): Promise<ClientPlace[]> => {
-  const response = await fetch(`/api/users/${userId}/places/all`);
+const fetchPlacesByDistrict = async (
+  district: string | null,
+): Promise<ClientPlace[]> => {
+  if (!district) return [];
+  const response = await fetch(`/api/places?district=${district}&limit=200`);
   if (!response.ok) {
-    throw new Error('Failed to fetch user places');
+    throw new Error('Failed to fetch places');
   }
-  return response.json();
+  const data = await response.json();
+  return data.places;
 };
 
 export const useAlternativeForm = ({
@@ -46,6 +50,8 @@ export const useAlternativeForm = ({
   const queryClient = useQueryClient();
   const addToast = useSetAtom(addToastAtom);
 
+  const district = originalPlace?.district ?? null;
+
   const form = useForm<AlternativeFormValues>({
     resolver: zodResolver(alternativeSchema),
     defaultValues: {
@@ -58,9 +64,9 @@ export const useAlternativeForm = ({
     ClientPlace[],
     Error
   >({
-    queryKey: ['userPlaces', session?.user?.id],
-    queryFn: () => fetchUserPlaces(session?.user?.id || ''),
-    enabled: !!session?.user?.id,
+    queryKey: ['places', district],
+    queryFn: () => fetchPlacesByDistrict(district),
+    enabled: !!district,
   });
 
   const filteredUserPlaces = useMemo(() => {

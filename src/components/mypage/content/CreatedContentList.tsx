@@ -41,7 +41,7 @@ interface CreatedContentListProps {
   onDeletePlace: (id: string) => void;
   onEditRoute: (id: string) => void;
   onDeleteRoute: (id: string) => void;
-  onToggleIsRepresentative?: ( // Make it optional
+  onToggleIsRepresentative?: (
     routeId: string,
     isRepresentative: boolean,
   ) => void;
@@ -288,7 +288,7 @@ export default function CreatedContentList({
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (handleToggleIsRepresentative) { // Add this check
+                    if (handleToggleIsRepresentative) {
                       handleToggleIsRepresentative(
                         route.id,
                         !route.isRepresentative,
@@ -401,69 +401,67 @@ export default function CreatedContentList({
                                   );
                                 }}
                                 size="small"
-                                className="w-auto px-3 py-1 text-xs bg-blue-500 hover:bg-blue-600"
-                                disabled={!isHovered}
+                                className="w-auto px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600"
                               >
                                 예비 장소 추가
                               </Button>
                             ) : (
-                              <Button
-                                size="small"
-                                className="w-auto px-3 py-1 text-xs bg-gray-300 text-gray-600 cursor-not-allowed"
-                                disabled
-                              >
-                                예비 장소 (최대 3개)
-                              </Button>
+                              <span className="text-xs text-gray-500">
+                                (최대 3개)
+                              </span>
                             )}
                           </div>
 
-                          {isRoutePlaceExpanded && hasAlternatives && (
+                          {isRoutePlaceExpanded && (
                             <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
-                              <p className="text-sm font-semibold">
-                                예비 장소:
-                              </p>
-                              {routePlace.alternatives.map((alt) => (
-                                <div
-                                  key={alt.id}
-                                  className="flex items-center justify-between bg-white p-2 rounded-md shadow-sm"
-                                >
-                                  <p className="text-sm">
-                                    {alt.place.name} ({alt.explanation})
-                                  </p>
-                                  <div className="flex space-x-1">
-                                    <Button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenEditAlternativeModal(
-                                          route.id,
-                                          routePlace.id,
-                                          alt,
-                                        );
-                                      }}
-                                      variant="outlined"
-                                      size="small"
-                                      className="w-auto px-2 py-1 text-xs"
-                                    >
-                                      수정
-                                    </Button>
-                                    <Button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteAlternative(
-                                          route.id,
-                                          routePlace.id,
-                                          alt.id,
-                                        );
-                                      }}
-                                      variant="outlined"
-                                      size="small"
-                                      className="w-auto px-2 py-1 text-xs text-red-600 border-red-600 hover:bg-red-50"
-                                    >
-                                      삭제
-                                    </Button>
+                              <div className="flex justify-between items-center">
+                                <p className="text-sm font-semibold">
+                                  예비 장소:
+                                </p>
+                              </div>
+                              {hasAlternatives &&
+                                routePlace.alternatives.map((alt) => (
+                                  <div
+                                    key={alt.id}
+                                    className="flex items-center justify-between bg-white p-2 rounded-md shadow-sm"
+                                  >
+                                    <p className="text-sm">
+                                      {alt.place.name} ({alt.explanation})
+                                    </p>
+                                    <div className="flex space-x-1">
+                                      <Button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEditAlternativeModal(
+                                            route.id,
+                                            routePlace.id,
+                                            alt,
+                                          );
+                                        }}
+                                        variant="outlined"
+                                        size="small"
+                                        className="w-auto px-2 py-1 text-xs"
+                                      >
+                                        수정
+                                      </Button>
+                                      <Button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteAlternative(
+                                            route.id,
+                                            routePlace.id,
+                                            alt.id,
+                                          );
+                                        }}
+                                        variant="outlined"
+                                        size="small"
+                                        className="w-auto px-2 py-1 text-xs text-red-600 border-red-600 hover:bg-red-50"
+                                      >
+                                        삭제
+                                      </Button>
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
                             </div>
                           )}
                         </li>

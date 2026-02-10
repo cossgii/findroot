@@ -6,18 +6,17 @@ import { SeoulMap } from '~/src/components/common/SeoulMap';
 export default function Page() {
   return (
     <div className="h-full w-full bg-gray-100">
-      <Parallax pages={3} style={{ top: '0', left: '0', width: '100%', height: '100%' }}>
+      <Parallax
+        pages={3}
+        style={{ top: '0', left: '0', width: '100%', height: '100%' }}
+      >
         <ParallaxLayer offset={0} speed={1}>
           <div className="h-full w-full">
             <SeoulMap />
           </div>
         </ParallaxLayer>
 
-        <ParallaxLayer
-          offset={1}
-          speed={0.2}
-          style={{ backgroundColor: '#f8fafc' }}
-        />
+        <ParallaxLayer offset={1} speed={0.2} />
 
         <ParallaxLayer offset={1} speed={0.8}>
           <div className="absolute inset-0 flex items-center justify-center">
@@ -53,11 +52,7 @@ export default function Page() {
           </div>
         </ParallaxLayer>
 
-        <ParallaxLayer
-          offset={2}
-          speed={0.2}
-          style={{ backgroundColor: '#eef2ff' }}
-        />
+        <ParallaxLayer offset={2} speed={0.2} />
 
         <ParallaxLayer offset={2} speed={0.8}>
           <div className="absolute inset-0 flex items-center justify-center">
