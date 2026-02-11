@@ -9,6 +9,7 @@ import {
   isKakaoMapApiLoadedAtom,
   contentCreatorAtom,
   routeViewAtom,
+  selectedDistrictFilterAtom,
 } from '~/src/stores/app-store';
 import SortDropdown from '~/src/components/common/SortDropdown';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
@@ -25,6 +26,7 @@ import RouteListSkeletonGrid from '~/src/components/routes/RouteListSkeletonGrid
 import RouteList from '~/src/components/routes/RouteList';
 import PurposeSelectionOverlay from './PurposeSelectionOverlay';
 import PurposeDropdown from '~/src/components/common/PurposeDropdown';
+import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
 type SerializablePlace = Omit<Place, 'createdAt' | 'updatedAt'> & {
   createdAt: string;
@@ -98,6 +100,7 @@ export default function DistrictClient({
   const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
   const { data: session, status: sessionStatus } = useSession();
   const contentCreator = useAtomValue(contentCreatorAtom);
+  const selectedDistrictFilter = useAtomValue(selectedDistrictFilterAtom);
 
   const initialPurposeFromUrl = searchParams.get('purpose') as
     | RoutePurpose
@@ -164,10 +167,16 @@ export default function DistrictClient({
         ? session.user.id
         : undefined;
 
+  const effectiveDistrictId = selectedDistrictFilter === 'all' ? districtId : selectedDistrictFilter;
+  const effectiveDistrictName =
+    selectedDistrictFilter === 'all'
+      ? districtInfo?.name || '전체'
+      : SEOUL_DISTRICTS.find((d) => d.id === selectedDistrictFilter)?.name || '전체';
+
   const { data: allPlaceLocations = [] } = useQuery<PlaceLocation[], Error>({
-    queryKey: ['placeLocations', districtInfo?.name, targetUserId],
-    queryFn: () => fetchAllPlaceLocations(districtInfo?.name, targetUserId),
-    enabled: !!districtInfo?.name && routeView === 'districts',
+    queryKey: ['placeLocations', effectiveDistrictName, targetUserId],
+    queryFn: () => fetchAllPlaceLocations(effectiveDistrictName, targetUserId),
+    enabled: !!effectiveDistrictName && routeView === 'districts',
   });
 
   const handleCategoryChange = useCallback(
@@ -217,7 +226,7 @@ export default function DistrictClient({
   const { data: placesData, isLoading: isLoadingPlaces } = useQuery({
     queryKey: [
       'places',
-      districtInfo?.name,
+      effectiveDistrictName,
       currentSort,
       currentCategory,
       currentPage,
@@ -225,7 +234,7 @@ export default function DistrictClient({
     ],
     queryFn: async () => {
       const params = new URLSearchParams({
-        districtName: districtInfo?.name || '전체',
+        districtName: effectiveDistrictName,
         sort: currentSort,
         page: currentPage.toString(),
       });
@@ -256,7 +265,7 @@ export default function DistrictClient({
   const { data: routesData, isLoading: isLoadingRoutes } = useQuery({
     queryKey: [
       'districtRoutes',
-      districtId,
+      effectiveDistrictId,
       currentSort,
       currentPage,
       targetUserId,
@@ -269,8 +278,8 @@ export default function DistrictClient({
         sort: currentSort,
       });
 
-      if (districtId && districtId !== 'all') {
-        params.set('districtId', districtId);
+      if (effectiveDistrictId && effectiveDistrictId !== 'all') {
+        params.set('districtId', effectiveDistrictId);
       }
       if (currentPurpose) {
         params.set('purpose', currentPurpose);
@@ -330,7 +339,7 @@ export default function DistrictClient({
           />
         ) : (
           <FeaturedRouteCarousel
-            districtId={districtId}
+            districtId={effectiveDistrictId}
             creatorId={targetUserId}
             purpose={currentPurpose}
           />
@@ -341,8 +350,8 @@ export default function DistrictClient({
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">
             {routeView === 'districts'
-              ? `${districtInfo?.name || districtId} ${creatorName} 맛집 정보`
-              : `${districtInfo?.name || districtId} ${creatorName} 루트 정보`}
+              ? `${effectiveDistrictName} ${creatorName} 맛집 정보`
+              : `${effectiveDistrictName} ${creatorName} 루트 정보`}
           </h2>
         </div>
 
@@ -409,7 +418,7 @@ export default function DistrictClient({
             ) : (
               <PlaceList
                 places={placesData?.places || []}
-                districtName={districtInfo?.name || '전체'}
+                districtName={effectiveDistrictName}
                 categoryName={
                   TABS.find((tab) => tab.value === currentCategory)?.label ||
                   '전체'
@@ -446,7 +455,7 @@ export default function DistrictClient({
             ) : (
               <RouteList
                 routes={routesData?.routes || []}
-                districtName={districtInfo?.name || '전체'}
+                districtName={effectiveDistrictName}
                 totalPages={routesData?.totalPages || 1}
                 currentPage={currentPage}
                 onPageChange={handlePageChange}

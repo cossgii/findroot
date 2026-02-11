@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { useAtomValue } from 'jotai';
-import { contentCreatorAtom } from '~/src/stores/app-store';
+import { useAtomValue, useAtom } from 'jotai';
+import { contentCreatorAtom, selectedDistrictFilterAtom } from '~/src/stores/app-store';
 import { cn } from '~/src/utils/class-name';
 import DistrictDropdown from '~/src/components/navigation/DistrictSelectDropdown';
 import AuthHeaderControls from '~/src/components/auth/AuthHeaderControls';
@@ -14,29 +14,39 @@ import { useSession } from 'next-auth/react';
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const contentCreator = useAtomValue(contentCreatorAtom);
+  const [selectedDistrictFilter, setSelectedDistrictFilter] = useAtom(selectedDistrictFilterAtom);
 
   const pathSegments = pathname.split('/');
-  const districtId =
-    pathSegments[1] === 'districts' ? pathSegments[2] || 'all' : 'all';
+  const currentPathIsDistrictPage = pathSegments[1] === 'districts';
+
   const handleDistrictChange = (newDistrictId: string) => {
-    if (newDistrictId === 'all') {
-      router.push('/districts');
-    } else {
-      router.push(`/districts/${newDistrictId}`);
+    setSelectedDistrictFilter(newDistrictId);
+
+    if (currentPathIsDistrictPage) {
+      const newPath = `/districts/${newDistrictId}`;
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      router.push(`${newPath}?${newSearchParams.toString()}`);
+    } else if (pathname === '/') {
+      if (newDistrictId === 'all') {
+        router.push('/districts');
+      } else {
+        router.push(`/districts/${newDistrictId}`);
+      }
     }
   };
 
   const hideDistrictDropdown = [
-    '/',
     '/login',
     '/signup',
     '/mypage',
     '/forgot-password',
     '/reset-password',
-  ].includes(pathname);
+    '/routes/[routeId]',
+  ].some(path => pathname.startsWith(path.replace(/\[.*?\]/, '')));
   const showDistrictDropdown = !hideDistrictDropdown;
 
   const creatorName =
@@ -45,6 +55,11 @@ export default function Header() {
       : contentCreator.type === 'me'
         ? '내 콘텐츠'
         : '추천';
+
+  let dropdownValue = selectedDistrictFilter;
+  if (currentPathIsDistrictPage) {
+    dropdownValue = pathSegments[2] || 'all';
+  }
 
   return (
     <>
@@ -72,7 +87,7 @@ export default function Header() {
         <nav className="flex items-center space-x-4">
           {showDistrictDropdown && (
             <DistrictDropdown
-              value={districtId}
+              value={dropdownValue}
               onChange={handleDistrictChange}
               triggerClassName="w-[100px] min-w-0"
               maxVisibleItems={5}

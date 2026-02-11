@@ -41,8 +41,6 @@ export interface RestaurantDetailModalProps {
   restaurantId: string;
 }
 
-
-
 export interface InfoMessageModalProps {
   title: string;
   message: string;
@@ -92,3 +90,5 @@ export const contentCreatorAtom = atom<ContentCreator>({ type: 'recommended' });
 export type RouteView = 'districts' | 'routes';
 
 export const routeViewAtom = atom<RouteView>('districts');
+
+export const selectedDistrictFilterAtom = atom<string>('all');

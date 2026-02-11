@@ -16,6 +16,8 @@ import CreatedContentList from '~/src/components/mypage/content/CreatedContentLi
 import Pagination from '~/src/components/common/Pagination';
 import { type MyPageSubTab } from '~/src/components/mypage/MyPageTabs';
 import { cn } from '~/src/utils/class-name';
+import { useAtomValue } from 'jotai';
+import { selectedDistrictFilterAtom } from '~/src/stores/app-store';
 
 interface UserProfileClientProps {
   profileUser: User;
@@ -41,6 +43,7 @@ export default function UserProfileClient({
   initialIsFollowing,
 }: UserProfileClientProps) {
   const [activeTab, setActiveTab] = useState<MyPageSubTab>('places');
+  const selectedDistrictFilter = useAtomValue(selectedDistrictFilterAtom);
 
   const {
     data: placesData,
@@ -48,8 +51,9 @@ export default function UserProfileClient({
     setPage: setPlacesPage,
     isLoading: isLoadingPlaces,
   } = usePaginatedQuery<Restaurant>({
-    queryKey: ['user', profileUser.id, 'places'],
+    queryKey: ['user', profileUser.id, 'places', selectedDistrictFilter],
     apiEndpoint: `/api/users/${profileUser.id}/places`,
+    queryParams: { districtId: selectedDistrictFilter },
     initialData: {
       data: initialPlaces,
       totalPages: 1, // Placeholder
@@ -63,8 +67,9 @@ export default function UserProfileClient({
     setPage: setRoutesPage,
     isLoading: isLoadingRoutes,
   } = usePaginatedQuery<RouteWithLikeData>({
-    queryKey: ['user', profileUser.id, 'routes'],
+    queryKey: ['user', profileUser.id, 'routes', selectedDistrictFilter],
     apiEndpoint: `/api/users/${profileUser.id}/routes`,
+    queryParams: { districtId: selectedDistrictFilter },
     initialData: {
       data: initialRoutes,
       totalPages: 1, // Placeholder
