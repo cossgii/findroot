@@ -4,11 +4,15 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useAtomValue, useAtom } from 'jotai';
-import { contentCreatorAtom, selectedDistrictFilterAtom } from '~/src/stores/app-store';
+import {
+  contentCreatorAtom,
+  selectedDistrictFilterAtom,
+} from '~/src/stores/app-store';
 import { cn } from '~/src/utils/class-name';
 import DistrictDropdown from '~/src/components/navigation/DistrictSelectDropdown';
 import AuthHeaderControls from '~/src/components/auth/AuthHeaderControls';
 import FollowerSelectionPanel from './FollowerSelectionPanel';
+import CreatorSelectorButton from './CreatorSelectorButton';
 import { useSession } from 'next-auth/react';
 
 export default function Header() {
@@ -18,10 +22,13 @@ export default function Header() {
   const { data: session } = useSession();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const contentCreator = useAtomValue(contentCreatorAtom);
-  const [selectedDistrictFilter, setSelectedDistrictFilter] = useAtom(selectedDistrictFilterAtom);
+  const [selectedDistrictFilter, setSelectedDistrictFilter] = useAtom(
+    selectedDistrictFilterAtom,
+  );
 
   const pathSegments = pathname.split('/');
   const currentPathIsDistrictPage = pathSegments[1] === 'districts';
+  const isUserPage = pathname.startsWith('/users/');
 
   const handleDistrictChange = (newDistrictId: string) => {
     setSelectedDistrictFilter(newDistrictId);
@@ -39,22 +46,8 @@ export default function Header() {
     }
   };
 
-  const hideDistrictDropdown = [
-    '/login',
-    '/signup',
-    '/mypage',
-    '/forgot-password',
-    '/reset-password',
-    '/routes/[routeId]',
-  ].some(path => pathname.startsWith(path.replace(/\[.*?\]/, '')));
-  const showDistrictDropdown = !hideDistrictDropdown;
-
-  const creatorName =
-    contentCreator.type === 'user'
-      ? contentCreator.userName
-      : contentCreator.type === 'me'
-        ? '내 콘텐츠'
-        : '추천';
+  const showDistrictDropdown =
+    pathname.startsWith('/districts/') || pathname.startsWith('/users/');
 
   let dropdownValue = selectedDistrictFilter;
   if (currentPathIsDistrictPage) {
@@ -76,12 +69,11 @@ export default function Header() {
             <h1 className="text-xl font-bold">FindRoot</h1>
           </Link>
           {session && showDistrictDropdown && (
-            <button
+            <CreatorSelectorButton
+              contentCreator={contentCreator}
               onClick={() => setIsPanelOpen(true)}
-              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
-            >
-              보기: <span className="font-semibold">{creatorName}</span>
-            </button>
+              isUserPage={isUserPage}
+            />
           )}
         </div>
         <nav className="flex items-center space-x-4">
@@ -100,6 +92,7 @@ export default function Header() {
         <FollowerSelectionPanel
           isOpen={isPanelOpen}
           onClose={() => setIsPanelOpen(false)}
+          isUserPage={isUserPage}
         />
       )}
     </>

@@ -1,8 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import { getLikeInfo } from '~/src/services/like/likeService';
 import { z } from 'zod';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 
 const likeInfoQuerySchema = z
   .object({
@@ -16,23 +14,13 @@ const likeInfoQuerySchema = z
     message: 'Only one of placeId or routeId can be provided',
   });
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
+export const GET = apiHandler({
+  querySchema: likeInfoQuerySchema,
+  handler: async ({ query, session }) => {
+    const { placeId, routeId } = query;
+    const userId = session?.user?.id;
 
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
-
-  try {
-    const { placeId, routeId } = likeInfoQuerySchema.parse(
-      Object.fromEntries(searchParams),
-    );
     const { count, liked } = await getLikeInfo({ placeId, routeId }, userId);
-    return NextResponse.json({ count, liked }, { status: 200 });
-  } catch (error) {
-    console.error('Error fetching like info:', error);
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+    return apiSuccess({ count, liked });
+  },
+});

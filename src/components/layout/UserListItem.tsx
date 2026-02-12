@@ -29,7 +29,7 @@ export default function UserListItem({
   onProfileLinkClick,
 }: UserListItemProps) {
   return (
-    <li
+    <div
       onClick={onClick}
       className={cn(
         'p-2 rounded-md cursor-pointer flex items-center justify-between gap-3 list-item-hover-effect',
@@ -53,6 +53,6 @@ export default function UserListItem({
       >
         <span className="text-gray-600 font-bold text-lg leading-none">→</span>
       </Link>
-    </li>
+    </div>
   );
 }

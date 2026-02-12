@@ -2,27 +2,27 @@ import { db } from '~/lib/db';
 import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 import { z } from 'zod';
 
-const getFollowingQuerySchema = z.object({
+const getFollowersQuerySchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(10),
 });
 
 export const GET = apiHandler({
   auth: true,
-  querySchema: getFollowingQuerySchema,
+  querySchema: getFollowersQuerySchema,
   handler: async ({ session, query }) => {
     const { page, limit } = query;
     const userId = session!.user.id;
 
     const skip = (page - 1) * limit;
 
-    const [followingRelations, totalCount] = await db.$transaction([
+    const [followerRelations, totalCount] = await db.$transaction([
       db.follow.findMany({
         where: {
-          followerId: userId,
+          followingId: userId,
         },
         include: {
-          following: {
+          follower: {
             select: {
               id: true,
               name: true,
@@ -31,7 +31,7 @@ export const GET = apiHandler({
           },
         },
         orderBy: {
-          following: {
+          follower: {
             name: 'asc',
           },
         },
@@ -40,16 +40,16 @@ export const GET = apiHandler({
       }),
       db.follow.count({
         where: {
-          followerId: userId,
+          followingId: userId,
         },
       }),
     ]);
 
-    const followingUsers = followingRelations.map((f) => f.following);
+    const followers = followerRelations.map((f) => f.follower);
     const totalPages = Math.ceil(totalCount / limit);
 
     return apiSuccess({
-      data: followingUsers,
+      data: followers,
       totalCount,
       totalPages,
       currentPage: page,

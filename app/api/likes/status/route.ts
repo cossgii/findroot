@@ -1,8 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import { getLikeStatus } from '~/src/services/like/likeService';
 import { z } from 'zod';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 
 const likeStatusQuerySchema = z
   .object({
@@ -16,26 +14,17 @@ const likeStatusQuerySchema = z
     message: 'Only one of placeId or routeId can be provided',
   });
 
-export async function GET(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ liked: false }, { status: 200 });
-  }
+export const GET = apiHandler({
+  querySchema: likeStatusQuerySchema,
+  handler: async ({ query, session }) => {
+    const { placeId, routeId } = query;
+    const userId = session?.user?.id;
 
-  const { searchParams } = new URL(request.url);
-  const userId = session.user.id;
+    if (!userId) {
+      return apiSuccess({ liked: false });
+    }
 
-  try {
-    const { placeId, routeId } = likeStatusQuerySchema.parse(
-      Object.fromEntries(searchParams),
-    );
     const liked = await getLikeStatus(userId, { placeId, routeId });
-    return NextResponse.json({ liked }, { status: 200 });
-  } catch (error) {
-    console.error('Error fetching like status:', error);
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+    return apiSuccess({ liked });
+  },
+});

@@ -1,6 +1,3 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import {
   deletePlace,
   getPlaceById,
@@ -8,140 +5,51 @@ import {
 } from '~/src/services/place/placeService';
 import { z } from 'zod';
 import { PlaceCategory } from '@prisma/client';
+import { apiHandler, apiSuccess, apiError } from '~/src/lib/api-handler';
 
-const PlaceRouteParamsSchema = z.object({
-  placeId: z.string({ message: '유효한 장소 ID가 필요합니다.' }),
+const paramsSchema = z.object({
+  placeId: z.string(),
 });
 
-interface PlaceRouteParams {
-  placeId: string;
-}
-const updatePlaceSchema = z.object({
+const updatePlaceBodySchema = z.object({
   name: z.string().min(1, { message: '이름을 입력해주세요.' }).optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   address: z.string().optional(),
   district: z.string().optional(),
   description: z.string().optional(),
-  link: z
-    .string()
-    .optional()
-    .nullable()
-    .transform((e) => (e === '' ? null : e)),
+  link: z.string().url().optional().nullable(),
   category: z.nativeEnum(PlaceCategory).optional(),
 });
 
-export async function GET(
-  request: Request,
-  context: { params: Promise<PlaceRouteParams> },
-) {
-  try {
-    const session = await getServerSession(authOptions);
+export const GET = apiHandler({
+  handler: async ({ params, session }) => {
+    const { placeId } = paramsSchema.parse(params);
     const userId = session?.user?.id;
-
-    const { placeId } = PlaceRouteParamsSchema.parse(await context.params);
     const place = await getPlaceById(placeId, userId);
 
     if (!place) {
-      return NextResponse.json({ error: 'Place not found' }, { status: 404 });
+      return apiError('Place not found', 404);
     }
+    return apiSuccess(place);
+  },
+});
 
-    return NextResponse.json(place);
-  } catch (error) {
-    console.error('Error fetching place by ID:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Invalid place ID', errors: error.issues },
-        { status: 400 },
-      );
-    }
-    return NextResponse.json(
-      { error: 'An unexpected error occurred.' },
-      { status: 500 },
-    );
-  }
-}
+export const DELETE = apiHandler({
+  auth: true,
+  handler: async ({ params, session }) => {
+    const { placeId } = paramsSchema.parse(params);
+    await deletePlace(placeId, session!.user.id);
+    return apiSuccess({ message: 'Place deleted successfully' });
+  },
+});
 
-export async function DELETE(
-  request: Request,
-  context: { params: Promise<PlaceRouteParams> },
-) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    const { placeId } = PlaceRouteParamsSchema.parse(await context.params);
-    await deletePlace(placeId, session.user.id);
-    return NextResponse.json(
-      { message: 'Place deleted successfully' },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.error('Error deleting place:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Invalid place ID', errors: error.issues },
-        { status: 400 },
-      );
-    } else if (error instanceof Error) {
-      if (error.message === 'Place not found.') {
-        return NextResponse.json({ message: error.message }, { status: 404 });
-      } else if (error.message === 'Unauthorized to delete this place.') {
-        return NextResponse.json({ message: error.message }, { status: 403 });
-      }
-    }
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
-
-export async function PUT(
-  request: Request,
-  context: { params: Promise<PlaceRouteParams> },
-) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    const { placeId } = PlaceRouteParamsSchema.parse(await context.params);
-    const body = await request.json();
-    const validatedData = updatePlaceSchema.parse(body);
-
-    const updatedPlace = await updatePlace(
-      placeId,
-      session.user.id,
-      validatedData,
-    );
-    return NextResponse.json(updatedPlace, { status: 200 });
-  } catch (error) {
-    console.error('Error updating place:', error);
-    if (error instanceof z.ZodError) {
-      const isParamError = error.issues.some(
-        (issue) => issue.path[0] === 'placeId',
-      );
-      return NextResponse.json(
-        {
-          message: isParamError ? 'Invalid place ID' : 'Invalid request body',
-          errors: error.issues,
-        },
-        { status: 400 },
-      );
-    } else if (error instanceof Error) {
-      if (error.message === 'Place not found.') {
-        return NextResponse.json({ message: error.message }, { status: 404 });
-      } else if (error.message === 'Unauthorized to update this place.') {
-        return NextResponse.json({ message: error.message }, { status: 403 });
-      }
-    }
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+export const PUT = apiHandler({
+  auth: true,
+  bodySchema: updatePlaceBodySchema,
+  handler: async ({ params, session, body }) => {
+    const { placeId } = paramsSchema.parse(params);
+    const updatedPlace = await updatePlace(placeId, session!.user.id, body);
+    return apiSuccess(updatedPlace);
+  },
+});

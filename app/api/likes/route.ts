@@ -1,8 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import { addLike, removeLike } from '~/src/services/like/likeService';
 import { z } from 'zod';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 
 const likeSchema = z
   .object({
@@ -16,55 +14,20 @@ const likeSchema = z
     message: 'Only one of placeId or routeId can be provided',
   });
 
-export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
+export const POST = apiHandler({
+  auth: true,
+  bodySchema: likeSchema,
+  handler: async ({ session, body }) => {
+    const like = await addLike(session!.user.id, body);
+    return apiSuccess(like, 201);
+  },
+});
 
-  try {
-    const { placeId, routeId } = likeSchema.parse(await request.json());
-    const like = await addLike(session.user.id, { placeId, routeId });
-    return NextResponse.json(like, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Validation error', errors: error.issues },
-        { status: 400 },
-      );
-    }
-    console.error('--- DETAILED LIKE API ERROR ---');
-    console.error('ERROR OBJECT:', error);
-    console.error('--- END OF DETAILED ERROR ---');
-    return NextResponse.json(
-      { message: 'Internal Server Error', errorDetail: String(error) },
-      { status: 500 },
-    );
-  }
-}
-
-export async function DELETE(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    const { placeId, routeId } = likeSchema.parse(await request.json());
-
-    await removeLike(session.user.id, { placeId, routeId });
-    return NextResponse.json({ message: 'Like removed' }, { status: 200 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Validation error', errors: error.issues },
-        { status: 400 },
-      );
-    }
-    console.error('Error removing like:', error);
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+export const DELETE = apiHandler({
+  auth: true,
+  bodySchema: likeSchema,
+  handler: async ({ session, body }) => {
+    await removeLike(session!.user.id, body);
+    return apiSuccess({ message: 'Like removed' });
+  },
+});

@@ -31,10 +31,16 @@ export default function FollowButton({
   const setModal = useSetAtom(modalAtom);
   const router = useRouter();
 
-  const { data: isFollowing, isLoading: isStatusLoading } = useQuery<boolean, Error>({
+  const { data: isFollowing, isLoading: isStatusLoading } = useQuery<
+    boolean,
+    Error
+  >({
     queryKey: ['followStatus', session?.user?.id, targetUserId],
     queryFn: () => fetchFollowStatus(targetUserId),
-    enabled: sessionStatus === 'authenticated' && !!session?.user?.id && session.user.id !== targetUserId,
+    enabled:
+      sessionStatus === 'authenticated' &&
+      !!session?.user?.id &&
+      session.user.id !== targetUserId,
     initialData: initialIsFollowing,
   });
 
@@ -51,20 +57,35 @@ export default function FollowButton({
       return res.json();
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ['followStatus', session?.user?.id, targetUserId] });
-      const previousStatus = queryClient.getQueryData(['followStatus', session?.user?.id, targetUserId]);
-      queryClient.setQueryData(['followStatus', session?.user?.id, targetUserId], true);
+      await queryClient.cancelQueries({
+        queryKey: ['followStatus', session?.user?.id, targetUserId],
+      });
+      const previousStatus = queryClient.getQueryData([
+        'followStatus',
+        session?.user?.id,
+        targetUserId,
+      ]);
+      queryClient.setQueryData(
+        ['followStatus', session?.user?.id, targetUserId],
+        true,
+      );
       return { previousStatus };
     },
     onError: (err: Error, variables, context) => {
       if (context?.previousStatus !== undefined) {
-        queryClient.setQueryData(['followStatus', session?.user?.id, targetUserId], context.previousStatus);
+        queryClient.setQueryData(
+          ['followStatus', session?.user?.id, targetUserId],
+          context.previousStatus,
+        );
       }
       alert(`팔로우 실패: ${err.message}`);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['followStatus', session?.user?.id, targetUserId] });
+      queryClient.invalidateQueries({
+        queryKey: ['followStatus', session?.user?.id, targetUserId],
+      });
       queryClient.invalidateQueries({ queryKey: ['following'] });
+      queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id] });
     },
   });
 
@@ -81,20 +102,35 @@ export default function FollowButton({
       return res.json();
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ['followStatus', session?.user?.id, targetUserId] });
-      const previousStatus = queryClient.getQueryData(['followStatus', session?.user?.id, targetUserId]);
-      queryClient.setQueryData(['followStatus', session?.user?.id, targetUserId], false);
+      await queryClient.cancelQueries({
+        queryKey: ['followStatus', session?.user?.id, targetUserId],
+      });
+      const previousStatus = queryClient.getQueryData([
+        'followStatus',
+        session?.user?.id,
+        targetUserId,
+      ]);
+      queryClient.setQueryData(
+        ['followStatus', session?.user?.id, targetUserId],
+        false,
+      );
       return { previousStatus };
     },
     onError: (err: Error, variables, context) => {
       if (context?.previousStatus !== undefined) {
-        queryClient.setQueryData(['followStatus', session?.user?.id, targetUserId], context.previousStatus);
+        queryClient.setQueryData(
+          ['followStatus', session?.user?.id, targetUserId],
+          context.previousStatus,
+        );
       }
       alert(`언팔로우 실패: ${err.message}`);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['followStatus', session?.user?.id, targetUserId] });
+      queryClient.invalidateQueries({
+        queryKey: ['followStatus', session?.user?.id, targetUserId],
+      });
       queryClient.invalidateQueries({ queryKey: ['following'] });
+      queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id] });
     },
   });
 
@@ -119,7 +155,8 @@ export default function FollowButton({
     }
   };
 
-  const isLoading = isStatusLoading || followMutation.isPending || unfollowMutation.isPending;
+  const isLoading =
+    isStatusLoading || followMutation.isPending || unfollowMutation.isPending;
 
   if (session?.user?.id === targetUserId) {
     return null; // Don't show follow button on own profile

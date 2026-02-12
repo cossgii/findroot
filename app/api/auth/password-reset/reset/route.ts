@@ -1,8 +1,7 @@
-
-import { NextResponse } from 'next/server';
 import { db } from '~/lib/db';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import { apiHandler, apiError, apiSuccess } from '~/src/lib/api-handler';
 
 const passwordRegex =
   /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$&*?!%])[A-Za-z\d!@$%&*?]{8,15}$/;
@@ -18,44 +17,33 @@ const resetPasswordSchema = z.object({
     }),
 });
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { selector, validator, password } = resetPasswordSchema.parse(body);
+export const POST = apiHandler({
+  bodySchema: resetPasswordSchema,
+  handler: async ({ body }) => {
+    const { selector, validator, password } = body;
 
-    // Find the token using the selector
     const resetToken = await db.passwordResetToken.findUnique({
-      where: {
-        selector: selector,
-      },
+      where: { selector },
     });
 
     if (!resetToken || resetToken.expires < new Date()) {
-      return NextResponse.json(
-        { message: '유효하지 않거나 만료된 토큰입니다.' },
-        { status: 400 },
-      );
+      return apiError('유효하지 않거나 만료된 토큰입니다.', 400);
     }
 
-    // Compare the provided validator with the stored hashedValidator
     const isMatch = await bcrypt.compare(validator, resetToken.hashedValidator);
-
     if (!isMatch) {
-      return NextResponse.json(
-        { message: '유효하지 않거나 만료된 토큰입니다.' },
-        { status: 400 },
-      );
+      return apiError('유효하지 않거나 만료된 토큰입니다.', 400);
     }
 
-    const user = await db.user.findFirst({ where: { email: resetToken.email } });
+    const user = await db.user.findFirst({
+      where: { email: resetToken.email },
+    });
     if (!user) {
-      // This should theoretically not happen if a token exists
-      return NextResponse.json({ message: '사용자를 찾을 수 없습니다.' }, { status: 404 });
+      return apiError('사용자를 찾을 수 없습니다.', 404);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Update user's password and delete all reset tokens for this user
     await db.$transaction([
       db.user.update({
         where: { id: user.id },
@@ -66,19 +54,6 @@ export async function POST(request: Request) {
       }),
     ]);
 
-    return NextResponse.json({ message: '비밀번호가 성공적으로 재설정되었습니다.' });
-
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Validation error', errors: error.issues },
-        { status: 400 },
-      );
-    }
-    console.error('Password reset error:', error);
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 },
-    );
-  }
-}
+    return apiSuccess({ message: '비밀번호가 성공적으로 재설정되었습니다.' });
+  },
+});

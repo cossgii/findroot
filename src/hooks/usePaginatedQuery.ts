@@ -41,7 +41,7 @@ const fetchPaginatedData = async <T>(
   const result = await response.json();
 
   return {
-    data: result.places || result.routes || [],
+    data: result.data || result.places || result.routes || [],
     totalPages: result.totalPages,
     currentPage: result.currentPage,
     totalCount: result.totalCount,

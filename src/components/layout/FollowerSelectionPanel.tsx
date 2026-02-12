@@ -10,8 +10,9 @@ import Input from '~/src/components/common/Input';
 import { useUserSearch } from '~/src/hooks/useUserSearch';
 import { useSession } from 'next-auth/react';
 import UserListItemSkeleton from './UserListItemSkeleton';
-import { User as UserIcon } from 'lucide-react';
+import { User as UserIcon, Star } from 'lucide-react';
 import AnimatedUserList from './AnimatedUserList';
+import { useRouter } from 'next/navigation';
 
 interface FollowingUser {
   id: string;
@@ -24,19 +25,23 @@ const fetchFollowing = async (): Promise<FollowingUser[]> => {
   if (!res.ok) {
     throw new Error('Failed to fetch following list');
   }
-  return res.json();
+  const result = await res.json();
+  return result.data;
 };
 
 interface FollowerSelectionPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  isUserPage?: boolean;
 }
 
 export default function FollowerSelectionPanel({
   isOpen,
   onClose,
+  isUserPage = false,
 }: FollowerSelectionPanelProps) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const { data: searchResults = [], isLoading: isSearching } =
     useUserSearch(searchTerm);
@@ -59,18 +64,23 @@ export default function FollowerSelectionPanel({
 
   const handleSelectCreator = (
     type: 'recommended' | 'me' | 'user',
-    user?: { id: string; name: string | null },
+    user?: FollowingUser,
   ) => {
-    if (type === 'recommended') {
-      setContentCreator({ type: 'recommended' });
-    } else if (type === 'me') {
-      setContentCreator({ type: 'me' });
-    } else if (type === 'user' && user) {
-      setContentCreator({
-        type: 'user',
-        userId: user.id,
-        userName: user.name || 'Unknown',
-      });
+    if (isUserPage && type === 'user' && user) {
+      router.push(`/users/${user.id}`);
+    } else {
+      if (type === 'recommended') {
+        setContentCreator({ type: 'recommended' });
+      } else if (type === 'me') {
+        setContentCreator({ type: 'me' });
+      } else if (type === 'user' && user) {
+        setContentCreator({
+          type: 'user',
+          userId: user.id,
+          userName: user.name || 'Unknown',
+          userImage: user.image,
+        });
+      }
     }
     onClose();
     setSearchTerm('');
@@ -89,70 +99,73 @@ export default function FollowerSelectionPanel({
               className="fixed top-0 left-0 h-full w-72 bg-white shadow-lg z-50 overflow-y-auto"
             >
               <div className="p-4">
-                <h2 className="text-lg font-bold mb-4">콘텐츠 보기</h2>
-                <ul className="space-y-2">
-                  <li
-                    onClick={() => handleSelectCreator('recommended')}
-                    className={cn(
-                      'p-2 rounded-md cursor-pointer flex items-center gap-3 transition-colors',
-                      contentCreator.type === 'recommended'
-                        ? 'bg-primary-100'
-                        : 'hover:bg-gray-100',
-                    )}
-                  >
-                    <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm">
-                      추천
-                    </div>
-                    <span className="font-semibold">추천 콘텐츠</span>
-                  </li>
-                  {session?.user?.id && (
+                {!isUserPage && (
+                  <ul className="flex justify-center gap-2 mb-4">
                     <li
-                      onClick={() => handleSelectCreator('me')}
+                      onClick={() => handleSelectCreator('recommended')}
                       className={cn(
                         'p-2 rounded-md cursor-pointer flex items-center gap-3 transition-colors',
-                        contentCreator.type === 'me'
+                        contentCreator.type === 'recommended'
                           ? 'bg-primary-100'
                           : 'hover:bg-gray-100',
                       )}
                     >
-                      <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
-                        <UserIcon size={18} />
+                      <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm">
+                        <Star size={18} />
                       </div>
-                      <span className="font-semibold">내 콘텐츠</span>
+                      <span className="font-semibold">추천</span>
                     </li>
-                  )}
+                    {session?.user?.id && (
+                      <li
+                        onClick={() => handleSelectCreator('me')}
+                        className={cn(
+                          'p-2 rounded-md cursor-pointer flex items-center gap-3 transition-colors',
+                          contentCreator.type === 'me'
+                            ? 'bg-primary-100'
+                            : 'hover:bg-gray-100',
+                        )}
+                      >
+                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
+                          <UserIcon size={18} />
+                        </div>
+                        <span className="font-semibold">my</span>
+                      </li>
+                    )}
+                  </ul>
+                )}
 
-                  <li className="py-2">
-                    <Input
-                      placeholder="사용자 검색"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full"
-                    />
-                  </li>
-                  {searchTerm && (
-                    <div className="space-y-1 max-h-40 overflow-y-auto border-t pt-2">
-                      {isSearching ? (
-                        Array.from({ length: 3 }).map((_, i) => (
-                          <UserListItemSkeleton key={i} />
-                        ))
-                      ) : searchResults.length > 0 ? (
-                        <AnimatedUserList
-                          users={searchResults}
-                          contentCreator={contentCreator}
-                          onSelectCreator={handleSelectCreator}
-                          onClose={onClose}
-                        />
-                      ) : (
-                        <p className="text-sm text-gray-500">
-                          검색 결과가 없습니다.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  <h3 className="text-md font-bold mt-4 mb-2 border-t pt-2">
-                    팔로잉 사용자
-                  </h3>
+                <h3 className="text-md font-bold mt-4 mb-2 border-t pt-2">
+                  팔로잉 사용자
+                </h3>
+                <div className="py-2">
+                  <Input
+                    placeholder="사용자 검색"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                {searchTerm && (
+                  <div className="space-y-1 max-h-40 overflow-y-auto border-t pt-2">
+                    {isSearching ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <UserListItemSkeleton key={i} />
+                      ))
+                    ) : searchResults.length > 0 ? (
+                      <AnimatedUserList
+                        users={searchResults}
+                        contentCreator={contentCreator}
+                        onSelectCreator={handleSelectCreator}
+                        onClose={onClose}
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        검색 결과가 없습니다.
+                      </p>
+                    )}
+                  </div>
+                )}
+                <ul className="space-y-2">
                   {isLoadingFollowing ? (
                     Array.from({ length: 3 }).map((_, i) => (
                       <UserListItemSkeleton key={i} />

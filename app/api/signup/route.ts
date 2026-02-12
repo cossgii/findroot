@@ -1,90 +1,58 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { db } from '~/lib/db';
 import bcrypt from 'bcryptjs';
-import { z } from 'zod';
 import { signupSchema } from '~/src/schemas/auth-schema';
 import { MAIN_ACCOUNT_ID } from '~/config';
+import { apiHandler, apiError, apiSuccess } from '~/src/lib/api-handler';
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    let email, password, name, loginId;
-
-    try {
-      ({ email, password, name, loginId } = signupSchema.parse(body));
-    } catch (validationError) {
-      if (validationError instanceof z.ZodError) {
-        return NextResponse.json(
-          { message: 'Validation error', errors: validationError.issues },
-          { status: 400 },
-        );
-      }
-      throw validationError;
-    }
+export const POST = apiHandler({
+  bodySchema: signupSchema,
+  handler: async ({ body }) => {
+    const { email, password, name, loginId } = body;
 
     const existingUserByEmail = await db.user.findFirst({ where: { email } });
     if (existingUserByEmail) {
-      return NextResponse.json(
-        { message: 'User with this email already exists' },
-        { status: 409 },
-      );
+      return apiError('User with this email already exists', 409);
     }
 
     const existingUserByLoginId = await db.user.findUnique({ where: { loginId } });
     if (existingUserByLoginId) {
-      return NextResponse.json(
-        { message: 'User with this loginId already exists' },
-        { status: 409 },
-      );
+      return apiError('User with this loginId already exists', 409);
     }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await db.$transaction(
-      async (prisma: Prisma.TransactionClient) => {
-        const createdUser = await prisma.user.create({
+    const newUser = await db.$transaction(async (prisma: Prisma.TransactionClient) => {
+      const createdUser = await prisma.user.create({
+        data: {
+          email,
+          name,
+          loginId,
+          password: hashedPassword,
+        },
+      });
+
+      const mainAccountExists = await prisma.user.findUnique({
+        where: { id: MAIN_ACCOUNT_ID },
+      });
+
+      if (mainAccountExists && createdUser.id !== MAIN_ACCOUNT_ID) {
+        await prisma.follow.create({
           data: {
-            email,
-            name,
-            loginId,
-            password: hashedPassword,
+            followerId: createdUser.id,
+            followingId: MAIN_ACCOUNT_ID,
           },
         });
+      }
+      return createdUser;
+    });
 
-        const mainAccountExists = await prisma.user.findUnique({
-          where: { id: MAIN_ACCOUNT_ID },
-        });
-
-        if (mainAccountExists && createdUser.id !== MAIN_ACCOUNT_ID) {
-          await prisma.follow.create({
-            data: {
-              followerId: createdUser.id,
-              followingId: MAIN_ACCOUNT_ID,
-            },
-          });
-        }
-        return createdUser;
-      },
-    );
-
-    return NextResponse.json(
+    return apiSuccess(
       {
         message: 'User registered successfully',
         user: { id: newUser.id, email: newUser.email, name: newUser.name },
       },
-      { status: 201 },
+      201,
     );
-  } catch (error) {
-    console.error('Signup error:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Validation error', errors: error.issues },
-        { status: 400 },
-      );
-    }
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 },
-    );
-  }
-}
+  },
+});

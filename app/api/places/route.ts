@@ -1,79 +1,42 @@
-import { NextRequest, NextResponse } from 'next/server';
 import {
   getPlacesByDistrict,
   createPlace,
 } from '~/src/services/place/placeService';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '~/src/services/auth/authOptions';
 import { PlaceCategory } from '@prisma/client';
 import { createPlaceSchema } from '~/src/schemas/place-schema';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
+import { z } from 'zod';
 
-// 문자열이 PlaceCategory enum의 유효한 값인지 확인하는 타입 가드 함수
-function isPlaceCategory(value: string): value is PlaceCategory {
-  return Object.values(PlaceCategory).includes(value as PlaceCategory);
-}
+const getPlacesQuerySchema = z.object({
+  district: z.string().default('전체'),
+  sort: z.enum(['recent', 'likes']).default('recent'),
+  page: z.coerce.number().default(1),
+  category: z.nativeEnum(PlaceCategory).optional(),
+});
 
-export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
+export const GET = apiHandler({
+  querySchema: getPlacesQuerySchema,
+  handler: async ({ query, session }) => {
+    const userId = session?.user?.id;
+    const { district, sort, page, category } = query;
 
-  const { searchParams } = new URL(request.url);
-  const district = searchParams.get('district') || '전체';
-  const sort = (searchParams.get('sort') as 'recent' | 'likes') || 'recent';
-  const page = parseInt(searchParams.get('page') || '1', 10);
-
-  const categoryParam = searchParams.get('category');
-  let category: PlaceCategory | undefined = undefined;
-
-  if (categoryParam && isPlaceCategory(categoryParam)) {
-    category = categoryParam;
-  }
-
-  try {
     const result = await getPlacesByDistrict(
       district,
       userId,
       page,
-      12,
+      12, // limit
       sort,
       category,
     );
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error('Error fetching places:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch places' },
-      { status: 500 },
-    );
-  }
-}
+    return apiSuccess(result);
+  },
+});
 
-export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
-
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const body = await request.json();
-  const validationResult = createPlaceSchema.safeParse(body);
-
-  if (!validationResult.success) {
-    return NextResponse.json(
-      { error: validationResult.error.flatten().fieldErrors },
-      { status: 400 },
-    );
-  }
-
-  try {
-    const newPlace = await createPlace(validationResult.data, userId);
-    return NextResponse.json(newPlace, { status: 201 });
-  } catch (error) {
-    console.error('Error creating place:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+export const POST = apiHandler({
+  auth: true,
+  bodySchema: createPlaceSchema,
+  handler: async ({ body, session }) => {
+    const newPlace = await createPlace(body, session!.user.id);
+    return apiSuccess(newPlace, 201);
+  },
+});

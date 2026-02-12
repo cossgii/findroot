@@ -2,7 +2,7 @@
 
 import { cn } from '~/src/utils/class-name';
 
-export type MyPageTab = 'profile' | 'content' | 'likes';
+export type MyPageTab = 'profile' | 'content' | 'likes' | 'following';
 export type MyPageSubTab = 'places' | 'routes';
 
 interface MyPageTabsProps {
@@ -14,6 +14,7 @@ const tabs: { id: MyPageTab; label: string }[] = [
   { id: 'profile', label: '프로필' },
   { id: 'content', label: '내 콘텐츠' },
   { id: 'likes', label: '좋아요' },
+  { id: 'following', label: '팔로잉/팔로워' },
 ];
 
 export default function MyPageTabs({ activeTab, setActiveTab }: MyPageTabsProps) {

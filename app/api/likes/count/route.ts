@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
 import {
   getPlaceLikesCount,
   getRouteLikesCount,
 } from '~/src/services/like/likeService';
 import { z } from 'zod';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 
 const likeCountQuerySchema = z
   .object({
@@ -17,27 +17,18 @@ const likeCountQuerySchema = z
     message: 'Only one of placeId or routeId can be provided',
   });
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
+export const GET = apiHandler({
+  querySchema: likeCountQuerySchema,
+  handler: async ({ query }) => {
+    const { placeId, routeId } = query;
+    let count = 0;
 
-  try {
-    const { placeId, routeId } = likeCountQuerySchema.parse(
-      Object.fromEntries(searchParams),
-    );
-    let count;
     if (placeId) {
       count = await getPlaceLikesCount(placeId);
     } else if (routeId) {
       count = await getRouteLikesCount(routeId);
-    } else {
-      return NextResponse.json({ count: 0 });
     }
-    return NextResponse.json({ count }, { status: 200 });
-  } catch (error) {
-    console.error('Error fetching likes count:', error);
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+
+    return apiSuccess({ count });
+  },
+});
