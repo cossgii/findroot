@@ -105,6 +105,7 @@ export const useAlternativeForm = ({
     mutationFn,
     onSuccess: () => {
       addToast({
+        id: Date.now().toString(),
         message: alternative
           ? '예비 장소가 수정되었습니다.'
           : '예비 장소가 추가되었습니다.',
@@ -116,6 +117,7 @@ export const useAlternativeForm = ({
     },
     onError: (error) => {
       addToast({
+        id: Date.now().toString(),
         message: `예비 장소 저장 실패: ${error.message}`,
         duration: 5000,
       });
@@ -125,7 +127,7 @@ export const useAlternativeForm = ({
 
   const onSubmit = (values: AlternativeFormValues) => {
     if (!session?.user?.id) {
-      addToast({ message: '로그인 후 예비 장소를 추가할 수 있습니다.' });
+      addToast({ id: Date.now().toString(), message: '로그인 후 예비 장소를 추가할 수 있습니다.' });
       return;
     }
     mutate(values);

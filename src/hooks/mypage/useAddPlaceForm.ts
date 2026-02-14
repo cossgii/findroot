@@ -58,7 +58,11 @@ export const useAddPlaceForm = ({
     mutationFn: createPlaceApi,
     onSuccess: () => {
       onClose();
-      addToast({ message: '장소가 성공적으로 등록되었습니다.', duration: 3000 });
+      addToast({
+        id: Date.now().toString(),
+        message: '장소가 성공적으로 등록되었습니다.',
+        duration: 3000,
+      });
       form.reset({});
       onPlaceAdded();
       queryClient.invalidateQueries({
@@ -68,6 +72,7 @@ export const useAddPlaceForm = ({
     },
     onError: (error) => {
       addToast({
+        id: Date.now().toString(),
         message: `장소 등록 실패: ${error.message}`,
         duration: 5000,
       });
@@ -78,6 +83,7 @@ export const useAddPlaceForm = ({
   const onSubmit = (values: AddPlaceFormValues) => {
     if (!session?.user?.id) {
       addToast({
+        id: Date.now().toString(),
         message: '로그인 후 장소를 등록할 수 있습니다.',
         duration: 5000,
       });

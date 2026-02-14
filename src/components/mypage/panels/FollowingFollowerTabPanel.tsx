@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Button from '~/src/components/common/Button';
 import { useSetAtom } from 'jotai';
 import { modalAtom } from '~/src/stores/app-store';
+import { addToastAtom, removeToastAtom } from '~/src/stores/toast-store';
 import { useRouter } from 'next/navigation';
 import { cn } from '~/src/utils/class-name';
 
@@ -29,6 +30,8 @@ export default function FollowingFollowerTabPanel() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const setModal = useSetAtom(modalAtom);
+  const addToast = useSetAtom(addToastAtom);
+  const removeToast = useSetAtom(removeToastAtom);
   const userId = session?.user?.id || '';
 
   const [activeFollowTab, setActiveFollowTab] =
@@ -41,7 +44,7 @@ export default function FollowingFollowerTabPanel() {
     isLoading: isLoadingFollowing,
   } = usePaginatedQuery<ClientUserSummary>({
     queryKey: ['user', userId, 'following'],
-    apiEndpoint: `/api/users/me/following`, // 아직 페이지네이션 지원 x
+    apiEndpoint: `/api/users/me/following`,
     enabled: !!userId && activeFollowTab === 'following',
   });
 
@@ -52,8 +55,24 @@ export default function FollowingFollowerTabPanel() {
     isLoading: isLoadingFollowers,
   } = usePaginatedQuery<ClientUserSummary>({
     queryKey: ['user', userId, 'followers'],
-    apiEndpoint: `/api/users/me/followers`, // 아직 페이지네이션 지원 x
+    apiEndpoint: `/api/users/me/followers`,
     enabled: !!userId && activeFollowTab === 'followers',
+  });
+
+  const followMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const res = await fetch(`/api/users/${targetUserId}/follow`, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to follow');
+      }
+      return res.json();
+    },
+    onError: (err: Error) => {
+      addToast({ id: Date.now().toString(), message: `팔로우 실패: ${err.message}` });
+    },
   });
 
   const unfollowMutation = useMutation({
@@ -68,14 +87,29 @@ export default function FollowingFollowerTabPanel() {
       }
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['user', userId, 'following'],
+    onSuccess: (data, targetUserId) => {
+      const toastId = Date.now().toString();
+      let actionTaken = false;
+
+      addToast({
+        id: toastId,
+        message: '언팔로우했습니다.',
+        actionLabel: '취소',
+        onAction: () => {
+          actionTaken = true;
+          followMutation.mutate(targetUserId);
+          removeToast(toastId);
+        },
+        onDismiss: () => {
+          if (!actionTaken) {
+            queryClient.invalidateQueries({
+              queryKey: ['user', userId, 'following'],
+            });
+            queryClient.invalidateQueries({ queryKey: ['following'] });
+          }
+        },
+        duration: 5000,
       });
-      queryClient.invalidateQueries({
-        queryKey: ['user', userId, 'followers'],
-      });
-      queryClient.invalidateQueries({ queryKey: ['following'] });
     },
     onError: (err: Error) => {
       setModal({
@@ -101,9 +135,7 @@ export default function FollowingFollowerTabPanel() {
       });
       return;
     }
-    if (confirm('정말로 이 사용자를 언팔로우하시겠습니까?')) {
-      unfollowMutation.mutate(targetUserId);
-    }
+    unfollowMutation.mutate(targetUserId);
   };
 
   const renderUserList = (

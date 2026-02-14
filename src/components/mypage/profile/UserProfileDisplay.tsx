@@ -39,13 +39,19 @@ export default function UserProfileDisplay({ user }: UserProfileDisplayProps) {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(profileUrl);
-        addToast({ message: '프로필 주소가 복사되었습니다.' });
+        addToast({
+          id: Date.now().toString(),
+          message: '프로필 주소가 복사되었습니다.',
+        });
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
       }
     } catch (err) {
       console.error('Share/Copy failed:', err);
-      addToast({ message: '공유/복사에 실패했습니다.' });
+      addToast({
+        id: Date.now().toString(),
+        message: '공유/복사에 실패했습니다.',
+      });
     }
   };
 

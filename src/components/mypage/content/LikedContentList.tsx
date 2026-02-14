@@ -62,16 +62,23 @@ export default function LikedContentList({
     originalHandleLike: (forceLike?: boolean) => Promise<void>,
   ) => {
     await originalHandleLike(false);
-    onContentUpdate();
 
     const toastId = Date.now().toString();
+    let actionTaken = false;
+
     addToast({
+      id: toastId,
       message: '좋아요가 취소되었습니다.',
       actionLabel: '실행 취소',
       onAction: async () => {
+        actionTaken = true;
         await originalHandleLike(true);
-        onContentUpdate();
         removeToast(toastId);
+      },
+      onDismiss: () => {
+        if (!actionTaken) {
+          onContentUpdate();
+        }
       },
       duration: 5000,
     });

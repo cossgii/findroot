@@ -22,6 +22,7 @@ export const usePlaceSearch = () => {
   const handleSearch = () => {
     if (!isKakaoPlacesServiceReady) {
       addToast({
+        id: Date.now().toString(),
         message: '지도를 로드 중입니다. 잠시 후 다시 시도해주세요.',
         duration: 10000,
       });
@@ -29,7 +30,7 @@ export const usePlaceSearch = () => {
     }
 
     if (!searchKeyword.trim()) {
-      addToast({ message: '검색어를 입력해주세요.', duration: 10000 });
+      addToast({ id: Date.now().toString(), message: '검색어를 입력해주세요.', duration: 10000 });
       return;
     }
 
@@ -41,6 +42,7 @@ export const usePlaceSearch = () => {
       !window.kakao.maps.services.Status
     ) {
       addToast({
+        id: Date.now().toString(),
         message:
           '카카오 장소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.',
         duration: 10000,
@@ -53,11 +55,11 @@ export const usePlaceSearch = () => {
       if (status === window.kakao.maps.services.Status.OK) {
         setSearchResults(data);
       } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
-        addToast({ message: '검색 결과가 없습니다.', duration: 10000 });
+        addToast({ id: Date.now().toString(), message: '검색 결과가 없습니다.', duration: 10000 });
         setSearchResults([]);
         setSelectedPlace(null);
       } else if (status === window.kakao.maps.services.Status.ERROR) {
-        addToast({ message: '검색 중 오류가 발생했습니다.', duration: 10000 });
+        addToast({ id: Date.now().toString(), message: '검색 중 오류가 발생했습니다.', duration: 10000 });
         setSearchResults([]);
         setSelectedPlace(null);
       }
@@ -71,6 +73,7 @@ export const usePlaceSearch = () => {
 
     if (!address.includes('서울')) {
       addToast({
+        id: Date.now().toString(),
         message: '현재는 서울 지역의 장소만 등록할 수 있습니다.',
         duration: 10000,
       });

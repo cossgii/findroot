@@ -102,6 +102,7 @@ export const useAddRouteForm = ({
     mutationFn: createRouteApi,
     onSuccess: () => {
       addToast({
+        id: Date.now().toString(),
         message: '루트가 성공적으로 등록되었습니다.',
         duration: 3000,
       });
@@ -112,7 +113,11 @@ export const useAddRouteForm = ({
       });
     },
     onError: (error) => {
-      addToast({ message: `루트 등록 실패: ${error.message}`, duration: 5000 });
+      addToast({
+        id: Date.now().toString(),
+        message: `루트 등록 실패: ${error.message}`,
+        duration: 5000,
+      });
       console.error('Error adding route:', error);
     },
   });
@@ -120,6 +125,7 @@ export const useAddRouteForm = ({
   const addStop = (place: Place, label: RouteStopLabel) => {
     if (stops.length >= MAX_STOPS) {
       addToast({
+        id: Date.now().toString(),
         message: `경유지는 최대 ${MAX_STOPS}개까지 추가할 수 있습니다.`,
       });
       return;
@@ -128,6 +134,7 @@ export const useAddRouteForm = ({
     const isDuplicate = stops.some(stop => stop.place.id === place.id);
     if (isDuplicate) {
       addToast({
+        id: Date.now().toString(),
         message: '이미 추가된 장소입니다.',
       });
       return;
@@ -201,7 +208,7 @@ export const useAddRouteForm = ({
 
   const onSubmit = (data: RouteDetails) => {
     if (stops.length === 0) {
-      addToast({ message: '경유지를 하나 이상 추가해주세요.' });
+      addToast({ id: Date.now().toString(), message: '경유지를 하나 이상 추가해주세요.' });
       return;
     }
 
@@ -218,7 +225,7 @@ export const useAddRouteForm = ({
     const validationResult = NewRouteApiSchema.safeParse(payload);
     if (!validationResult.success) {
       console.error('API Payload validation failed:', validationResult.error);
-      addToast({ message: '입력 데이터가 올바르지 않습니다.' });
+      addToast({ id: Date.now().toString(), message: '입력 데이터가 올바르지 않습니다.' });
       return;
     }
 
