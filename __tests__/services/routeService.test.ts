@@ -138,7 +138,7 @@ describe('routeService', () => {
 
       // Act & Assert
       await expect(updateRoute(routeId, userId, updateData)).rejects.toThrow(
-        'Route not found.',
+        '루트를 찾을 수 없습니다.',
       );
     });
 
@@ -151,7 +151,7 @@ describe('routeService', () => {
 
       // Act & Assert
       await expect(updateRoute(routeId, userId, updateData)).rejects.toThrow(
-        'Unauthorized to update this route.',
+        '이 루트를 수정할 권한이 없습니다.',
       );
       expect(mockedDb.route.update).not.toHaveBeenCalled();
     });
@@ -189,7 +189,7 @@ describe('routeService', () => {
 
       // Act & Assert
       await expect(deleteRoute(routeId, userId)).rejects.toThrow(
-        'Route not found.',
+        '루트를 찾을 수 없습니다.',
       );
     });
 
@@ -202,7 +202,7 @@ describe('routeService', () => {
 
       // Act & Assert
       await expect(deleteRoute(routeId, userId)).rejects.toThrow(
-        'Unauthorized to delete this route.',
+        '이 루트를 삭제할 권한이 없습니다.',
       );
     });
   });

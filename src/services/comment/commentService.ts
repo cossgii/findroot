@@ -1,5 +1,6 @@
 import { db } from '~/lib/db';
 import { Prisma } from '@prisma/client';
+import { ForbiddenError, NotFoundError } from '~/src/utils/api-errors';
 
 interface GetCommentsProps {
   routeId: string;
@@ -79,11 +80,11 @@ export async function updateComment({
   });
 
   if (!comment) {
-    throw new Error('Comment not found');
+    throw new NotFoundError('댓글을 찾을 수 없습니다.');
   }
 
   if (comment.authorId !== userId) {
-    throw new Error('Unauthorized');
+    throw new ForbiddenError('이 댓글을 수정할 권한이 없습니다.');
   }
 
   return db.comment.update({
@@ -110,12 +111,12 @@ export async function deleteComment({ commentId, userId }: DeleteCommentProps) {
   });
 
   if (!comment) {
-    throw new Error('Comment not found');
+    throw new NotFoundError('댓글을 찾을 수 없습니다.');
   }
 
   // Allow deletion if the user is the author of the comment OR the owner of the route
   if (comment.authorId !== userId && comment.route.creatorId !== userId) {
-    throw new Error('Unauthorized');
+    throw new ForbiddenError('이 댓글을 삭제할 권한이 없습니다.');
   }
 
   return db.comment.delete({

@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import { z } from 'zod';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
+import { ApiError } from '~/src/utils/api-errors';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,16 +18,12 @@ const uploadRequestSchema = z.object({
     }),
 });
 
-export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    const { fileName } = uploadRequestSchema.parse(await request.json());
-
-    const userId = session.user.id;
+export const POST = apiHandler({
+  auth: true,
+  bodySchema: uploadRequestSchema,
+  handler: async ({ session, body }) => {
+    const { fileName } = body;
+    const userId = session!.user.id;
     const filePath = `${userId}/${Date.now()}-${fileName}`;
 
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -36,23 +31,16 @@ export async function POST(request: Request) {
       .createSignedUploadUrl(filePath);
 
     if (uploadError) {
-      console.error('Supabase signed URL error:', uploadError);
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      throw new ApiError(uploadError.message, 500);
     }
 
     const { data: publicUrlData } = supabase.storage
       .from('profile-images')
       .getPublicUrl(filePath);
 
-    return NextResponse.json({
+    return apiSuccess({
       signedUrl: uploadData.signedUrl,
       publicUrl: publicUrlData.publicUrl,
     });
-  } catch (error) {
-    console.error('Internal Server Error:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+  },
+});

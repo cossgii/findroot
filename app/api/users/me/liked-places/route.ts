@@ -1,21 +1,13 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import { getLikedPlacesByUserId } from '~/src/services/like/likeService';
 import { PlaceCategory } from '@prisma/client';
 import { z } from 'zod';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 
 const districtIds = SEOUL_DISTRICTS.map((d) => d.id);
 const likedPlacesQuerySchema = z.object({
-  page: z.preprocess(
-    (val) => parseInt(z.string().parse(val), 10),
-    z.number().min(1).default(1),
-  ),
-  limit: z.preprocess(
-    (val) => parseInt(z.string().parse(val), 10),
-    z.number().min(1).default(5),
-  ),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).default(5),
   districtId: z
     .string()
     .refine((val) => districtIds.includes(val) || val === 'all', {
@@ -25,31 +17,18 @@ const likedPlacesQuerySchema = z.object({
   category: z.nativeEnum(PlaceCategory).optional().nullable(),
 });
 
-export async function GET(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { searchParams } = new URL(request.url);
-
-  try {
-    const { page, limit, districtId, category } = likedPlacesQuerySchema.parse(
-      Object.fromEntries(searchParams),
-    );
+export const GET = apiHandler({
+  auth: true,
+  querySchema: likedPlacesQuerySchema,
+  handler: async ({ query, session }) => {
+    const { page, limit, districtId, category } = query;
     const paginatedData = await getLikedPlacesByUserId(
-      session.user.id,
+      session!.user.id,
       page,
       limit,
       districtId,
       category,
     );
-    return NextResponse.json(paginatedData);
-  } catch (error) {
-    console.error('Error fetching liked places:', error);
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+    return apiSuccess(paginatedData);
+  },
+});

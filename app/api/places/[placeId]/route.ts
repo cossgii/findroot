@@ -5,7 +5,8 @@ import {
 } from '~/src/services/place/placeService';
 import { z } from 'zod';
 import { PlaceCategory } from '@prisma/client';
-import { apiHandler, apiSuccess, apiError } from '~/src/lib/api-handler';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
+import { NotFoundError } from '~/src/utils/api-errors';
 
 const paramsSchema = z.object({
   placeId: z.string(),
@@ -29,7 +30,7 @@ export const GET = apiHandler({
     const place = await getPlaceById(placeId, userId);
 
     if (!place) {
-      return apiError('Place not found', 404);
+      throw new NotFoundError('Place not found');
     }
     return apiSuccess(place);
   },

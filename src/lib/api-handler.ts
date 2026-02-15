@@ -2,6 +2,7 @@ import { getServerSession, type Session } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { z, ZodType } from 'zod';
 import { authOptions } from '~/src/services/auth/authOptions';
+import { ApiError } from '~/src/utils/api-errors';
 
 export const apiSuccess = <T>(data: T, status = 200): NextResponse<T> => {
   return NextResponse.json(data, { status });
@@ -45,7 +46,7 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
       if (options.auth) {
         session = await getServerSession(authOptions);
         if (!session?.user?.id) {
-          return apiError('Unauthorized', 401);
+          throw new ApiError('Unauthorized', 401);
         }
       }
 
@@ -84,6 +85,11 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
       return await options.handler({ req, params, session, body, query });
     } catch (error: unknown) {
       console.error('API Route Error:', error);
+
+      if (error instanceof ApiError) {
+        return apiError(error.message, error.status);
+      }
+
       if (error instanceof z.ZodError) {
         return NextResponse.json(
           { message: 'Validation error', errors: error.format() },

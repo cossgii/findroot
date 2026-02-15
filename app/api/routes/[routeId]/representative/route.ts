@@ -1,46 +1,27 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import { updateRouteIsRepresentative } from '~/src/services/route/routeService';
+import { z } from 'zod';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 
-export async function PATCH(
-  request: Request,
-  { params: awaitedParams }: { params: Promise<{ routeId: string }> },
-) {
-  const params = await awaitedParams;
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
+const paramsSchema = z.object({
+  routeId: z.string(),
+});
 
-  const { routeId } = params;
-  const { isRepresentative } = await request.json();
+const bodySchema = z.object({
+  isRepresentative: z.boolean(),
+});
 
-  if (typeof isRepresentative !== 'boolean') {
-    return NextResponse.json(
-      { message: 'Invalid request body: isRepresentative must be a boolean' },
-      { status: 400 },
-    );
-  }
+export const PATCH = apiHandler({
+  auth: true,
+  bodySchema: bodySchema,
+  handler: async ({ params, session, body }) => {
+    const { routeId } = paramsSchema.parse(params);
+    const { isRepresentative } = body;
 
-  try {
     const updatedRoute = await updateRouteIsRepresentative(
       routeId,
-      session.user.id,
+      session!.user.id,
       isRepresentative,
     );
-    return NextResponse.json(updatedRoute, { status: 200 });
-  } catch (error: any) {
-    if (error.message === 'Route not found.') {
-      return NextResponse.json({ message: error.message }, { status: 404 });
-    }
-    if (error.message === 'Unauthorized to update this route.') {
-      return NextResponse.json({ message: error.message }, { status: 403 });
-    }
-    console.error('Error updating route isRepresentative status:', error);
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+    return apiSuccess(updatedRoute);
+  },
+});

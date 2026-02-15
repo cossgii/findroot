@@ -3,6 +3,11 @@
 import { db } from '~/lib/db';
 import { Prisma, RoutePurpose } from '@prisma/client';
 import { NewRouteInput, UpdateRouteInput } from '~/src/schemas/route-schema';
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from '~/src/utils/api-errors';
 
 function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
   place: T,
@@ -525,11 +530,11 @@ export async function deleteRoute(routeId: string, userId: string) {
   });
 
   if (!routeToDelete) {
-    throw new Error('Route not found.');
+    throw new NotFoundError('루트를 찾을 수 없습니다.');
   }
 
   if (routeToDelete.creatorId !== userId) {
-    throw new Error('Unauthorized to delete this route.');
+    throw new ForbiddenError('이 루트를 삭제할 권한이 없습니다.');
   }
 
   return db.route.delete({
@@ -548,11 +553,11 @@ export async function updateRoute(
   });
 
   if (!routeToUpdate) {
-    throw new Error('Route not found.');
+    throw new NotFoundError('루트를 찾을 수 없습니다.');
   }
 
   if (routeToUpdate.creatorId !== userId) {
-    throw new Error('Unauthorized to update this route.');
+    throw new ForbiddenError('이 루트를 수정할 권한이 없습니다.');
   }
 
   return db.$transaction(async (prisma) => {
@@ -598,16 +603,16 @@ export async function updateRouteIsRepresentative(
   });
 
   if (!routeToUpdate) {
-    throw new Error('Route not found.');
+    throw new NotFoundError('루트를 찾을 수 없습니다.');
   }
 
   if (routeToUpdate.creatorId !== userId) {
-    throw new Error('Unauthorized to update this route.');
+    throw new ForbiddenError('이 루트를 수정할 권한이 없습니다.');
   }
 
   if (isRepresentative) {
     if (!routeToUpdate.districtId) {
-      throw new Error('대표 루트는 자치구가 설정된 루트만 가능합니다.');
+      throw new BadRequestError('대표 루트는 자치구가 설정된 루트만 가능합니다.');
     }
 
     const representativeRoutesCount = await db.route.count({
@@ -619,7 +624,7 @@ export async function updateRouteIsRepresentative(
     });
 
     if (representativeRoutesCount >= 3) {
-      throw new Error(
+      throw new BadRequestError(
         `해당 자치구에는 대표 루트를 최대 3개까지 설정할 수 있습니다. (현재 ${representativeRoutesCount}개)`,
       );
     }

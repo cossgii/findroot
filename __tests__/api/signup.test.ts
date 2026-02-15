@@ -63,7 +63,7 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req);
+      const response = await POST(req, { params: {} });
       const body = await response.json();
 
       // Assert
@@ -103,12 +103,12 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req);
+      const response = await POST(req, { params: {} });
       const body = await response.json();
 
       // Assert
       expect(response.status).toBe(409);
-      expect(body.message).toBe('User with this email already exists');
+      expect(body.message).toBe('이미 사용중인 이메일입니다.');
     });
 
     it('중복된 아이디로 가입 시 409를 반환한다', async () => {
@@ -129,12 +129,12 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req);
+      const response = await POST(req, { params: {} });
       const body = await response.json();
 
       // Assert
       expect(response.status).toBe(409);
-      expect(body.message).toBe('User with this loginId already exists');
+      expect(body.message).toBe('이미 사용중인 아이디입니다.');
     });
 
     it('여러 유효성 검사 실패 시 400과 모든 에러 메시지를 반환한다', async () => {
@@ -148,58 +148,42 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req);
+      const response = await POST(req, { params: {} });
       const body = await response.json();
 
       // Assert
       expect(response.status).toBe(400);
-      expect(body.message).toBe('Validation error');
-      expect(body.errors).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            path: ['name'],
-            message: '이름은 2글자 이상이어야 합니다',
-          }),
-          expect.objectContaining({
-            path: ['email'],
-            message: '이메일 형식이 아닙니다',
-          }),
-          expect.objectContaining({
-            path: ['password'],
-            message: '비밀번호는 8자리 이상이어야 합니다',
-          }),
-          expect.objectContaining({
-            path: ['confirmPassword'],
-            message: '비밀번호가 일치하지 않습니다.',
-          }),
-        ]),
-      );
+      expect(body.message).toBe('Validation error in request body');
+      expect(body.errors).toEqual({
+        _errors: [],
+        name: { _errors: ['이름은 2글자 이상이어야 합니다'] },
+        email: { _errors: ['이메일 형식이 아닙니다'] },
+        password: { _errors: ['비밀번호는 8자리 이상이어야 합니다', '영문, 숫자, 특수문자(~!@#$%^&*)를 모두 조합해 주세요'] }, // Updated
+        confirmPassword: { _errors: ['비밀번호가 일치하지 않습니다.'] },
+      });
     });
 
     it('비밀번호가 정규식 조건에 맞지 않으면 400을 반환한다', async () => {
       // Arrange
       const req = createRequest({
         email: 'test@example.com',
+        loginId: 'testuser', // Added loginId
         name: 'Test User',
         password: 'password123', // Missing special character
         confirmPassword: 'password123',
       });
 
       // Act
-      const response = await POST(req);
+      const response = await POST(req, { params: {} });
       const body = await response.json();
 
       // Assert
       expect(response.status).toBe(400);
-      expect(body.message).toBe('Validation error');
-      expect(body.errors).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            path: ['password'],
-            message: '영문, 숫자, 특수문자(~!@#$%^&*)를 모두 조합해 주세요',
-          }),
-        ]),
-      );
+      expect(body.message).toBe('Validation error in request body');
+      expect(body.errors).toEqual({
+        _errors: [],
+        password: { _errors: ['영문, 숫자, 특수문자(~!@#$%^&*)를 모두 조합해 주세요'] },
+      });
     });
   });
 
@@ -220,12 +204,12 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req);
+      const response = await POST(req, { params: {} });
       const body = await response.json();
 
       // Assert
       expect(response.status).toBe(500);
-      expect(body.message).toBe('Internal server error');
+      expect(body.message).toBe('Hashing failed');
     });
 
     it('데이터베이스 트랜잭션 중 오류 발생 시 500을 반환한다', async () => {
@@ -245,12 +229,12 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req);
+      const response = await POST(req, { params: {} });
       const body = await response.json();
 
       // Assert
       expect(response.status).toBe(500);
-      expect(body.message).toBe('Internal server error');
+      expect(body.message).toBe('DB transaction failed');
     });
   });
 });

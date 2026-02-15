@@ -1,31 +1,26 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import { getFeaturedRoutes } from '~/src/services/route/routeService';
+import { z } from 'zod';
 import { RoutePurpose } from '@prisma/client';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const districtId = searchParams.get('districtId') || '';
-  const creatorId = searchParams.get('creatorId') || undefined;
-  const purpose = searchParams.get('purpose') as RoutePurpose | undefined;
+const featuredRoutesQuerySchema = z.object({
+  districtId: z.string().optional(),
+  creatorId: z.string().optional(),
+  purpose: z.nativeEnum(RoutePurpose).optional(),
+});
 
-  const session = await getServerSession(authOptions);
-  const currentUserId = session?.user?.id || undefined;
+export const GET = apiHandler({
+  querySchema: featuredRoutesQuerySchema,
+  handler: async ({ query, session }) => {
+    const { districtId, creatorId, purpose } = query;
+    const currentUserId = session?.user?.id || undefined;
 
-  try {
     const result = await getFeaturedRoutes(
-      districtId,
-      creatorId || undefined,
+      districtId || '',
+      creatorId,
       currentUserId,
       purpose,
     );
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error('Error fetching featured routes:', error);
-    return NextResponse.json(
-      { message: 'Failed to fetch featured routes' },
-      { status: 500 },
-    );
-  }
-}
+    return apiSuccess(result);
+  },
+});

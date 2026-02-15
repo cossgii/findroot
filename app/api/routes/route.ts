@@ -1,44 +1,12 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient, Prisma } from '@prisma/client';
-import { db } from '~/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import { createRoute } from '~/src/services/route/routeService';
 import { NewRouteApiSchema } from '~/src/schemas/route-schema';
-import { z } from 'zod';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 
-
-
-export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    const body = await request.json();
-    const validatedData = NewRouteApiSchema.parse(body);
-
-    const newRoute = await createRoute(validatedData, session.user.id);
-
-    return NextResponse.json(newRoute, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Invalid request body', errors: error.issues },
-        { status: 400 },
-      );
-    }
-    console.error('Error creating route:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Invalid request body', errors: error.issues },
-        { status: 400 },
-      );
-    }
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+export const POST = apiHandler({
+  auth: true,
+  bodySchema: NewRouteApiSchema,
+  handler: async ({ body, session }) => {
+    const newRoute = await createRoute(body, session!.user.id);
+    return apiSuccess(newRoute, 201);
+  },
+});

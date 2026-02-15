@@ -1,10 +1,8 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import { getPlacesByCreatorId } from '~/src/services/place/placeService';
 import { PlaceCategory } from '@prisma/client';
 import { z } from 'zod';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 
 const districtIds = SEOUL_DISTRICTS.map((d) => d.id);
 
@@ -13,14 +11,8 @@ const UserPlacesParamsSchema = z.object({
 });
 
 const UserPlacesQuerySchema = z.object({
-  page: z.preprocess(
-    (val) => parseInt(z.string().parse(val), 10),
-    z.number().min(1).default(1),
-  ),
-  limit: z.preprocess(
-    (val) => parseInt(z.string().parse(val), 10),
-    z.number().min(1).default(5),
-  ),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).default(5),
   districtId: z
     .string()
     .refine((val) => districtIds.includes(val) || val === 'all', {
@@ -30,20 +22,11 @@ const UserPlacesQuerySchema = z.object({
   category: z.nativeEnum(PlaceCategory).optional().nullable(),
 });
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ userId: string }> },
-) {
-  const resolvedParams = await params;
-  const { searchParams } = new URL(request.url);
-
-  try {
-    const { userId: creatorId } = UserPlacesParamsSchema.parse(resolvedParams);
-    const { page, limit, districtId, category } = UserPlacesQuerySchema.parse(
-      Object.fromEntries(searchParams),
-    );
-
-    const session = await getServerSession(authOptions);
+export const GET = apiHandler({
+  querySchema: UserPlacesQuerySchema,
+  handler: async ({ params, query, session }) => {
+    const { userId: creatorId } = UserPlacesParamsSchema.parse(params);
+    const { page, limit, districtId, category } = query;
     const currentUserId = session?.user?.id;
 
     const paginatedData = await getPlacesByCreatorId(
@@ -54,18 +37,6 @@ export async function GET(
       currentUserId,
       category,
     );
-    return NextResponse.json(paginatedData);
-  } catch (error) {
-    console.error('Error fetching user places:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Validation error', errors: error.issues },
-        { status: 400 },
-      );
-    }
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+    return apiSuccess(paginatedData);
+  },
+});

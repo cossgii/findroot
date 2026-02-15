@@ -65,7 +65,7 @@ describe('POST /api/auth/password-reset/reset', () => {
     });
 
     // Act
-    const response = await POST(req);
+    const response = await POST(req, { params: {} });
     const body = await response.json();
 
     // Assert
@@ -91,7 +91,7 @@ describe('POST /api/auth/password-reset/reset', () => {
     });
 
     // Act
-    const response = await POST(req);
+    const response = await POST(req, { params: {} });
     const body = await response.json();
 
     // Assert
@@ -107,12 +107,12 @@ describe('POST /api/auth/password-reset/reset', () => {
     });
 
     // Act
-    const response = await POST(req);
+    const response = await POST(req, { params: {} });
     const body = await response.json();
 
     // Assert
     expect(response.status).toBe(400);
-    expect(body.message).toBe('Validation error');
+    expect(body.message).toBe('Validation error in request body');
   });
 
   it('만료된 토큰이면, 400 에러를 반환해야 한다', async () => {
@@ -138,7 +138,7 @@ describe('POST /api/auth/password-reset/reset', () => {
     });
 
     // Act
-    const response = await POST(req);
+    const response = await POST(req, { params: {} });
     const body = await response.json();
 
     // Assert

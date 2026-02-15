@@ -25,12 +25,20 @@ jest.mock('~/lib/mailer', () => ({
   sendPasswordResetEmail: jest.fn(),
 }));
 
-jest.mock('crypto', () => ({
-  randomBytes: jest.fn(() => ({ toString: () => 'mocked-secure-token' })),
-}));
+jest.mock('crypto', () => {
+  const actualCrypto = jest.requireActual('crypto');
+  return {
+    ...actualCrypto,
+    randomBytes: jest.fn(() => ({ toString: () => 'mocked-secure-token' })),
+  };
+});
 
 jest.mock('bcryptjs', () => ({
   hash: jest.fn(),
+}));
+
+jest.mock('next-auth', () => ({
+  getServerSession: jest.fn(),
 }));
 
 // 2. 타입 캐스팅 및 변수 할당
@@ -63,7 +71,7 @@ describe('POST /api/auth/password-reset/request', () => {
     });
 
     // Act
-    const response = await POST(req);
+    const response = await POST(req, { params: {} });
     const body = await response.json();
 
     // Assert
@@ -87,7 +95,7 @@ describe('POST /api/auth/password-reset/request', () => {
     });
 
     // Act
-    const response = await POST(req);
+    const response = await POST(req, { params: {} });
     const body = await response.json();
 
     // Assert
@@ -105,12 +113,12 @@ describe('POST /api/auth/password-reset/request', () => {
     });
 
     // Act
-    const response = await POST(req);
+    const response = await POST(req, { params: {} });
     const body = await response.json();
 
     // Assert
     expect(response.status).toBe(400);
-    expect(body.message).toBe('Validation error');
+    expect(body.message).toBe('Validation error in request body');
   });
 
   it('이메일이 없는 요청 시, 400 에러를 반환해야 한다', async () => {
@@ -121,12 +129,12 @@ describe('POST /api/auth/password-reset/request', () => {
     });
 
     // Act
-    const response = await POST(req);
+    const response = await POST(req, { params: {} });
     const body = await response.json();
 
     // Assert
     expect(response.status).toBe(400);
-    expect(body.message).toBe('Validation error'); // Assuming a generic validation error message
+    expect(body.message).toBe('Validation error in request body'); // Assuming a generic validation error message
     // You might also check for specific error details if your API provides them
     // expect(body.errors[0].path).toEqual(['email']);
   });

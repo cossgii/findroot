@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import { getRoutesByCreatorId } from '~/src/services/route/routeService';
 import { z } from 'zod';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
+import { ForbiddenError } from '~/src/utils/api-errors';
 
 const districtIds = SEOUL_DISTRICTS.map((d) => d.id);
 
@@ -12,14 +11,8 @@ const UserRoutesParamsSchema = z.object({
 });
 
 const UserRoutesQuerySchema = z.object({
-  page: z.preprocess(
-    (val) => parseInt(z.string().parse(val), 10),
-    z.number().min(1).default(1),
-  ),
-  limit: z.preprocess(
-    (val) => parseInt(z.string().parse(val), 10),
-    z.number().min(1).default(5),
-  ),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).default(5),
   districtId: z
     .string()
     .refine((val) => districtIds.includes(val) || val === 'all', {
@@ -28,23 +21,15 @@ const UserRoutesQuerySchema = z.object({
     .optional(),
 });
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ userId: string }> },
-) {
-  const resolvedParams = await params;
-  const session = await getServerSession(authOptions);
+export const GET = apiHandler({
+  auth: true,
+  querySchema: UserRoutesQuerySchema,
+  handler: async ({ params, query, session }) => {
+    const { userId: userIdFromParams } = UserRoutesParamsSchema.parse(params);
+    const { page, limit, districtId } = query;
 
-  try {
-    const { userId: userIdFromParams } =
-      UserRoutesParamsSchema.parse(resolvedParams);
-    const { searchParams } = new URL(request.url);
-    const { page, limit, districtId } = UserRoutesQuerySchema.parse(
-      Object.fromEntries(searchParams),
-    );
-
-    if (!session?.user?.id || session.user.id !== userIdFromParams) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (session!.user.id !== userIdFromParams) {
+      throw new ForbiddenError('이 사용자의 루트를 조회할 권한이 없습니다.');
     }
 
     const result = await getRoutesByCreatorId(
@@ -53,18 +38,6 @@ export async function GET(
       limit,
       districtId,
     );
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error('Error fetching user routes:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Validation error', errors: error.issues },
-        { status: 400 },
-      );
-    }
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+    return apiSuccess(result);
+  },
+});

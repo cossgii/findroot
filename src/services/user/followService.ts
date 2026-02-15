@@ -1,8 +1,9 @@
 import { db } from '~/lib/db';
+import { BadRequestError } from '~/src/utils/api-errors';
 
 export async function followUser(followerId: string, followingId: string) {
   if (followerId === followingId) {
-    throw new Error('Cannot follow yourself.');
+    throw new BadRequestError('자기 자신을 팔로우할 수 없습니다.');
   }
 
   return db.follow.create({

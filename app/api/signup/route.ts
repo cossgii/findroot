@@ -3,7 +3,8 @@ import { db } from '~/lib/db';
 import bcrypt from 'bcryptjs';
 import { signupSchema } from '~/src/schemas/auth-schema';
 import { MAIN_ACCOUNT_ID } from '~/config';
-import { apiHandler, apiError, apiSuccess } from '~/src/lib/api-handler';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
+import { ConflictError } from '~/src/utils/api-errors';
 
 export const POST = apiHandler({
   bodySchema: signupSchema,
@@ -12,40 +13,44 @@ export const POST = apiHandler({
 
     const existingUserByEmail = await db.user.findFirst({ where: { email } });
     if (existingUserByEmail) {
-      return apiError('User with this email already exists', 409);
+      throw new ConflictError('이미 사용중인 이메일입니다.');
     }
 
-    const existingUserByLoginId = await db.user.findUnique({ where: { loginId } });
+    const existingUserByLoginId = await db.user.findUnique({
+      where: { loginId },
+    });
     if (existingUserByLoginId) {
-      return apiError('User with this loginId already exists', 409);
+      throw new ConflictError('이미 사용중인 아이디입니다.');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await db.$transaction(async (prisma: Prisma.TransactionClient) => {
-      const createdUser = await prisma.user.create({
-        data: {
-          email,
-          name,
-          loginId,
-          password: hashedPassword,
-        },
-      });
-
-      const mainAccountExists = await prisma.user.findUnique({
-        where: { id: MAIN_ACCOUNT_ID },
-      });
-
-      if (mainAccountExists && createdUser.id !== MAIN_ACCOUNT_ID) {
-        await prisma.follow.create({
+    const newUser = await db.$transaction(
+      async (prisma: Prisma.TransactionClient) => {
+        const createdUser = await prisma.user.create({
           data: {
-            followerId: createdUser.id,
-            followingId: MAIN_ACCOUNT_ID,
+            email,
+            name,
+            loginId,
+            password: hashedPassword,
           },
         });
-      }
-      return createdUser;
-    });
+
+        const mainAccountExists = await prisma.user.findUnique({
+          where: { id: MAIN_ACCOUNT_ID },
+        });
+
+        if (mainAccountExists && createdUser.id !== MAIN_ACCOUNT_ID) {
+          await prisma.follow.create({
+            data: {
+              followerId: createdUser.id,
+              followingId: MAIN_ACCOUNT_ID,
+            },
+          });
+        }
+        return createdUser;
+      },
+    );
 
     return apiSuccess(
       {

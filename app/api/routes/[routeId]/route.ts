@@ -1,6 +1,3 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '~/src/services/auth/authOptions';
 import {
   deleteRoute,
   getRouteById,
@@ -8,126 +5,42 @@ import {
 } from '~/src/services/route/routeService';
 import { UpdateRouteApiSchema } from '~/src/schemas/route-schema';
 import { z } from 'zod';
+import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
+import { NotFoundError } from '~/src/utils/api-errors';
 
-const RouteRouteParamsSchema = z.object({
+const RouteParamsSchema = z.object({
   routeId: z.string({ message: '유효한 루트 ID가 필요합니다.' }),
 });
 
-interface RouteRouteParams {
-  routeId: string;
-}
-
-export async function GET(
-  request: Request,
-  context: { params: Promise<RouteRouteParams> },
-) {
-  try {
-    const session = await getServerSession(authOptions);
+export const GET = apiHandler({
+  handler: async ({ params, session }) => {
+    const { routeId } = RouteParamsSchema.parse(params);
     const userId = session?.user?.id;
-
-    const { routeId } = RouteRouteParamsSchema.parse(await context.params);
     const route = await getRouteById(routeId, userId);
 
     if (!route) {
-      return NextResponse.json({ error: 'Route not found' }, { status: 404 });
+      throw new NotFoundError('루트를 찾을 수 없습니다.');
     }
 
-    return NextResponse.json(route);
-  } catch (error) {
-    console.error('Error fetching route by ID:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Invalid route ID', errors: error.issues },
-        { status: 400 },
-      );
-    }
-    return NextResponse.json(
-      { error: 'An unexpected error occurred.' },
-      { status: 500 },
-    );
-  }
-}
+    return apiSuccess(route);
+  },
+});
 
-export async function DELETE(
-  request: Request,
-  context: { params: Promise<RouteRouteParams> },
-) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
+export const DELETE = apiHandler({
+  auth: true,
+  handler: async ({ params, session }) => {
+    const { routeId } = RouteParamsSchema.parse(params);
+    await deleteRoute(routeId, session!.user.id);
+    return apiSuccess({ message: '루트가 성공적으로 삭제되었습니다.' });
+  },
+});
 
-  try {
-    const { routeId } = RouteRouteParamsSchema.parse(await context.params);
-    await deleteRoute(routeId, session.user.id);
-    return NextResponse.json(
-      { message: 'Route deleted successfully' },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.error('Error deleting route:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: 'Invalid route ID', errors: error.issues },
-        { status: 400 },
-      );
-    } else if (error instanceof Error) {
-      if (error.message === 'Route not found.') {
-        return NextResponse.json({ message: error.message }, { status: 404 });
-      } else if (error.message === 'Unauthorized to delete this route.') {
-        return NextResponse.json({ message: error.message }, { status: 403 });
-      }
-    }
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
-
-export async function PUT(
-  request: Request,
-  context: { params: Promise<RouteRouteParams> },
-) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    const { routeId } = RouteRouteParamsSchema.parse(await context.params);
-    const body = await request.json();
-    const validatedData = UpdateRouteApiSchema.parse(body);
-
-    const updatedRoute = await updateRoute(
-      routeId,
-      session.user.id,
-      validatedData,
-    );
-    return NextResponse.json(updatedRoute, { status: 200 });
-  } catch (error) {
-    console.error('Error updating route:', error);
-    if (error instanceof z.ZodError) {
-      const isParamError = error.issues.some(
-        (issue) => issue.path[0] === 'routeId',
-      );
-      return NextResponse.json(
-        {
-          message: isParamError ? 'Invalid route ID' : 'Invalid request body',
-          errors: error.issues,
-        },
-        { status: 400 },
-      );
-    } else if (error instanceof Error) {
-      if (error.message === 'Route not found.') {
-        return NextResponse.json({ message: error.message }, { status: 404 });
-      } else if (error.message === 'Unauthorized to update this route.') {
-        return NextResponse.json({ message: error.message }, { status: 403 });
-      }
-    }
-    return NextResponse.json(
-      { message: 'Internal Server Error' },
-      { status: 500 },
-    );
-  }
-}
+export const PUT = apiHandler({
+  auth: true,
+  bodySchema: UpdateRouteApiSchema,
+  handler: async ({ params, session, body }) => {
+    const { routeId } = RouteParamsSchema.parse(params);
+    const updatedRoute = await updateRoute(routeId, session!.user.id, body);
+    return apiSuccess(updatedRoute);
+  },
+});
