@@ -16,7 +16,7 @@ export default function UserListItemSkeleton() {
       <Avatar size="small">
         <AvatarFallback className="bg-gray-300" />
       </Avatar>
-      <div className="h-5 w-24 bg-gray-300 rounded-md"></div>
+      <div className="h-5 flex-grow bg-gray-300 rounded-md"></div>
     </animated.li>
   );
 }

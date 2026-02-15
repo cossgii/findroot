@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePaginatedQuery } from '~/src/hooks/usePaginatedQuery';
-import ListItemSkeleton from '~/src/components/mypage/content/ListItemSkeleton';
 import Pagination from '~/src/components/common/Pagination';
 import { ClientUserSummary } from '~/src/types/shared';
 import UserListItem from '~/src/components/layout/UserListItem';
@@ -14,14 +13,15 @@ import { modalAtom } from '~/src/stores/app-store';
 import { addToastAtom, removeToastAtom } from '~/src/stores/toast-store';
 import { useRouter } from 'next/navigation';
 import { cn } from '~/src/utils/class-name';
+import UserListItemSkeleton from '~/src/components/layout/UserListItemSkeleton'; // New import
 
 type FollowType = 'following' | 'followers';
 
 const ListSkeleton = () => (
   <div className="space-y-3">
-    <ListItemSkeleton />
-    <ListItemSkeleton />
-    <ListItemSkeleton />
+    <UserListItemSkeleton />
+    <UserListItemSkeleton />
+    <UserListItemSkeleton />
   </div>
 );
 

@@ -14,7 +14,7 @@ const tabs: { id: MyPageTab; label: string }[] = [
   { id: 'profile', label: '프로필' },
   { id: 'content', label: '내 콘텐츠' },
   { id: 'likes', label: '좋아요' },
-  { id: 'following', label: '팔로잉/팔로워' },
+  { id: 'following', label: '팔로잉' },
 ];
 
 export default function MyPageTabs({ activeTab, setActiveTab }: MyPageTabsProps) {
