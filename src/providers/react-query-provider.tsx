@@ -3,8 +3,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
-const queryClient = new QueryClient();
-
 const ReactQueryDevtools =
   process.env.NODE_ENV === 'development'
     ? React.lazy(() =>
@@ -19,6 +17,8 @@ export default function ReactQueryProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const [queryClient] = React.useState(() => new QueryClient());
+
   return (
     <QueryClientProvider client={queryClient}>
       {children}

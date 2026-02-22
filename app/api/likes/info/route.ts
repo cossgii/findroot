@@ -1,6 +1,8 @@
 import { getLikeInfo } from '~/src/services/like/likeService';
 import { z } from 'zod';
 import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '~/src/services/auth/authOptions';
 
 const likeInfoQuerySchema = z
   .object({
@@ -16,11 +18,14 @@ const likeInfoQuerySchema = z
 
 export const GET = apiHandler({
   querySchema: likeInfoQuerySchema,
-  handler: async ({ query, session }) => {
-    const { placeId, routeId } = query;
+  handler: async ({ query }) => {
+    const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
 
-    const { count, liked } = await getLikeInfo({ placeId, routeId }, userId);
+    const { count, liked } = await getLikeInfo(
+      { placeId: query.placeId, routeId: query.routeId },
+      userId,
+    );
     return apiSuccess({ count, liked });
   },
 });

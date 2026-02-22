@@ -11,6 +11,7 @@ import KakaoMapApiLoader from '~/src/components/common/KakaoMapApiLoader';
 import Toast from '~/src/components/common/Toast';
 
 import ReactQueryProvider from '~/src/providers/react-query-provider';
+import { Suspense } from 'react';
 
 export default function RootLayout({
   children,
@@ -34,7 +35,9 @@ export default function RootLayout({
           <Provider>
             <ReactQueryProvider>
               <AuthProvider>
-                <Header />
+                <Suspense fallback={null}>
+                  <Header />
+                </Suspense>
                 <main className="flex-grow pt-header">{children}</main>
                 <GlobalModalRenderer />
                 <Toast />

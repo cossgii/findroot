@@ -21,7 +21,7 @@ export interface RouteStop {
 
 const routeDetailsSchema = z.object({
   name: z.string().min(1, { message: '루트 이름을 입력해주세요.' }),
-  description: z.string().optional(),
+  description: z.string().min(1, { message: '설명을 입력해주세요.' }).optional(),
   purpose: z.nativeEnum(RoutePurpose),
 });
 
@@ -48,16 +48,13 @@ const createRouteApi = async (payload: NewRouteInput) => {
   return response.json();
 };
 
-const fetchPlacesByDistrict = async (
-  districtId: string | null,
-): Promise<Place[]> => {
-  if (!districtId) return [];
-  const response = await fetch(`/api/places?district=${districtId}&limit=200`);
+const fetchUserPlaces = async (userId: string): Promise<Place[]> => {
+  if (!userId) return [];
+  const response = await fetch(`/api/users/${userId}/places/all`);
   if (!response.ok) {
-    throw new Error('Failed to fetch places');
+    throw new Error('Failed to fetch user places');
   }
-  const data = await response.json();
-  return data.places;
+  return response.json();
 };
 
 export const useAddRouteForm = ({
@@ -93,9 +90,9 @@ export const useAddRouteForm = ({
     isLoading,
     error,
   } = useQuery<Place[], Error>({
-    queryKey: ['places', selectedDistrict],
-    queryFn: () => fetchPlacesByDistrict(selectedDistrict),
-    enabled: !!selectedDistrict,
+    queryKey: ['userPlaces', userId],
+    queryFn: () => fetchUserPlaces(userId),
+    enabled: !!userId,
   });
 
   const { mutate: addRouteMutation, isPending } = useMutation({

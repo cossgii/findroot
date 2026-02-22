@@ -1,110 +1,139 @@
 import { defineConfig } from 'cypress';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+require('dotenv').config();
 
-let prisma: PrismaClient;
+let prisma: PrismaClient | null = null;
 
-async function cleanupTestPatterns() {
+function getPrismaClient() {
+  if (!prisma) {
+    const DATABASE_URL = process.env.DATABASE_URL;
+    if (!DATABASE_URL) {
+      throw new Error(
+        'DATABASE_URL is not set in environment variables for Prisma Client in Cypress.',
+      );
+    }
+
+    const { PrismaPg } = require('@prisma/adapter-pg');
+    const { Pool } = require('pg');
+
+    const pool = new Pool({ connectionString: DATABASE_URL });
+
+    prisma = new PrismaClient({
+      adapter: new PrismaPg(pool),
+      log: process.env.DEBUG ? ['query', 'error', 'warn'] : ['error'],
+    });
+  }
+  return prisma;
+}
+
+async function cleanupTestPatterns(client: PrismaClient) {
   const testPatterns = ['Cypress 테스트', 'cypress-test-', 'Test Route'];
 
-  try {
-    for (const pattern of testPatterns) {
-      if (prisma.routePlace) {
-        await prisma.routePlace.deleteMany({
-          where: {
-            route: {
-              OR: [
-                { name: { contains: pattern } },
-                { description: { contains: pattern } },
-              ],
-            },
-          },
-        });
-      }
+  const whereCondition = {
+    OR: testPatterns.flatMap((pattern) => [
+      { name: { contains: pattern } },
+      { description: { contains: pattern } },
+    ]),
+  };
 
-      await prisma.route.deleteMany({
-        where: {
-          OR: [
-            { name: { contains: pattern } },
-            { description: { contains: pattern } },
-          ],
-        },
-      });
+  await client.$transaction(async (tx) => {
+    await tx.routePlace.deleteMany({
+      where: {
+        route: whereCondition,
+      },
+    });
 
-      await prisma.place.deleteMany({
-        where: {
-          OR: [
-            { name: { contains: pattern } },
-            { description: { contains: pattern } },
-          ],
-        },
+    await tx.route.deleteMany({
+      where: whereCondition,
+    });
+
+    await tx.place.deleteMany({
+      where: whereCondition,
+    });
+
+    console.log('✅ Pattern cleanup completed');
+  });
+}
+
+async function cleanupAndCreateTestUser(client: PrismaClient) {
+  const testUserLoginId = 'testuser';
+  const testUserEmail = 'test2@test.com';
+  const testUserPassword = 'test1234!';
+
+  await client.$transaction(async (tx) => {
+    const testUser = await tx.user.findUnique({
+      where: { loginId: testUserLoginId },
+      select: { id: true },
+    });
+
+    if (testUser) {
+      await tx.like.deleteMany({ where: { userId: testUser.id } });
+      await tx.routePlace.deleteMany({
+        where: { route: { creatorId: testUser.id } },
       });
+      await tx.route.deleteMany({ where: { creatorId: testUser.id } });
+      await tx.place.deleteMany({ where: { creatorId: testUser.id } });
+      await tx.user.delete({ where: { id: testUser.id } });
+
+      console.log(`✅ Cleaned up existing user: ${testUserLoginId}`);
     }
-  } catch (error) {
-    console.error('Pattern cleanup error:', error);
-  }
+
+    const hashedPassword = await bcrypt.hash(testUserPassword, 10);
+    await tx.user.create({
+      data: {
+        email: testUserEmail,
+        loginId: testUserLoginId,
+        name: 'Test User',
+        password: hashedPassword,
+      },
+    });
+
+    console.log(`✅ Created test user: ${testUserLoginId}`);
+  });
 }
 
 export default defineConfig({
   e2e: {
     baseUrl: 'http://localhost:3000',
+
     setupNodeEvents(on, config) {
-      if (!prisma) {
-        prisma = new PrismaClient();
-      }
+      const client = getPrismaClient();
 
       on('task', {
         'db:cleanup': async () => {
           try {
-            // 1. Run the generic pattern cleanup first
-            await cleanupTestPatterns();
-            console.log('DB Cleanup: Cleaned up general test patterns.');
-
-            // 2. Now, run the specific user cleanup and creation
-            const testUserLoginId = 'testuser';
-            const testUserEmail = 'test2@test.com';
-
-            const testUser = await prisma.user.findUnique({
-              where: { loginId: testUserLoginId },
-              select: { id: true },
-            });
-
-            if (testUser) {
-              await prisma.like.deleteMany({ where: { userId: testUser.id } });
-              await prisma.route.deleteMany({ where: { creatorId: testUser.id } });
-              await prisma.place.deleteMany({ where: { creatorId: testUser.id } });
-              await prisma.user.delete({ where: { id: testUser.id } });
-              console.log(`DB Cleanup: Cleaned data for user ${testUserLoginId}`);
-            }
-            
-            // 3. Create the user fresh
-            const hashedPassword = await bcrypt.hash('test1234!', 10);
-            await prisma.user.create({
-              data: {
-                email: testUserEmail,
-                loginId: testUserLoginId,
-                name: 'Test User',
-                password: hashedPassword,
-              },
-            });
-            console.log(`DB Cleanup: Ensured user ${testUserLoginId} exists.`);
-
-            return { success: true };
+            await cleanupTestPatterns(client);
+            await cleanupAndCreateTestUser(client);
+            return null;
           } catch (error) {
-            console.error('❌ Cleanup error:', error);
-            return { success: false, error: String(error) };
+            console.error('❌ db:cleanup failed:', error);
+            throw error;
           }
         },
 
-        'db:seed': async () => {
-          return { success: true };
+        'store:clear': async () => {
+          return null;
         },
-      });
 
-      on('after:run', () => {
-        if (prisma) {
-          prisma.$disconnect();
-        }
+        'db:findUserByLoginId': async (loginId: string) => {
+          try {
+            const user = await client.user.findUnique({
+              where: { loginId },
+              select: { id: true },
+            });
+            if (!user) {
+              throw new Error(`User with loginId "${loginId}" not found.`);
+            }
+            return user.id;
+          } catch (error) {
+            console.error(
+              `❌ db:findUserByLoginId failed for "${loginId}":`,
+              error,
+            );
+            throw error;
+          }
+        },
       });
 
       return config;

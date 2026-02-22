@@ -39,8 +39,9 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
 ) {
   return async (
     req: NextRequest,
-    { params }: { params: Record<string, string> },
+    { params: awaitedParams }: { params: Promise<Record<string, string>> },
   ): Promise<NextResponse> => {
+    const params = await awaitedParams;
     try {
       let session: Session | null = null;
       if (options.auth) {

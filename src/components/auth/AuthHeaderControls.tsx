@@ -14,7 +14,11 @@ export default function AuthHeaderControls() {
   const isMyPage = pathname === '/mypage';
 
   if (status === 'loading') {
-    return <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />;
+    return (
+      <div className="flex items-center space-x-4">
+        <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+      </div>
+    );
   }
 
   if (session) {

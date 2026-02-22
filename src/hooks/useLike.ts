@@ -28,10 +28,12 @@ const removeLikeApi = async (payload: {
   placeId?: string;
   routeId?: string;
 }) => {
-  const response = await fetch('/api/likes', {
+  const params = new URLSearchParams();
+  if (payload.placeId) params.set('placeId', payload.placeId);
+  if (payload.routeId) params.set('routeId', payload.routeId);
+
+  const response = await fetch(`/api/likes?${params.toString()}`, {
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
   });
   if (!response.ok) {
     const errorData = await response.json();
@@ -64,7 +66,7 @@ export function useLike({
       fetchLikeInfo(placeId ? 'placeId' : 'routeId', placeId || routeId || ''),
     enabled: !!(placeId || routeId),
     initialData: { count: initialLikesCount, liked: initialIsLiked },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const { mutate: addLikeMutation } = useMutation({
@@ -100,14 +102,28 @@ export function useLike({
         queryClient.setQueryData(queryKey, data);
       }
 
-      queryClient.invalidateQueries({ queryKey: ['place', variables.placeId] });
+      queryClient.invalidateQueries({ queryKey });
+
+      if (variables.placeId) {
+        queryClient.invalidateQueries({
+          queryKey: ['places'],
+          exact: false,
+        });
+      } else if (variables.routeId) {
+        queryClient.invalidateQueries({
+          queryKey: ['districtRoutes'],
+          exact: false,
+        });
+      }
 
       if (session?.user?.id) {
         queryClient.invalidateQueries({
           queryKey: ['user', 'me', 'places', 'liked'],
+          exact: false,
         });
         queryClient.invalidateQueries({
           queryKey: ['user', 'me', 'routes', 'liked'],
+          exact: false,
         });
       }
     },
@@ -153,13 +169,30 @@ export function useLike({
         queryClient.setQueryData(queryKey, data);
       }
 
-      queryClient.invalidateQueries({ queryKey: ['place', variables.placeId] });
-      queryClient.invalidateQueries({
-        queryKey: ['user', 'me', 'places', 'liked'],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['user', 'me', 'routes', 'liked'],
-      });
+      queryClient.invalidateQueries({ queryKey });
+
+      if (variables.placeId) {
+        queryClient.invalidateQueries({
+          queryKey: ['places'],
+          exact: false,
+        });
+      } else if (variables.routeId) {
+        queryClient.invalidateQueries({
+          queryKey: ['districtRoutes'],
+          exact: false,
+        });
+      }
+
+      if (session?.user?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ['user', 'me', 'places', 'liked'],
+          exact: false,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['user', 'me', 'routes', 'liked'],
+          exact: false,
+        });
+      }
     },
     onError: (err, removedLike, context) => {
       const queryKey = removedLike.placeId

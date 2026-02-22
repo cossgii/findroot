@@ -24,13 +24,11 @@ describe('루트 생성 테스트', () => {
 
   beforeEach(() => {
     cy.task('db:cleanup');
-    cy.session('user-session', () => {
-      cy.visit('/login');
-      cy.get('input[name="loginId"]').type('testuser');
-      cy.get('input[name="password"]').type('test1234!');
-      cy.get('button[type="submit"]').click();
-      cy.url().should('eq', Cypress.config().baseUrl + '/');
-    });
+    cy.visit('/login');
+    cy.get('input[name="loginId"]').type('testuser');
+    cy.get('input[name="password"]').type('test1234!');
+    cy.get('button[type="submit"]').click();
+    cy.url().should('eq', Cypress.config().baseUrl + '/');
     cy.visit('/mypage');
     cy.contains('h1', '마이페이지').should('be.visible');
   });
@@ -85,9 +83,11 @@ describe('루트 생성 테스트', () => {
     cy.get('ul.py-1')
       .find('li')
       .should('have.length.at.least', 1)
-      .first()
+      .last()
       .click();
     cy.get('@addStopSection').contains('button', '추가').click();
+
+    cy.get('ul.space-y-2.rounded-md.border.p-2 > li').should('have.length', 2);
 
     cy.get('input[name="name"]').type(routeName);
     cy.get('input[name="description"]').type(
