@@ -1,8 +1,9 @@
 import { PlaceCategory, Prisma } from '@prisma/client';
 import { db } from '~/lib/db';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
+import { NotFoundError } from '~/src/utils/api-errors';
 
-function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
+function serializeDates<T extends { createdAt: Date; updatedAt: Date }>(
   obj: T,
 ): Omit<T, 'createdAt' | 'updatedAt'> & {
   createdAt: string;
@@ -25,26 +26,33 @@ export async function addLike(userId: string, { placeId, routeId }: LikeInput) {
     throw new Error('Place ID or Route ID is required.');
   }
 
-  const where = placeId
-    ? { userId_placeId: { userId, placeId } }
-    : { userId_routeId: { userId, routeId: routeId! } };
-
-  const create = {
-    userId,
-    placeId,
-    routeId,
-  };
-
-  return db.like
-    .upsert({
-      where: where,
-      create: create,
-      update: {},
-    })
-    .catch((error) => {
-      console.error('Prisma upsert error in addLike:', error);
-      throw error;
+  return db.$transaction(async (prisma) => {
+    const existingLike = await prisma.like.findFirst({
+      where: { userId, placeId, routeId },
     });
+
+    if (existingLike) {
+      return existingLike;
+    }
+
+    if (placeId) {
+      const createLike = prisma.like.create({ data: { userId, placeId } });
+      const updateCount = prisma.place.update({
+        where: { id: placeId },
+        data: { likesCount: { increment: 1 } },
+      });
+      const [newLike] = await Promise.all([createLike, updateCount]);
+      return newLike;
+    } else if (routeId) {
+      const createLike = prisma.like.create({ data: { userId, routeId } });
+      const updateCount = prisma.route.update({
+        where: { id: routeId },
+        data: { likesCount: { increment: 1 } },
+      });
+      const [newLike] = await Promise.all([createLike, updateCount]);
+      return newLike;
+    }
+  });
 }
 
 export async function removeLike(
@@ -54,12 +62,25 @@ export async function removeLike(
   if (!placeId && !routeId) {
     throw new Error('Place ID or Route ID is required.');
   }
-  return db.like.deleteMany({
-    where: {
-      userId,
-      placeId,
-      routeId,
-    },
+
+  return db.$transaction(async (prisma) => {
+    const where = { userId, placeId, routeId };
+    const deletedResult = await prisma.like.deleteMany({ where });
+
+    if (deletedResult.count > 0) {
+      if (placeId) {
+        await prisma.place.update({
+          where: { id: placeId },
+          data: { likesCount: { decrement: 1 } },
+        });
+      } else if (routeId) {
+        await prisma.route.update({
+          where: { id: routeId },
+          data: { likesCount: { decrement: 1 } },
+        });
+      }
+    }
+    return deletedResult;
   });
 }
 
@@ -78,22 +99,6 @@ export async function getLikeStatus(
     },
   });
   return !!like;
-}
-
-export async function getPlaceLikesCount(placeId: string) {
-  return db.like.count({
-    where: {
-      placeId,
-    },
-  });
-}
-
-export async function getRouteLikesCount(routeId: string) {
-  return db.like.count({
-    where: {
-      routeId,
-    },
-  });
 }
 
 export async function getLikedPlacesByUserId(
@@ -124,13 +129,7 @@ export async function getLikedPlacesByUserId(
     db.like.findMany({
       where: whereClause,
       include: {
-        place: {
-          include: {
-            _count: {
-              select: { likes: true },
-            },
-          },
-        },
+        place: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -144,10 +143,8 @@ export async function getLikedPlacesByUserId(
   const places = likedItems
     .map((like) => {
       if (!like.place) return null;
-      const { _count, ...placeDetails } = like.place;
       return {
-        ...serializeDatesInPlace(placeDetails),
-        likesCount: _count.likes,
+        ...serializeDates(like.place),
         isLiked: true,
       };
     })
@@ -182,13 +179,7 @@ export async function getLikedRoutesByUserId(
     db.like.findMany({
       where: whereClause,
       include: {
-        route: {
-          include: {
-            _count: {
-              select: { likes: true },
-            },
-          },
-        },
+        route: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -202,10 +193,8 @@ export async function getLikedRoutesByUserId(
   const routes = likedItems
     .map((like) => {
       if (!like.route) return null;
-      const { _count, ...routeDetails } = like.route;
       return {
-        ...serializeDatesInPlace(routeDetails),
-        likesCount: _count.likes,
+        ...serializeDates(like.route),
         isLiked: true,
       };
     })
@@ -227,22 +216,26 @@ export async function getLikeInfo(
     throw new Error('Place ID or Route ID is required.');
   }
 
-  const where = placeId ? { placeId } : { routeId };
+  let count = 0;
+  if (placeId) {
+    const place = await db.place.findUnique({
+      where: { id: placeId },
+      select: { likesCount: true },
+    });
+    if (!place) throw new NotFoundError('Place not found');
+    count = place.likesCount;
+  } else if (routeId) {
+    const route = await db.route.findUnique({
+      where: { id: routeId },
+      select: { likesCount: true },
+    });
+    if (!route) throw new NotFoundError('Route not found');
+    count = route.likesCount;
+  }
 
-  const countPromise = db.like.count({ where });
-
-  const likedPromise = userId
-    ? db.like
-        .findFirst({
-          where: {
-            userId,
-            ...where,
-          },
-        })
-        .then((like) => !!like)
-    : Promise.resolve(false);
-
-  const [count, liked] = await Promise.all([countPromise, likedPromise]);
+  const liked = userId
+    ? await getLikeStatus(userId, { placeId, routeId })
+    : false;
 
   return { count, liked };
 }

@@ -52,6 +52,7 @@ const CreatedPlaces = ({
   return (
     <>
       <CreatedContentList
+        isMyProfile={true}
         activeSubTab="places"
         places={data?.data || []}
         routes={[]}
@@ -100,6 +101,7 @@ const CreatedRoutes = ({
   return (
     <>
       <CreatedContentList
+        isMyProfile={true}
         activeSubTab="routes"
         places={[]}
         routes={data?.data || []}

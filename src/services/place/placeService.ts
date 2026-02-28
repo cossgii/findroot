@@ -99,7 +99,7 @@ export async function getPlacesByDistrict(
 
   const orderByClause =
     sort === 'likes'
-      ? { likes: { _count: 'desc' as const } }
+      ? { likesCount: 'desc' as const }
       : { createdAt: 'desc' as const };
 
   const [placesWithLikes, totalCount] = await db.$transaction([
@@ -108,9 +108,6 @@ export async function getPlacesByDistrict(
       include: {
         creator: {
           select: { id: true, name: true, image: true },
-        },
-        _count: {
-          select: { likes: true },
         },
         likes: userId
           ? {
@@ -130,9 +127,8 @@ export async function getPlacesByDistrict(
     db.place.count({ where: whereClause }),
   ]);
 
-  const places = placesWithLikes.map(({ _count, likes, ...place }) => ({
+  const places = placesWithLikes.map(({ likes, ...place }) => ({
     ...serializeDatesInPlace(place),
-    likesCount: _count.likes,
     isLiked: !!(likes && likes.length > 0),
     category: place.category as PlaceCategory,
   }));
@@ -151,9 +147,6 @@ export async function getPlaceById(id: string, userId?: string) {
     include: {
       creator: {
         select: { id: true, name: true, image: true },
-      },
-      _count: {
-        select: { likes: true },
       },
       likes: userId
         ? {
@@ -175,11 +168,10 @@ export async function getPlaceById(id: string, userId?: string) {
   const isLiked =
     userId && placeWithLikes.likes && placeWithLikes.likes.length > 0;
 
-  const { _count, likes, ...place } = placeWithLikes;
+  const { likes, ...place } = placeWithLikes;
 
   return {
     ...serializeDatesInPlace(place),
-    likesCount: _count.likes,
     isLiked: !!isLiked,
     category: place.category as PlaceCategory,
   };
@@ -213,9 +205,6 @@ export async function getPlacesByCreatorId(
         creator: {
           select: { id: true, name: true, image: true },
         },
-        _count: {
-          select: { likes: true },
-        },
         likes: currentUserId
           ? {
               where: {
@@ -236,9 +225,8 @@ export async function getPlacesByCreatorId(
     db.place.count({ where: whereClause }),
   ]);
 
-  const places = placesWithLikes.map(({ _count, likes, ...place }) => ({
+  const places = placesWithLikes.map(({ likes, ...place }) => ({
     ...serializeDatesInPlace(place),
-    likesCount: _count.likes,
     isLiked: !!(likes && likes.length > 0),
     category: place.category as PlaceCategory,
   }));

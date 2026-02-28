@@ -58,11 +58,7 @@ const routeInclude = {
       order: 'asc' as const,
     },
     include: {
-      place: {
-        include: {
-          _count: { select: { likes: true } },
-        },
-      },
+      place: true,
     },
   },
 };
@@ -72,18 +68,14 @@ export async function getRouteById(id: string, userId?: string) {
     where: { id },
     include: {
       ...routeInclude,
-      _count: { select: { likes: true, comments: true } },
+      _count: { select: { comments: true } },
       likes: userId ? { where: { userId }, select: { userId: true } } : false,
       places: {
         orderBy: {
           order: 'asc' as const,
         },
         include: {
-          place: {
-            include: {
-              _count: { select: { likes: true } },
-            },
-          },
+          place: true,
           alternatives: {
             include: {
               place: true,
@@ -113,7 +105,7 @@ export async function getRouteById(id: string, userId?: string) {
   const userLikedPlaceIds = new Set(userLikes.map((like) => like.placeId));
 
   const enrichedPlaces = routeWithLikes.places.map((routePlace) => {
-    const { _count, ...place } = routePlace.place;
+    const { ...place } = routePlace.place;
 
     const serializedAlternatives = (routePlace.alternatives || []).map(
       (alt) => ({
@@ -126,7 +118,6 @@ export async function getRouteById(id: string, userId?: string) {
       ...routePlace,
       place: {
         ...serializeDatesInPlace(place),
-        likesCount: _count.likes,
         isLiked: userLikedPlaceIds.has(place.id),
       },
       alternatives: serializedAlternatives,
@@ -141,7 +132,6 @@ export async function getRouteById(id: string, userId?: string) {
   return {
     ...serializeDatesInPlace(routeData),
     places: enrichedPlaces,
-    likesCount: _count.likes,
     commentsCount: _count.comments,
     isLiked: isRouteLiked,
   };
@@ -159,13 +149,13 @@ export async function getRoutesByCreatorId(
     whereClause.districtId = districtId;
   }
 
-  const [routesWithLikes, totalCount] = await db.$transaction([
+  const [routesWithData, totalCount] = await db.$transaction([
     db.route.findMany({
       where: whereClause,
       include: {
         ...routeInclude,
         _count: {
-          select: { likes: true, comments: true },
+          select: { comments: true },
         },
         likes: {
           where: {
@@ -185,15 +175,9 @@ export async function getRoutesByCreatorId(
     db.route.count({ where: whereClause }),
   ]);
 
-  const allPlaceIds = routesWithLikes.flatMap((route) =>
+  const allPlaceIds = routesWithData.flatMap((route) =>
     (route.places || []).map((rp) => rp.place.id),
   );
-
-  const likeCounts = await db.like.groupBy({
-    by: ['placeId'],
-    where: { placeId: { in: allPlaceIds } },
-    _count: { placeId: true },
-  });
 
   const userLikes = creatorId
     ? await db.like.findMany({
@@ -201,25 +185,19 @@ export async function getRoutesByCreatorId(
         select: { placeId: true },
       })
     : [];
-
   const userLikedPlaceIds = new Set(userLikes.map((like) => like.placeId));
-  const placeIdToLikeCountMap = new Map(
-    likeCounts.map((item) => [item.placeId, item._count.placeId]),
-  );
 
-  const routes = routesWithLikes.map(({ _count, likes, ...route }) => {
+  const routes = routesWithData.map(({ _count, likes, ...route }) => {
     const serializedRoute = serializeDatesInPlace(route);
     const serializedPlaces = route.places.map((rp) => ({
       ...rp,
       place: {
         ...serializeDatesInPlace(rp.place),
-        likesCount: placeIdToLikeCountMap.get(rp.place.id) || 0,
         isLiked: userLikedPlaceIds.has(rp.place.id),
       },
     }));
     return {
       ...serializedRoute,
-      likesCount: _count.likes,
       commentsCount: _count.comments,
       isLiked: (likes || []).length > 0,
       places: serializedPlaces,
@@ -263,16 +241,16 @@ export async function getRoutes(
   }
 
   const orderBy: Prisma.RouteOrderByWithRelationInput = orderByLikes
-    ? { likes: { _count: 'desc' } }
+    ? { likesCount: 'desc' }
     : { createdAt: 'desc' };
 
-  const [routesWithLikes, totalCount] = await db.$transaction([
+  const [routesWithData, totalCount] = await db.$transaction([
     db.route.findMany({
       where: whereClause,
       include: {
         ...routeInclude,
         _count: {
-          select: { likes: true, comments: true },
+          select: { comments: true },
         },
         likes: currentUserId
           ? {
@@ -292,15 +270,9 @@ export async function getRoutes(
     db.route.count({ where: whereClause }),
   ]);
 
-  const allPlaceIds = routesWithLikes.flatMap((route) =>
+  const allPlaceIds = routesWithData.flatMap((route) =>
     (route.places || []).filter((rp) => rp.place).map((rp) => rp.place.id),
   );
-
-  const likeCounts = await db.like.groupBy({
-    by: ['placeId'],
-    where: { placeId: { in: allPlaceIds } },
-    _count: { placeId: true },
-  });
 
   const userLikes = currentUserId
     ? await db.like.findMany({
@@ -308,13 +280,9 @@ export async function getRoutes(
         select: { placeId: true },
       })
     : [];
-
   const userLikedPlaceIds = new Set(userLikes.map((like) => like.placeId));
-  const placeIdToLikeCountMap = new Map(
-    likeCounts.map((item) => [item.placeId, item._count.placeId]),
-  );
 
-  const routes = routesWithLikes.map(({ _count, likes, ...route }) => {
+  const routes = routesWithData.map(({ _count, likes, ...route }) => {
     const serializedRoute = serializeDatesInPlace(route);
     const serializedPlaces = (route.places || [])
       .filter((rp) => rp.place)
@@ -322,13 +290,11 @@ export async function getRoutes(
         ...rp,
         place: {
           ...serializeDatesInPlace(rp.place),
-          likesCount: placeIdToLikeCountMap.get(rp.place.id) || 0,
           isLiked: userLikedPlaceIds.has(rp.place.id),
         },
       }));
     return {
       ...serializedRoute,
-      likesCount: _count.likes,
       commentsCount: _count.comments,
       isLiked: (likes || []).length > 0,
       places: serializedPlaces,
@@ -368,16 +334,16 @@ export async function getAllPublicRoutes(
   }
 
   const orderBy: Prisma.RouteOrderByWithRelationInput = orderByLikes
-    ? { likes: { _count: 'desc' } }
+    ? { likesCount: 'desc' }
     : { createdAt: 'desc' };
 
-  const [routesWithLikes, totalCount] = await db.$transaction([
+  const [routesWithData, totalCount] = await db.$transaction([
     db.route.findMany({
       where: whereClause,
       include: {
         ...routeInclude,
         _count: {
-          select: { likes: true, comments: true },
+          select: { comments: true },
         },
         likes: currentUserId
           ? {
@@ -397,15 +363,9 @@ export async function getAllPublicRoutes(
     db.route.count({ where: whereClause }),
   ]);
 
-  const allPlaceIds = routesWithLikes.flatMap((route) =>
+  const allPlaceIds = routesWithData.flatMap((route) =>
     (route.places || []).filter((rp) => rp.place).map((rp) => rp.place.id),
   );
-
-  const likeCounts = await db.like.groupBy({
-    by: ['placeId'],
-    where: { placeId: { in: allPlaceIds } },
-    _count: { placeId: true },
-  });
 
   const userLikes = currentUserId
     ? await db.like.findMany({
@@ -413,13 +373,9 @@ export async function getAllPublicRoutes(
         select: { placeId: true },
       })
     : [];
-
   const userLikedPlaceIds = new Set(userLikes.map((like) => like.placeId));
-  const placeIdToLikeCountMap = new Map(
-    likeCounts.map((item) => [item.placeId, item._count.placeId]),
-  );
 
-  const routes = routesWithLikes.map(({ _count, likes, ...route }) => {
+  const routes = routesWithData.map(({ _count, likes, ...route }) => {
     const serializedRoute = serializeDatesInPlace(route);
     const serializedPlaces = (route.places || [])
       .filter((rp) => rp.place)
@@ -427,13 +383,11 @@ export async function getAllPublicRoutes(
         ...rp,
         place: {
           ...serializeDatesInPlace(rp.place),
-          likesCount: placeIdToLikeCountMap.get(rp.place.id) || 0,
           isLiked: userLikedPlaceIds.has(rp.place.id),
         },
       }));
     return {
       ...serializedRoute,
-      likesCount: _count.likes,
       commentsCount: _count.comments,
       isLiked: (likes || []).length > 0,
       places: serializedPlaces,
@@ -612,7 +566,9 @@ export async function updateRouteIsRepresentative(
 
   if (isRepresentative) {
     if (!routeToUpdate.districtId) {
-      throw new BadRequestError('대표 루트는 자치구가 설정된 루트만 가능합니다.');
+      throw new BadRequestError(
+        '대표 루트는 자치구가 설정된 루트만 가능합니다.',
+      );
     }
 
     const representativeRoutesCount = await db.route.count({

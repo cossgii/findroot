@@ -80,6 +80,7 @@ model Place {
   district     String?
   category     PlaceCategory
   likes        Like[]
+  likesCount   Int           @default(0)
   creator      User          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   routes       RoutePlace[]
   alternatives Alternative[]
@@ -92,6 +93,7 @@ model Place {
   @@index([creatorId, createdAt])
   @@index([district, category])
   @@index([creatorId, address])
+  @@index([likesCount])
   @@map("places")
 }
 
@@ -106,6 +108,7 @@ model Route {
   purpose          RoutePurpose @default(ENTIRE)
   isRepresentative Boolean      @default(false) @map("is_representative")
   likes            Like[]
+  likesCount       Int          @default(0)
   places           RoutePlace[]
   creator          User         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   comments         Comment[]
@@ -114,6 +117,7 @@ model Route {
   @@index([creatorId])
   @@index([districtId, createdAt])
   @@index([districtId, creatorId])
+  @@index([likesCount])
   @@map("routes")
 }
 

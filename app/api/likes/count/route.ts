@@ -1,7 +1,4 @@
-import {
-  getPlaceLikesCount,
-  getRouteLikesCount,
-} from '~/src/services/like/likeService';
+import { getLikeInfo } from '~/src/services/like/likeService';
 import { z } from 'zod';
 import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 
@@ -19,15 +16,10 @@ const likeCountQuerySchema = z
 
 export const GET = apiHandler({
   querySchema: likeCountQuerySchema,
-  handler: async ({ query }) => {
+  handler: async ({ query, session }) => {
     const { placeId, routeId } = query;
-    let count = 0;
-
-    if (placeId) {
-      count = await getPlaceLikesCount(placeId);
-    } else if (routeId) {
-      count = await getRouteLikesCount(routeId);
-    }
+    const userId = session?.user?.id;
+    const { count } = await getLikeInfo({ placeId, routeId }, userId);
 
     return apiSuccess({ count });
   },
