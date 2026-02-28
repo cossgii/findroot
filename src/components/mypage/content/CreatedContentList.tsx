@@ -46,7 +46,9 @@ interface CreatedContentListProps {
     isRepresentative: boolean,
   ) => void;
   onContentUpdate: () => void;
+  isMyProfile: boolean;
 }
+
 const routeStopLabelMap: Record<
   RouteStopLabel,
   { text: string; className: string }
@@ -75,6 +77,7 @@ export default function CreatedContentList({
   onDeleteRoute,
   onToggleIsRepresentative,
   onContentUpdate,
+  isMyProfile,
 }: CreatedContentListProps) {
   const queryClient = useQueryClient();
   const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null);
@@ -232,24 +235,26 @@ export default function CreatedContentList({
                 <p className="text-sm text-gray-500">{place.district}</p>
               )}
             </div>
-            <div className="flex space-x-2 flex-shrink-0">
-              <Button
-                onClick={() => onEditPlace(place.id)}
-                variant="outlined"
-                size="small"
-                className="w-auto px-3 py-1 text-xs"
-              >
-                수정
-              </Button>
-              <Button
-                onClick={() => onDeletePlace(place.id)}
-                variant="outlined"
-                size="small"
-                className="w-auto px-3 py-1 text-xs"
-              >
-                삭제
-              </Button>
-            </div>
+            {isMyProfile && (
+              <div className="flex space-x-2 flex-shrink-0">
+                <Button
+                  onClick={() => onEditPlace(place.id)}
+                  variant="outlined"
+                  size="small"
+                  className="w-auto px-3 py-1 text-xs"
+                >
+                  수정
+                </Button>
+                <Button
+                  onClick={() => onDeletePlace(place.id)}
+                  variant="outlined"
+                  size="small"
+                  className="w-auto px-3 py-1 text-xs"
+                >
+                  삭제
+                </Button>
+              </div>
+            )}
           </li>
         ))}
       </ul>

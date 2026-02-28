@@ -28,10 +28,6 @@ export const GET = apiHandler({
     const { userId: userIdFromParams } = UserRoutesParamsSchema.parse(params);
     const { page, limit, districtId } = query;
 
-    if (session!.user.id !== userIdFromParams) {
-      throw new ForbiddenError('이 사용자의 루트를 조회할 권한이 없습니다.');
-    }
-
     const result = await getRoutesByCreatorId(
       userIdFromParams,
       page,

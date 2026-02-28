@@ -143,6 +143,7 @@ export default function UserProfileClient({
                 onEditRoute={() => {}}
                 onDeleteRoute={() => {}}
                 onContentUpdate={() => {}}
+                isMyProfile={isMyProfile}
               />
               <Pagination
                 currentPage={placesPage}
@@ -164,6 +165,7 @@ export default function UserProfileClient({
               onEditRoute={() => {}}
               onDeleteRoute={() => {}}
               onContentUpdate={() => {}}
+              isMyProfile={isMyProfile}
             />
             <Pagination
               currentPage={routesPage}
