@@ -1,9 +1,11 @@
 import {
   updateComment,
   deleteComment,
+  deleteCommentWithRouteId,
 } from '~/src/services/comment/commentService';
 import { z } from 'zod';
 import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
+import { db } from '~/lib/db';
 
 const putBodySchema = z.object({
   content: z.string().min(1, 'Comment content cannot be empty.'),
@@ -33,8 +35,18 @@ export const DELETE = apiHandler({
     const { commentId } = paramsSchema.parse(params);
     const userId = session!.user.id;
 
-    await deleteComment({ commentId, userId });
+    const { routeId } = await deleteCommentWithRouteId({ commentId, userId });
 
-    return apiSuccess(null, 204);
+    const totalCommentsCount = await db.comment.count({
+      where: { routeId },
+    });
+
+    return apiSuccess(
+      {
+        deleted: true,
+        commentsCount: totalCommentsCount,
+      },
+      200,
+    );
   },
 });

@@ -140,6 +140,8 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
     Record<string, string>
   >({});
 
+  const [commentsCount, setCommentsCount] = useState(route.commentsCount);
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       setModal({
@@ -243,7 +245,7 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
           className="flex items-center text-gray-600 hover:underline"
         >
           <span className="mr-1">💬</span>
-          <span>{route.commentsCount}</span>
+          <span>{commentsCount}</span>
         </a>
       </div>
       <p className="text-gray-600 mb-8">{route.description}</p>
@@ -293,7 +295,11 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
           <div className="mt-12 pt-8 border-t">댓글을 불러오는 중...</div>
         }
       >
-        <CommentSection routeId={route.id} />
+        <CommentSection
+          routeId={route.id}
+          initialCommentsCount={commentsCount}
+          onCommentsCountChange={setCommentsCount}
+        />
       </Suspense>
     </div>
   );

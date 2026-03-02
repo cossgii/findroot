@@ -4,6 +4,7 @@ import {
 } from '~/src/services/comment/commentService';
 import { z } from 'zod';
 import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
+import { db } from '~/lib/db';
 
 const getCommentsQuerySchema = z.object({
   page: z.coerce.number().min(1).default(1),
@@ -38,6 +39,16 @@ export const POST = apiHandler({
 
     const newComment = await createComment({ routeId, authorId, content });
 
-    return apiSuccess(newComment, 201);
+    const totalCommentsCount = await db.comment.count({
+      where: { routeId },
+    });
+
+    return apiSuccess(
+      {
+        comment: newComment,
+        commentsCount: totalCommentsCount,
+      },
+      201,
+    );
   },
 });

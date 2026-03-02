@@ -36,10 +36,12 @@ export async function getCommentsByRouteId({
     db.comment.count({ where }),
   ]);
 
+  const totalPages = Math.ceil(totalCount / limit);
+
   return {
-    comments,
+    data: comments,
     totalCount,
-    totalPages: Math.ceil(totalCount / limit),
+    totalPages,
     currentPage: page,
   };
 }
@@ -55,13 +57,24 @@ export async function createComment({
   authorId,
   content,
 }: CreateCommentProps) {
-  return db.comment.create({
+  const newComment = await db.comment.create({
     data: {
       routeId,
       authorId,
       content,
     },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+    },
   });
+
+  return newComment;
 }
 
 interface UpdateCommentProps {
@@ -90,6 +103,15 @@ export async function updateComment({
   return db.comment.update({
     where: { id: commentId },
     data: { content },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+    },
   });
 }
 
@@ -114,7 +136,6 @@ export async function deleteComment({ commentId, userId }: DeleteCommentProps) {
     throw new NotFoundError('댓글을 찾을 수 없습니다.');
   }
 
-  // Allow deletion if the user is the author of the comment OR the owner of the route
   if (comment.authorId !== userId && comment.route.creatorId !== userId) {
     throw new ForbiddenError('이 댓글을 삭제할 권한이 없습니다.');
   }
@@ -122,4 +143,37 @@ export async function deleteComment({ commentId, userId }: DeleteCommentProps) {
   return db.comment.delete({
     where: { id: commentId },
   });
+}
+
+export async function deleteCommentWithRouteId({
+  commentId,
+  userId,
+}: DeleteCommentProps) {
+  const comment = await db.comment.findUnique({
+    where: { id: commentId },
+    include: {
+      route: {
+        select: {
+          id: true,
+          creatorId: true,
+        },
+      },
+    },
+  });
+
+  if (!comment) {
+    throw new NotFoundError('댓글을 찾을 수 없습니다.');
+  }
+
+  if (comment.authorId !== userId && comment.route.creatorId !== userId) {
+    throw new ForbiddenError('이 댓글을 삭제할 권한이 없습니다.');
+  }
+
+  const routeId = comment.route.id;
+
+  await db.comment.delete({
+    where: { id: commentId },
+  });
+
+  return { routeId };
 }
