@@ -60,9 +60,7 @@ export const Marker = ({
       key={id}
       ref={ref}
       style={{
-        transform: styles.y.to(
-          (y) => `translate(-50%, -50%) translateY(${y}px)`,
-        ),
+        transform: styles.y.to((y) => `translate(0%, -45%) translateY(${y}px)`),
         scale: styles.scale,
       }}
       className="w-8 h-8"
@@ -154,11 +152,11 @@ export const RoutePath = () => {
 
   const d = useMemo(
     () =>
-      ROUTE.places
-        .map((p, i) =>
+      ROUTE.markers
+        .map((m, i) =>
           i === 0
-            ? `M ${p.coords.x.replace('%', '')} ${p.coords.y.replace('%', '')}`
-            : `L ${p.coords.x.replace('%', '')} ${p.coords.y.replace('%', '')}`,
+            ? `M ${m.coords.x.replace('%', '')} ${m.coords.y.replace('%', '')}`
+            : `L ${m.coords.x.replace('%', '')} ${m.coords.y.replace('%', '')}`,
         )
         .join(' '),
     [],
