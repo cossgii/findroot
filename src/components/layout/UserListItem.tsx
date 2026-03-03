@@ -43,7 +43,7 @@ export default function UserListItem({
             <UserIcon className="h-3/5 w-3/5 text-gray-500" />
           </AvatarFallback>
         </Avatar>
-        <span className="font-medium">{user.name}</span>
+        <span className="font-medium" data-cy="user-list-item-name">{user.name}</span>
       </div>
       <Link
         href={`/users/${user.id}`}

@@ -134,6 +134,76 @@ export default defineConfig({
             throw error;
           }
         },
+
+        'db:seedUsers': async (count: number) => {
+          try {
+            const usersToCreate = [];
+            for (let i = 1; i <= count; i++) {
+              const loginId = `user${i}`;
+              const email = `user${i}@test.com`;
+              const password = await bcrypt.hash('password123!', 10);
+              usersToCreate.push({
+                loginId,
+                email,
+                name: `User ${i}`,
+                password,
+              });
+            }
+            await client.user.createMany({
+              data: usersToCreate,
+              skipDuplicates: true,
+            });
+            console.log(`✅ Seeded ${count} users.`);
+            return null;
+          } catch (error) {
+            console.error('❌ db:seedUsers failed:', error);
+            throw error;
+          }
+        },
+
+        'db:createFollows': async ({
+          followerLoginId,
+          count,
+        }: {
+          followerLoginId: string;
+          count: number;
+        }) => {
+          try {
+            const follower = await client.user.findUnique({
+              where: { loginId: followerLoginId },
+            });
+
+            if (!follower) {
+              throw new Error(`Follower with loginId "${followerLoginId}" not found.`);
+            }
+
+            const usersToFollow = await client.user.findMany({
+              where: {
+                NOT: {
+                  id: follower.id,
+                },
+              },
+              take: count,
+            });
+
+            const followData = usersToFollow.map((user) => ({
+              followerId: follower.id,
+              followingId: user.id,
+            }));
+
+            await client.follow.createMany({
+              data: followData,
+              skipDuplicates: true,
+            });
+            console.log(
+              `✅ User "${followerLoginId}" now follows ${count} users.`,
+            );
+            return null;
+          } catch (error) {
+            console.error('❌ db:createFollows failed:', error);
+            throw error;
+          }
+        },
       });
 
       return config;

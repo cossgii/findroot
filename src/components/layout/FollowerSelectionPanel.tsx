@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { useTransition, animated } from '@react-spring/web';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useRef, useCallback } from 'react';
+import {
+  animated,
+  useTransition as useSpringTransition,
+} from '@react-spring/web';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useAtom } from 'jotai';
 import { contentCreatorAtom } from '~/src/stores/app-store';
 import { cn } from '~/src/utils/class-name';
@@ -20,13 +23,25 @@ interface FollowingUser {
   image: string | null;
 }
 
-const fetchFollowing = async (): Promise<FollowingUser[]> => {
-  const res = await fetch('/api/users/me/following');
+interface FollowingApiResponse {
+  data: FollowingUser[];
+  nextCursor?: string;
+}
+
+const fetchFollowing = async (
+  cursor?: string,
+): Promise<FollowingApiResponse> => {
+  const params = new URLSearchParams();
+  if (cursor) {
+    params.append('cursor', cursor);
+  }
+  params.append('limit', '8');
+
+  const res = await fetch(`/api/users/me/following?${params.toString()}`);
   if (!res.ok) {
     throw new Error('Failed to fetch following list');
   }
-  const result = await res.json();
-  return result.data;
+  return res.json();
 };
 
 interface FollowerSelectionPanelProps {
@@ -46,17 +61,40 @@ export default function FollowerSelectionPanel({
   const { data: searchResults = [], isLoading: isSearching } =
     useUserSearch(searchTerm);
 
-  const { data: following = [], isLoading: isLoadingFollowing } = useQuery<
-    FollowingUser[]
-  >({
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isLoadingFollowing,
+  } = useInfiniteQuery<FollowingApiResponse>({
     queryKey: ['following'],
-    queryFn: fetchFollowing,
+    queryFn: ({ pageParam }) => fetchFollowing(pageParam as string | undefined),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: undefined,
     enabled: isOpen,
   });
 
+  const following = data?.pages.flatMap((page) => page.data) ?? [];
+
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastElementRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (isFetchingNextPage) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [isFetchingNextPage, hasNextPage, fetchNextPage],
+  );
+
   const [contentCreator, setContentCreator] = useAtom(contentCreatorAtom);
 
-  const panelTransition = useTransition(isOpen, {
+  const panelTransition = useSpringTransition(isOpen, {
     from: { transform: 'translateX(-100%)' },
     enter: { transform: 'translateX(0%)' },
     leave: { transform: 'translateX(-100%)' },
@@ -96,9 +134,10 @@ export default function FollowerSelectionPanel({
           item && (
             <animated.div
               style={styles}
-              className="fixed top-0 left-0 h-full w-72 bg-white shadow-lg z-50 overflow-y-auto"
+              className="fixed top-0 left-0 h-full w-72 bg-white shadow-lg z-50 flex flex-col"
+              data-cy="follower-selection-panel"
             >
-              <div className="p-4">
+              <div className="p-4 flex-shrink-0">
                 {!isUserPage && (
                   <ul className="flex justify-center gap-2 mb-4">
                     <li
@@ -145,8 +184,11 @@ export default function FollowerSelectionPanel({
                     className="w-full"
                   />
                 </div>
-                {searchTerm && (
-                  <div className="space-y-1 max-h-40 overflow-y-auto border-t pt-2">
+              </div>
+
+              <div className="flex-grow overflow-y-auto px-4">
+                {searchTerm ? (
+                  <div className="space-y-1 max-h-40 overflow-y-auto pt-2">
                     {isSearching ? (
                       Array.from({ length: 3 }).map((_, i) => (
                         <UserListItemSkeleton key={i} />
@@ -164,25 +206,30 @@ export default function FollowerSelectionPanel({
                       </p>
                     )}
                   </div>
+                ) : (
+                  <ul className="space-y-2">
+                    {isLoadingFollowing && !data ? (
+                      Array.from({ length: 8 }).map((_, i) => (
+                        <UserListItemSkeleton key={i} />
+                      ))
+                    ) : following.length > 0 ? (
+                      <>
+                        <AnimatedUserList
+                          users={following}
+                          contentCreator={contentCreator}
+                          onSelectCreator={handleSelectCreator}
+                          onClose={onClose}
+                        />
+                        <div ref={lastElementRef} className="h-1" />
+                        {isFetchingNextPage && <UserListItemSkeleton />}
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        팔로잉하는 사용자가 없습니다.
+                      </p>
+                    )}
+                  </ul>
                 )}
-                <ul className="space-y-2">
-                  {isLoadingFollowing ? (
-                    Array.from({ length: 3 }).map((_, i) => (
-                      <UserListItemSkeleton key={i} />
-                    ))
-                  ) : following.length > 0 ? (
-                    <AnimatedUserList
-                      users={following}
-                      contentCreator={contentCreator}
-                      onSelectCreator={handleSelectCreator}
-                      onClose={onClose}
-                    />
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      팔로잉하는 사용자가 없습니다.
-                    </p>
-                  )}
-                </ul>
               </div>
             </animated.div>
           ),

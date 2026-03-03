@@ -68,6 +68,7 @@ export default function CreatorSelectorButton({
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2',
       )}
       aria-label={isUserPage ? '팔로잉 검색' : '콘텐츠 크리에이터 선택'}
+      data-cy="creator-selector-button"
     >
       {renderContent()}
       <ChevronDown size={16} className="text-gray-500 ml-1" />

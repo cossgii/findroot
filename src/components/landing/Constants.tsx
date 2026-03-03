@@ -26,7 +26,7 @@ export const PLACES = [
     markerImage: '/assets/marker-drink.png',
     coords: { x: '90%', y: '35%' },
     description:
-      '아름다운 노을과 함께, 트렌딩한 위스키와 칵테일을 즐길 수 있습니다.',
+      '아름다운 노을과 함께, 트렌디한 위스키와 칵테일을 즐길 수 있습니다.',
   },
 ];
 
