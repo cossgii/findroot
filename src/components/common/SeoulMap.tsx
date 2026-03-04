@@ -144,7 +144,7 @@ export function SeoulMap() {
       <SeoulDistrictsSVG
         ref={svgObjectRef}
         aria-label="Seoul Districts Interactive Map"
-        className="max-w-full max-h-full"
+        className="max-w-full max-h-full aspect-square"
         onMouseOver={handleMouseOver}
         onMouseOut={handleMouseOut}
         onClick={handleSvgClick}
