@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useSpring, animated } from '@react-spring/web';
 import { SeoulMap } from '~/src/components/common/SeoulMap';
 import LandingPicture from '~/public/assets/landing-picture.png';
@@ -20,10 +20,7 @@ export const HeroSection = ({ showHero }: { showHero: boolean }) => {
   });
 
   return (
-    <div
-      className="relative w-full h-screen bg-gray-100 flex items-center justify-center overflow-hidden"
-      style={{ willChange: 'contents' }}
-    >
+    <div className="relative w-full h-screen bg-gray-100 flex items-center justify-center overflow-hidden">
       <div
         className="absolute inset-0"
         style={{ userSelect: 'none', pointerEvents: 'auto' }}
@@ -52,18 +49,6 @@ export const PlacesSection = ({ currentPage }: { currentPage: number }) => {
   const [selectedPlace, setSelectedPlace] = useState(PLACES[1]);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!imageContainerRef.current) return;
-
-    const resizeObserver = new ResizeObserver(() => {});
-
-    resizeObserver.observe(imageContainerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
   const calculatePosition = (coords: { x: string; y: string }) => {
     const x = parseFloat(coords.x);
     const y = parseFloat(coords.y);
@@ -75,10 +60,7 @@ export const PlacesSection = ({ currentPage }: { currentPage: number }) => {
   };
 
   return (
-    <div
-      className="w-full min-h-screen bg-gray-100 flex items-center justify-center py-8 sm:py-12 md:py-0"
-      style={{ willChange: 'contents' }}
-    >
+    <div className="w-full min-h-screen bg-gray-100 flex items-center justify-center py-8 sm:py-12 md:py-0">
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 items-center">
           <div className="text-center md:text-left">
@@ -157,18 +139,6 @@ export const PlacesSection = ({ currentPage }: { currentPage: number }) => {
 export const RoutesSection = ({ currentPage }: { currentPage: number }) => {
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!imageContainerRef.current) return;
-
-    const resizeObserver = new ResizeObserver(() => {});
-
-    resizeObserver.observe(imageContainerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
   const calculatePosition = (coords: { x: string; y: string }) => {
     const x = parseFloat(coords.x);
     const y = parseFloat(coords.y);
@@ -180,10 +150,7 @@ export const RoutesSection = ({ currentPage }: { currentPage: number }) => {
   };
 
   return (
-    <div
-      className="w-full min-h-screen bg-gray-100 flex items-center justify-center py-8 sm:py-12 md:py-0"
-      style={{ willChange: 'contents' }}
-    >
+    <div className="w-full min-h-screen bg-gray-100 flex items-center justify-center py-8 sm:py-12 md:py-0">
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 items-center">
           <div className="text-center md:text-left md:order-last">

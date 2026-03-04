@@ -3,11 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-import SeoulDistrictsSVG from '../../../public/assets/Seoul_districts.svg';
+import SeoulDistrictsSVG from '~/public/assets/Seoul_districts.svg';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
-import { DISTRICT_COLORS } from '~/src/utils/colors';
 
-// Constants for label styling
 const LABEL_FONT_SIZE = '18px';
 const LABEL_FONT_WEIGHT = 'bold';
 const LABEL_FILL_COLOR = '#1F2937';
@@ -112,10 +110,9 @@ export function SeoulMap() {
 
     const districts = svgElement.querySelectorAll('path[id]');
 
-    districts.forEach((district, index) => {
+    districts.forEach((district) => {
       const path = district as SVGPathElement;
-      path.style.fill = DISTRICT_COLORS[index % DISTRICT_COLORS.length];
-      // Apply base class for stroke, stroke-width, transition, cursor
+
       path.classList.add('svg-district-path');
 
       const bbox = path.getBBox();
@@ -123,7 +120,6 @@ export function SeoulMap() {
       const centerY = bbox.y + bbox.height / 2;
       path.style.transformOrigin = `${centerX}px ${centerY}px`;
 
-      // Apply/remove hover class for transform
       if (path.id === hoveredDistrictId) {
         path.classList.add('svg-district-path-hover');
       } else {
@@ -132,7 +128,6 @@ export function SeoulMap() {
     });
 
     return () => {
-      // Cleanup: remove classes if component unmounts or hoveredDistrictId changes
       districts.forEach((district) => {
         const path = district as SVGPathElement;
         path.classList.remove('svg-district-path');

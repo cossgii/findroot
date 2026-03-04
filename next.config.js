@@ -3,6 +3,16 @@ const nextConfig = {
   serverExternalPackages: ['@prisma/client'],
   experimental: {},
 
+  async redirects() {
+    return [
+      {
+        source: '/districts',
+        destination: '/districts/all',
+        permanent: true,
+      },
+    ];
+  },
+
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,
