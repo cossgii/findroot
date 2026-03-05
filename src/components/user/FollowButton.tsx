@@ -44,6 +44,21 @@ export default function FollowButton({
     initialData: initialIsFollowing,
   });
 
+  const handleSettled = () => {
+    queryClient.invalidateQueries({
+      queryKey: ['followStatus', session?.user?.id, targetUserId],
+    });
+    if (session?.user?.id) {
+      queryClient.invalidateQueries({
+        queryKey: ['user', session.user.id, 'following'],
+      });
+    }
+    queryClient.invalidateQueries({
+      queryKey: ['user', targetUserId, 'followers'],
+    });
+    queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id] });
+  };
+
   const followMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/users/${targetUserId}/follow`, {
@@ -80,13 +95,7 @@ export default function FollowButton({
       }
       alert(`팔로우 실패: ${err.message}`);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['followStatus', session?.user?.id, targetUserId],
-      });
-      queryClient.invalidateQueries({ queryKey: ['following'] });
-      queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id] });
-    },
+    onSettled: handleSettled,
   });
 
   const unfollowMutation = useMutation({
@@ -125,13 +134,7 @@ export default function FollowButton({
       }
       alert(`언팔로우 실패: ${err.message}`);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['followStatus', session?.user?.id, targetUserId],
-      });
-      queryClient.invalidateQueries({ queryKey: ['following'] });
-      queryClient.invalidateQueries({ queryKey: ['user', session?.user?.id] });
-    },
+    onSettled: handleSettled,
   });
 
   const handleFollowToggle = () => {
@@ -159,7 +162,7 @@ export default function FollowButton({
     isStatusLoading || followMutation.isPending || unfollowMutation.isPending;
 
   if (session?.user?.id === targetUserId) {
-    return null; // Don't show follow button on own profile
+    return null;
   }
 
   return (

@@ -37,10 +37,10 @@ export const GET = apiHandler({
           },
         },
       },
-      orderBy: {
-        followerId: 'asc',
-        followingId: 'asc',
-      },
+      orderBy: [
+        { followerId: 'asc' },
+        { followingId: 'asc' },
+      ],
     });
 
     const followingUsers = followingRelations
