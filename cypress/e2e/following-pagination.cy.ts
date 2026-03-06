@@ -59,7 +59,7 @@ describe('팔로잉 패널 페이지네이션 테스트', () => {
       }
     });
 
-    cy.visit('/districts');
+    cy.visit('/districts/all');
     cy.wait('@getSession');
     cy.get('h2').should('be.visible');
     openFollowerSelectionPanel();
@@ -77,7 +77,7 @@ describe('팔로잉 패널 페이지네이션 테스트', () => {
     });
 
     // 2. 스크롤하여 두 번째 팔로잉 유저 리스트 로드
-    cy.get('[data-cy="follower-selection-panel"] > .overflow-y-auto').scrollTo(
+    cy.get('[data-cy="follower-list-scroll-area"]').scrollTo(
       'bottom',
     );
     cy.wait('@getFollowingSecondPage');
@@ -91,7 +91,7 @@ describe('팔로잉 패널 페이지네이션 테스트', () => {
     });
 
     // 4. 더 이상 로드할 리스트가 없는지 확인 (스크롤을 다시 해도 추가 요청이 없는지 확인)
-    cy.get('[data-cy="follower-selection-panel"] > .overflow-y-auto').scrollTo(
+    cy.get('[data-cy="follower-list-scroll-area"]').scrollTo(
       'bottom',
     );
     cy.get('[data-cy="follower-selection-panel"]')

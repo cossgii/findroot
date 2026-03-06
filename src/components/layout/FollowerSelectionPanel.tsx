@@ -186,7 +186,10 @@ export default function FollowerSelectionPanel({
                 </div>
               </div>
 
-              <div className="flex-grow overflow-y-auto px-4">
+              <div
+                className="flex-grow overflow-y-auto px-4"
+                data-cy="follower-list-scroll-area"
+              >
                 {searchTerm ? (
                   <div className="space-y-1 max-h-40 overflow-y-auto pt-2">
                     {isSearching ? (
