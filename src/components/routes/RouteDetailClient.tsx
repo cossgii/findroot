@@ -6,7 +6,7 @@ import Link from 'next/link';
 import React from 'react';
 import { useSpring, animated } from '@react-spring/web';
 import { useSession } from 'next-auth/react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useSetAtom } from 'jotai';
 import { modalAtom } from '~/src/stores/app-store';
 
@@ -134,13 +134,23 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
   const { status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const setModal = useSetAtom(modalAtom);
 
   const [selectedAlternatives, setSelectedAlternatives] = useState<
     Record<string, string>
   >({});
-
   const [commentsCount, setCommentsCount] = useState(route.commentsCount);
+  const [backHref, setBackHref] = useState(
+    `/districts/${route.districtId || 'all'}?purpose=${route.purpose}`,
+  );
+
+  useEffect(() => {
+    const backUrl = searchParams.get('backUrl');
+    if (backUrl) {
+      setBackHref(backUrl);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -230,7 +240,7 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">{route.name}</h1>
         <Link
-          href={`/districts/${route.districtId || 'all'}?purpose=${route.purpose}`}
+          href={backHref}
           className="p-2 rounded-md hover:bg-gray-100 text-sm"
         >
           목록으로

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { ClientUser as User } from '~/src/types/shared';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 import MainContainer from '~/src/components/layout/MainContainer';
@@ -16,8 +17,8 @@ import CreatedContentList from '~/src/components/mypage/content/CreatedContentLi
 import Pagination from '~/src/components/common/Pagination';
 import { type MyPageSubTab } from '~/src/components/mypage/MyPageTabs';
 import { cn } from '~/src/utils/class-name';
-import { useAtomValue } from 'jotai';
-import { selectedDistrictFilterAtom } from '~/src/stores/app-store';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { selectedDistrictFilterAtom, modalAtom } from '~/src/stores/app-store';
 
 interface UserProfileClientProps {
   profileUser: User;
@@ -44,6 +45,20 @@ export default function UserProfileClient({
 }: UserProfileClientProps) {
   const [activeTab, setActiveTab] = useState<MyPageSubTab>('places');
   const selectedDistrictFilter = useAtomValue(selectedDistrictFilterAtom);
+  const setModal = useSetAtom(modalAtom);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handlePlaceClick = (placeId: string) => {
+    setModal({
+      type: 'RESTAURANT_DETAIL',
+      props: { restaurantId: placeId },
+    });
+  };
+
+  const handleRouteClick = (routeId: string) => {
+    router.push(`/routes/${routeId}?backUrl=${encodeURIComponent(pathname)}`);
+  };
 
   const {
     data: placesData,
@@ -144,6 +159,8 @@ export default function UserProfileClient({
                 onDeleteRoute={() => {}}
                 onContentUpdate={() => {}}
                 isMyProfile={isMyProfile}
+                onPlaceClick={handlePlaceClick}
+                displayMode="like"
               />
               <Pagination
                 currentPage={placesPage}
@@ -166,6 +183,8 @@ export default function UserProfileClient({
               onDeleteRoute={() => {}}
               onContentUpdate={() => {}}
               isMyProfile={isMyProfile}
+              onRouteClick={handleRouteClick}
+              displayMode="like"
             />
             <Pagination
               currentPage={routesPage}

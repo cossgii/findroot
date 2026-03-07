@@ -13,6 +13,8 @@ import AddAlternativeModal from '~/src/components/routes/AddAlternativeModal';
 import EditAlternativeModal from '~/src/components/routes/EditAlternativeModal';
 import { useSession } from 'next-auth/react';
 
+import LikeButton from '~/src/components/common/LikeButton';
+
 interface AlternativeWithPlace {
   id: string;
   explanation: string;
@@ -47,6 +49,9 @@ interface CreatedContentListProps {
   ) => void;
   onContentUpdate: () => void;
   isMyProfile: boolean;
+  onPlaceClick?: (placeId: string) => void;
+  onRouteClick?: (routeId: string) => void;
+  displayMode?: 'edit' | 'like';
 }
 
 const routeStopLabelMap: Record<
@@ -78,6 +83,9 @@ export default function CreatedContentList({
   onToggleIsRepresentative,
   onContentUpdate,
   isMyProfile,
+  onPlaceClick,
+  onRouteClick,
+  displayMode = 'edit',
 }: CreatedContentListProps) {
   const queryClient = useQueryClient();
   const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null);
@@ -227,7 +235,8 @@ export default function CreatedContentList({
         {places.map((place) => (
           <li
             key={place.id}
-            className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between card-hover-effect"
+            className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between card-hover-effect cursor-pointer"
+            onClick={() => onPlaceClick && onPlaceClick(place.id)}
           >
             <div>
               <p className="font-semibold">{place.name}</p>
@@ -235,26 +244,40 @@ export default function CreatedContentList({
                 <p className="text-sm text-gray-500">{place.district}</p>
               )}
             </div>
-            {isMyProfile && (
-              <div className="flex space-x-2 flex-shrink-0">
-                <Button
-                  onClick={() => onEditPlace(place.id)}
-                  variant="outlined"
-                  size="small"
-                  className="w-auto px-3 py-1 text-xs"
-                >
-                  수정
-                </Button>
-                <Button
-                  onClick={() => onDeletePlace(place.id)}
-                  variant="outlined"
-                  size="small"
-                  className="w-auto px-3 py-1 text-xs"
-                >
-                  삭제
-                </Button>
-              </div>
-            )}
+            <div className="flex-shrink-0">
+              {displayMode === 'edit' && isMyProfile ? (
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditPlace(place.id);
+                    }}
+                    variant="outlined"
+                    size="small"
+                    className="w-auto px-3 py-1 text-xs"
+                  >
+                    수정
+                  </Button>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeletePlace(place.id);
+                    }}
+                    variant="outlined"
+                    size="small"
+                    className="w-auto px-3 py-1 text-xs"
+                  >
+                    삭제
+                  </Button>
+                </div>
+              ) : (
+                <LikeButton
+                  placeId={place.id}
+                  initialIsLiked={place.isLiked}
+                  initialLikesCount={place.likesCount}
+                />
+              )}
+            </div>
           </li>
         ))}
       </ul>
@@ -280,7 +303,11 @@ export default function CreatedContentList({
                 ? 'shadow-lg ring-2 ring-primary-500'
                 : 'hover:bg-gray-50',
             )}
-            onClick={() => handleRouteClick(route.id)}
+            onClick={() =>
+              onRouteClick
+                ? onRouteClick(route.id)
+                : handleRouteClick(route.id)
+            }
           >
             <div className="flex items-center justify-between">
               <div>
@@ -289,51 +316,61 @@ export default function CreatedContentList({
                   <p className="text-sm text-gray-500">{districtName}</p>
                 )}
               </div>
-              <div className="flex space-x-2 flex-shrink-0">
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (handleToggleIsRepresentative) {
-                      handleToggleIsRepresentative(
-                        route.id,
-                        !route.isRepresentative,
-                      );
-                    }
-                  }}
-                  variant="outlined"
-                  size="small"
-                  className={cn(
-                    'w-auto px-3 py-1 text-xs',
-                    route.isRepresentative
-                      ? 'text-primary-500 border-primary-500'
-                      : 'text-gray-400 border-gray-400 hover:text-primary-400 hover:border-primary-400',
-                  )}
-                  disabled={toggleRepresentativeMutation.isPending}
-                >
-                  📌
-                </Button>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditRoute(route.id);
-                  }}
-                  variant="outlined"
-                  size="small"
-                  className="w-auto px-3 py-1 text-xs"
-                >
-                  수정
-                </Button>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteRoute(route.id);
-                  }}
-                  variant="outlined"
-                  size="small"
-                  className="w-auto px-3 py-1 text-xs"
-                >
-                  삭제
-                </Button>
+              <div className="flex items-center space-x-2 flex-shrink-0">
+                {displayMode === 'edit' && isMyProfile ? (
+                  <>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (handleToggleIsRepresentative) {
+                          handleToggleIsRepresentative(
+                            route.id,
+                            !route.isRepresentative,
+                          );
+                        }
+                      }}
+                      variant="outlined"
+                      size="small"
+                      className={cn(
+                        'w-auto px-3 py-1 text-xs',
+                        route.isRepresentative
+                          ? 'text-primary-500 border-primary-500'
+                          : 'text-gray-400 border-gray-400 hover:text-primary-400 hover:border-primary-400',
+                      )}
+                      disabled={toggleRepresentativeMutation.isPending}
+                    >
+                      📌
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditRoute(route.id);
+                      }}
+                      variant="outlined"
+                      size="small"
+                      className="w-auto px-3 py-1 text-xs"
+                    >
+                      수정
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteRoute(route.id);
+                      }}
+                      variant="outlined"
+                      size="small"
+                      className="w-auto px-3 py-1 text-xs"
+                    >
+                      삭제
+                    </Button>
+                  </>
+                ) : (
+                  <LikeButton
+                    routeId={route.id}
+                    initialIsLiked={route.isLiked}
+                    initialLikesCount={route.likesCount}
+                  />
+                )}
               </div>
             </div>
 
