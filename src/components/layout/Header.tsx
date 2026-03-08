@@ -46,8 +46,10 @@ export default function Header() {
     }
   };
 
-  const showDistrictDropdown =
+  const showCreatorSelector =
     pathname.startsWith('/districts/') || pathname.startsWith('/users/');
+
+  const showDistrictDropdown = pathname.startsWith('/districts/');
 
   let dropdownValue = selectedDistrictFilter;
   if (currentPathIsDistrictPage) {
@@ -68,7 +70,7 @@ export default function Header() {
           <Link href="/">
             <h1 className="text-xl font-bold">FindRoot</h1>
           </Link>
-          {session && showDistrictDropdown && (
+          {session && showCreatorSelector && (
             <CreatorSelectorButton
               contentCreator={contentCreator}
               onClick={() => setIsPanelOpen(true)}
