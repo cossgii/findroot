@@ -8,6 +8,7 @@ import {
   ForbiddenError,
   NotFoundError,
 } from '~/src/utils/api-errors';
+import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 
 function serializeDatesInPlace<T extends { createdAt: Date; updatedAt: Date }>(
   place: T,
@@ -226,10 +227,27 @@ export async function getRoutes(
 
   if (targetUserId) {
     whereClause.creatorId = targetUserId;
+  } else {
+    const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
+    if (MAIN_ACCOUNT_ID) {
+      whereClause.OR = [
+        { creatorId: MAIN_ACCOUNT_ID },
+        ...(currentUserId ? [{ creatorId: currentUserId }] : []),
+      ];
+    }
   }
 
   if (districtId && districtId !== 'all') {
-    whereClause.districtId = districtId;
+    const districtName = SEOUL_DISTRICTS.find((d) => d.id === districtId)?.name;
+    if (districtName) {
+      whereClause.places = {
+        some: {
+          place: {
+            district: districtName,
+          },
+        },
+      };
+    }
   }
 
   if (purpose && purpose !== 'ENTIRE') {
@@ -320,17 +338,33 @@ export async function getAllPublicRoutes(
 ) {
   const whereClause: Prisma.RouteWhereInput = {};
 
+  if (targetUserId) {
+    whereClause.creatorId = targetUserId;
+  } else {
+    const MAIN_ACCOUNT_ID = process.env.MAIN_ACCOUNT_ID;
+    if (MAIN_ACCOUNT_ID) {
+      whereClause.OR = [
+        { creatorId: MAIN_ACCOUNT_ID },
+        ...(currentUserId ? [{ creatorId: currentUserId }] : []),
+      ];
+    }
+  }
+
   if (districtId && districtId !== 'all') {
-    whereClause.districtId = districtId;
+    const districtName = SEOUL_DISTRICTS.find((d) => d.id === districtId)?.name;
+    if (districtName) {
+      whereClause.places = {
+        some: {
+          place: {
+            district: districtName,
+          },
+        },
+      };
+    }
   }
 
   if (purpose && purpose !== 'ENTIRE') {
     whereClause.purpose = purpose;
-  }
-
-  if (targetUserId) {
-    // Add this condition
-    whereClause.creatorId = targetUserId;
   }
 
   const orderBy: Prisma.RouteOrderByWithRelationInput = orderByLikes

@@ -1,5 +1,5 @@
 import { defineConfig } from 'cypress';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 require('dotenv').config();
 
@@ -28,7 +28,12 @@ function getPrismaClient() {
 }
 
 async function cleanupTestPatterns(client: PrismaClient) {
-  const testPatterns = ['Cypress 테스트', 'cypress-test-', 'Test Route'];
+  const testPatterns = [
+    'Cypress 테스트',
+    'cypress-test-',
+    'Test Route',
+    'Test Place',
+  ];
 
   const whereCondition = {
     OR: testPatterns.flatMap((pattern) => [
@@ -174,7 +179,9 @@ export default defineConfig({
             });
 
             if (!follower) {
-              throw new Error(`Follower with loginId "${followerLoginId}" not found.`);
+              throw new Error(
+                `Follower with loginId "${followerLoginId}" not found.`,
+              );
             }
 
             const usersToFollow = await client.user.findMany({
@@ -203,6 +210,34 @@ export default defineConfig({
             console.error('❌ db:createFollows failed:', error);
             throw error;
           }
+        },
+
+        'db:createAdminPlace': async (
+          placeData: Omit<Prisma.PlaceUncheckedCreateInput, 'creatorId'>,
+        ) => {
+          const adminId = process.env.MAIN_ACCOUNT_ID;
+          if (!adminId) {
+            throw new Error('MAIN_ACCOUNT_ID is not set in .env file');
+          }
+          const place = await client.place.create({
+            data: {
+              ...placeData,
+              creatorId: adminId,
+            },
+          });
+          return place;
+        },
+
+        'db:deletePlaceById': async (id: string) => {
+          if (!id) return null;
+          try {
+            await client.place.delete({ where: { id } });
+          } catch (_error) {
+            console.log(
+              `Note: Could not delete place with id ${id}. It may have already been removed.`,
+            );
+          }
+          return null;
         },
       });
 

@@ -41,7 +41,7 @@ describe("'좋아요' 기능 플로우", () => {
   let createdPlaceId: string;
   let createdPlaceName: string;
   let createdDistrictId: string;
-  let authCookies: Cypress.Cookie[] = [];
+  let createdAdminPlaceId: string | null = null;
   let _testUserId: string;
 
   const DISTRICT_MAP: Record<string, string> = {
@@ -92,10 +92,6 @@ describe("'좋아요' 기능 플로우", () => {
     cy.url().should('not.include', '/login');
     cy.wait('@getSession');
 
-    cy.getCookies().then((cookies: Cypress.Cookie[]) => {
-      authCookies = cookies;
-    });
-
     cy.visit('/mypage');
     cy.contains('button', '내 콘텐츠').click();
     cy.contains('button', '장소 등록').click();
@@ -133,25 +129,12 @@ describe("'좋아요' 기능 플로우", () => {
 
   afterEach(() => {
     if (createdPlaceId) {
-      cy.clearCookies();
-      authCookies.forEach((cookie: Cypress.Cookie) => {
-        cy.setCookie(cookie.name, cookie.value, {
-          domain: cookie.domain ?? undefined,
-          path: cookie.path ?? undefined,
-          secure: cookie.secure,
-          httpOnly: cookie.httpOnly,
-        });
-      });
-
-      cy.request({
-        method: 'DELETE',
-        url: `/api/places/${createdPlaceId}`,
-        failOnStatusCode: false,
-      }).then((_response) => {
-        createdPlaceId = '';
-        createdPlaceName = '';
-        createdDistrictId = '';
-      });
+      cy.task('db:deletePlaceById', createdPlaceId);
+      createdPlaceId = '';
+    }
+    if (createdAdminPlaceId) {
+      cy.task('db:deletePlaceById', createdAdminPlaceId);
+      createdAdminPlaceId = null;
     }
   });
 
@@ -290,25 +273,43 @@ describe("'좋아요' 기능 플로우", () => {
   });
 
   it("비로그인 상태에서 '좋아요' 버튼 클릭 시 로그인 안내 모달이 표시되어야 합니다.", () => {
-    cy.request({
-      method: 'POST',
-      url: '/api/auth/signout',
-      failOnStatusCode: false,
+    const adminPlace = {
+      name: 'Admin Test Place',
+      address: '서울특별시 중구 태평로1가 31',
+      latitude: 37.5665,
+      longitude: 126.978,
+      description: 'Admin place for guest like test',
+      category: 'MEAL',
+      district: '중구',
+    };
+
+    cy.task('db:createAdminPlace', adminPlace).then((place) => {
+      createdAdminPlaceId = (place as typeof adminPlace & { id: string }).id;
+
+      cy.request({
+        method: 'POST',
+        url: '/api/auth/signout',
+        failOnStatusCode: false,
+      });
+      cy.clearCookies();
+      cy.clearLocalStorage();
+
+      cy.visit(`${Cypress.config().baseUrl}/districts/Jung-gu`);
+      cy.wait('@getDistrictPlaces');
+
+      cy.contains('h3', adminPlace.name)
+        .should('be.visible')
+        .closest('div.bg-white.rounded-lg.shadow-md')
+        .find('[data-cy="like-button"]')
+        .click();
+
+      cy.contains('h2', '로그인이 필요합니다').should('be.visible');
+      cy.contains('p', '로그인하고 나만의 장소를 저장해보세요!').should(
+        'be.visible',
+      );
+      cy.contains('button', '확인').should('be.visible');
+      cy.contains('button', '취소').click();
+      cy.contains('h2', '로그인이 필요합니다').should('not.exist');
     });
-    cy.clearCookies();
-    cy.clearLocalStorage();
-
-    cy.visit(`${Cypress.config().baseUrl}/districts/${createdDistrictId}`);
-    cy.wait('@getDistrictPlaces');
-
-    cy.get('[data-cy="like-button"]').first().click();
-
-    cy.contains('h2', '로그인이 필요합니다').should('be.visible');
-    cy.contains('p', '로그인하고 나만의 장소를 저장해보세요!').should(
-      'be.visible',
-    );
-    cy.contains('button', '확인').should('be.visible');
-    cy.contains('button', '취소').click();
-    cy.contains('h2', '로그인이 필요합니다').should('not.exist');
   });
 });
