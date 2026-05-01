@@ -6,7 +6,6 @@ import KakaoMap from '~/src/components/common/KakaoMap';
 import { useSetAtom, useAtomValue, useAtom } from 'jotai';
 import {
   modalAtom,
-  isKakaoMapApiLoadedAtom,
   contentCreatorAtom,
   routeViewAtom,
   selectedDistrictFilterAtom,
@@ -97,7 +96,6 @@ export default function DistrictClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const setModal = useSetAtom(modalAtom);
-  const isApiLoaded = useAtomValue(isKakaoMapApiLoadedAtom);
   const { data: session, status: sessionStatus } = useSession();
   const contentCreator = useAtomValue(contentCreatorAtom);
   const selectedDistrictFilter = useAtomValue(selectedDistrictFilterAtom);
@@ -316,11 +314,9 @@ export default function DistrictClient({
       longitude: p.longitude,
       category: p.category,
     }));
-  }, [allPlaceLocations, currentCategory, isApiLoaded]);
+  }, [allPlaceLocations, currentCategory]);
 
-  const mapPolylines = useMemo(() => {
-    return [];
-  }, []);
+  const mapPolylines: never[] = [];
 
   const creatorName =
     contentCreator.type === 'user' ? `${contentCreator.userName}님의` : '추천';

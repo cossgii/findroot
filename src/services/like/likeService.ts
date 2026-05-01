@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { PlaceCategory, Prisma } from '@prisma/client';
 import { db } from '~/lib/db';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';

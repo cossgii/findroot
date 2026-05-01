@@ -3,6 +3,8 @@
 import { useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useSetAtom } from 'jotai';
+import { addToastAtom } from '~/src/stores/toast-store';
 
 interface UseLikeProps {
   placeId?: string;
@@ -56,6 +58,7 @@ export function useLike({
 }: UseLikeProps) {
   const { data: session, status: sessionStatus } = useSession();
   const queryClient = useQueryClient();
+  const addToast = useSetAtom(addToastAtom);
 
   const { data: likeInfo, isLoading: isLikeInfoLoading } = useQuery<
     { count: number; liked: boolean },
@@ -132,7 +135,11 @@ export function useLike({
         ? ['placeLikes', newLike.placeId]
         : ['routeLikes', newLike.routeId];
       queryClient.setQueryData(queryKey, context?.previousData);
-      alert(`좋아요 처리 중 오류가 발생했습니다: ${err.message}`);
+      addToast({
+        id: Date.now().toString(),
+        message: `좋아요 처리 중 오류가 발생했습니다: ${err.message}`,
+        duration: 3000,
+      });
     },
   });
 
@@ -199,14 +206,22 @@ export function useLike({
         ? ['placeLikes', removedLike.placeId]
         : ['routeLikes', removedLike.routeId];
       queryClient.setQueryData(queryKey, context?.previousData);
-      alert(`좋아요 취소 중 오류가 발생했습니다: ${err.message}`);
+      addToast({
+        id: Date.now().toString(),
+        message: `좋아요 취소 중 오류가 발생했습니다: ${err.message}`,
+        duration: 3000,
+      });
     },
   });
 
   const handleLike = useCallback(
     async (forceLike?: boolean) => {
       if (sessionStatus !== 'authenticated' || !session?.user?.id) {
-        alert('로그인이 필요합니다.');
+        addToast({
+          id: Date.now().toString(),
+          message: '로그인이 필요합니다.',
+          duration: 3000,
+        });
         return;
       }
 

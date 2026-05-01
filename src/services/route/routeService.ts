@@ -1,4 +1,4 @@
-'server-only';
+import 'server-only';
 
 import { db } from '~/lib/db';
 import { Prisma, RoutePurpose } from '@prisma/client';
@@ -503,10 +503,6 @@ export async function getFeaturedRoutes(
     targetCreatorId,
     undefined, // isRepresentative = undefined (전체)
     true,
-  );
-  console.log(
-    '--- getFeaturedRoutes returning overallFallbackRoutes ---',
-    overallFallbackRoutes.length,
   );
   return { routes: overallFallbackRoutes, type: 'creator_fallback' };
 }

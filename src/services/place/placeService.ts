@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { db } from '~/lib/db';
 import { CreatePlaceInput } from '~/src/schemas/place-schema';
 import { Place, Prisma } from '@prisma/client';

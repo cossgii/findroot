@@ -11,18 +11,23 @@ const KAKAO_MAP_APP_KEY = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
 export default function KakaoMapApiLoader() {
   const setIsKakaoMapApiLoaded = useSetAtom(isKakaoMapApiLoadedAtom);
   const addToast = useSetAtom(addToastAtom);
+
   useEffect(() => {
+    if (!KAKAO_MAP_APP_KEY) {
+      console.error('NEXT_PUBLIC_KAKAO_APP_KEY is not defined.');
+      addToast({
+        id: 'kakao-api-key-missing',
+        message: '카카오맵 API 키가 설정되지 않았습니다.',
+        duration: 5000,
+      });
+      return;
+    }
     if (window.kakao && window.kakao.maps && window.kakao.maps.services) {
       setIsKakaoMapApiLoaded(true);
     }
-  }, []);
+  }, [addToast, setIsKakaoMapApiLoaded]);
+
   if (!KAKAO_MAP_APP_KEY) {
-    console.error('NEXT_PUBLIC_KAKA_APP_KEY is not defined.');
-    addToast({
-      id: Date.now().toString(),
-      message: '카카오맵 API 키가 설정되지 않았습니다.',
-      duration: 5000,
-    });
     return null;
   }
 

@@ -6,11 +6,10 @@ export async function followUser(followerId: string, followingId: string) {
     throw new BadRequestError('자기 자신을 팔로우할 수 없습니다.');
   }
 
-  return db.follow.create({
-    data: {
-      followerId,
-      followingId,
-    },
+  return db.follow.upsert({
+    where: { followerId_followingId: { followerId, followingId } },
+    create: { followerId, followingId },
+    update: {},
   });
 }
 
