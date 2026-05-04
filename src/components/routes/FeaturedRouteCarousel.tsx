@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { RoutePurpose } from '@prisma/client';
+import LikeButton from '~/src/components/common/LikeButton';
 
 interface FeaturedRouteCarouselProps {
   districtId: string;
@@ -80,8 +81,8 @@ export default function FeaturedRouteCarousel({
             key={route.id}
             className="flex-none w-full h-full snap-center p-4 flex justify-center items-center"
           >
-            <Link href={`/routes/${route.id}`} className="block h-full">
-              <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col border-2 border-gray-200 aspect-[3/4] h-full">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col border-2 border-gray-200 aspect-[3/4] h-full">
+              <Link href={`/routes/${route.id}`} className="block flex-grow overflow-hidden">
                 <div className="relative w-full h-3/5 bg-gray-200">
                   <Image
                     src={`/api/routes/${route.id}/image`}
@@ -91,20 +92,24 @@ export default function FeaturedRouteCarousel({
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
-                <div className="p-4 flex flex-col flex-grow">
+                <div className="p-4 flex flex-col">
                   <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">
                     {route.name}
                   </h3>
-                  <p className="text-sm text-gray-600 line-clamp-2 mt-1 flex-grow">
+                  <p className="text-sm text-gray-600 line-clamp-2 mt-1">
                     {route.description}
                   </p>
-                  <div className="flex items-center text-sm text-gray-500 mt-2">
-                    <span>❤️ {route.likesCount}</span>
-                    <span className="ml-4">💬 {route.commentsCount}</span>{' '}
-                  </div>
                 </div>
+              </Link>
+              <div className="px-4 pb-3 flex items-center justify-between">
+                <span className="text-sm text-gray-500">💬 {route.commentsCount}</span>
+                <LikeButton
+                  routeId={route.id}
+                  initialIsLiked={route.isLiked}
+                  initialLikesCount={route.likesCount}
+                />
               </div>
-            </Link>
+            </div>
           </div>
         ))}
       </div>
