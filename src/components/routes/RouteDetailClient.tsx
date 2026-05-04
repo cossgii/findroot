@@ -13,6 +13,7 @@ import { modalAtom } from '~/src/stores/app-store';
 import { getRouteById } from '~/src/services/route/routeService';
 import { PlaceCategory } from '@prisma/client';
 import CommentSection from '~/src/components/comments/CommentSection';
+import { useLike } from '~/src/hooks/useLike';
 import { ArrowDown } from 'lucide-react';
 import { cn } from '~/src/utils/class-name';
 import { PURPOSE_MAP } from '@/constants/purpose';
@@ -141,6 +142,11 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
     Record<string, string>
   >({});
   const [commentsCount, setCommentsCount] = useState(route.commentsCount);
+  const { isLiked, likesCount, handleLike } = useLike({
+    routeId: route.id,
+    initialIsLiked: route.isLiked,
+    initialLikesCount: route.likesCount,
+  });
   const [backHref, setBackHref] = useState(
     `/districts/${route.districtId || 'all'}?purpose=${route.purpose}`,
   );
@@ -239,6 +245,7 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">{route.name}</h1>
+
         <Link
           href={backHref}
           className="p-2 rounded-md hover:bg-gray-100 text-sm"
@@ -246,16 +253,23 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
           목록으로
         </Link>
       </div>
-      <div className="flex items-center space-x-4 mb-4">
+      <div className="flex items-center gap-4 mb-4">
         <span className="font-semibold">
           목적: {PURPOSE_MAP[route.purpose].title}
         </span>
+        <button
+          onClick={() => handleLike()}
+          className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors"
+        >
+          <span className={isLiked ? 'text-red-500' : 'text-gray-400'}>♥</span>
+          <span className="text-sm">{likesCount}</span>
+        </button>
         <a
           href="#comments"
-          className="flex items-center text-gray-600 hover:underline"
+          className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors"
         >
-          <span className="mr-1">💬</span>
-          <span>{commentsCount}</span>
+          <span>💬</span>
+          <span className="text-sm">{commentsCount}</span>
         </a>
       </div>
       <p className="text-gray-600 mb-8">{route.description}</p>
