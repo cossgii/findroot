@@ -12,6 +12,7 @@ const requestResetSchema = z.object({
 
 export const POST = apiHandler({
   bodySchema: requestResetSchema,
+  rateLimit: { windowMs: 60_000, max: 10 },
   handler: async ({ body }) => {
     const { loginId, email } = body;
 

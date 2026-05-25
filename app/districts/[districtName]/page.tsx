@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { getPlacesByDistrict } from '~/src/services/place/placeService';
 import { getRoutes } from '~/src/services/route/routeService';
 import { getServerSession } from 'next-auth/next';
@@ -7,6 +8,21 @@ import DistrictClient from '~/src/components/districts/DistrictClient';
 import { PlaceCategory, RoutePurpose } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: { params: Promise<{ districtName: string }> }): Promise<Metadata> {
+  const { districtName } = await params;
+  const districtInfo = SEOUL_DISTRICTS.find((d) => d.id === districtName);
+  const name = districtInfo?.name ?? '서울';
+
+  return {
+    title: districtName === 'all' ? '서울 전체' : `${name} 맛집 & 루트`,
+    description: `${name}의 맛집과 코스 루트를 확인해보세요.`,
+    openGraph: {
+      title: districtName === 'all' ? '서울 전체 | FindRoot' : `${name} 맛집 & 루트 | FindRoot`,
+      description: `${name}의 맛집과 코스 루트를 확인해보세요.`,
+    },
+  };
+}
 
 interface DistrictPageProps {
   params: Promise<{ districtName: string }>;

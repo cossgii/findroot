@@ -19,6 +19,7 @@ const resetPasswordSchema = z.object({
 
 export const POST = apiHandler({
   bodySchema: resetPasswordSchema,
+  rateLimit: { windowMs: 60_000, max: 10 },
   handler: async ({ body }) => {
     const { selector, validator, password } = body;
 

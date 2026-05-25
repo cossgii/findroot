@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z, ZodType } from 'zod';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { ApiError } from '~/src/utils/api-errors';
+import { checkRateLimit, getClientIp, RateLimitConfig, RATE_LIMITS } from '~/src/lib/rate-limiter';
 
 export const apiSuccess = <T>(data: T, status = 200): NextResponse<T> => {
   return NextResponse.json(data, { status });
@@ -32,6 +33,7 @@ interface HandlerOptions<TBody, TQuery> {
   auth?: boolean;
   bodySchema?: ZodType<TBody>;
   querySchema?: ZodType<TQuery>;
+  rateLimit?: RateLimitConfig;
 }
 
 export function apiHandler<TBody = unknown, TQuery = unknown>(
@@ -43,6 +45,13 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
   ): Promise<NextResponse> => {
     const params = await awaitedParams;
     try {
+      const rateLimitConfig = options.rateLimit ?? RATE_LIMITS.DEFAULT;
+      const ip = getClientIp(req);
+      const key = `${req.nextUrl.pathname}:${ip}`;
+      if (!checkRateLimit(key, rateLimitConfig)) {
+        return NextResponse.json({ message: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' }, { status: 429 });
+      }
+
       let session: Session | null = null;
       if (options.auth) {
         session = await getServerSession(authOptions);
