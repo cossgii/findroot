@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import LikeButton from '~/src/components/common/LikeButton';
+import { SpinnerContainer } from '~/src/components/common/Spinner';
+import EmptyState from '~/src/components/common/EmptyState';
 import { Restaurant, RouteWithLikeData } from '~/src/types/restaurant';
 import { RouteStopLabel } from '@prisma/client';
 
@@ -20,17 +22,11 @@ export default function RestaurantRouteContainer({
   isLoading,
 }: RestaurantRouteContainerProps) {
   if (isLoading) {
-    return <p className="text-gray-500">사용자 루트를 불러오는 중...</p>;
+    return <SpinnerContainer />;
   }
 
   if (routes.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-40 rounded-lg bg-gray-50">
-        <p className="text-gray-500">
-          이 지역에 생성된 사용자 루트가 없습니다.
-        </p>
-      </div>
-    );
+    return <EmptyState message="이 지역에 생성된 사용자 루트가 없습니다." />;
   }
 
   return (

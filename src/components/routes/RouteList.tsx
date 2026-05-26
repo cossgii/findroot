@@ -4,6 +4,7 @@ import React from 'react';
 import RouteCard from './RouteCard';
 import Pagination from '~/src/components/common/Pagination';
 import { ClientRoute } from '~/src/types/shared';
+import EmptyState from '~/src/components/common/EmptyState';
 
 interface RouteListProps {
   routes: ClientRoute[];
@@ -21,11 +22,7 @@ export default function RouteList({
   onPageChange,
 }: RouteListProps) {
   if (routes.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        <p>{districtName}에 등록된 루트가 없습니다.</p>
-      </div>
-    );
+    return <EmptyState message={`${districtName}에 등록된 루트가 없습니다.`} />;
   }
 
   return (

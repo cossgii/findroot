@@ -22,6 +22,7 @@ import Dropdown from '~/src/components/common/Dropdown';
 import { RoutePurpose } from '@prisma/client';
 
 import { PURPOSE_FORM_OPTIONS } from '@/constants/purpose';
+import { SpinnerContainer } from '~/src/components/common/Spinner';
 
 const routeStopLabelMap: Record<RouteStopLabel, string> = {
   MEAL: '식사',
@@ -93,11 +94,13 @@ export default function EditRouteForm({
   }, [userPlaces, selectedDistrict]);
 
   if (isLoading) {
-    return <p>루트 정보를 불러오는 중...</p>;
+    return <SpinnerContainer />;
   }
 
   if (error) {
-    return <p>오류: {error}</p>;
+    return (
+      <p className="text-sm text-red-500 text-center py-4">오류: {error}</p>
+    );
   }
 
   return (

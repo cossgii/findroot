@@ -17,6 +17,7 @@ import { useLike } from '~/src/hooks/useLike';
 import { ArrowDown } from 'lucide-react';
 import { cn } from '~/src/utils/class-name';
 import { PURPOSE_MAP } from '@/constants/purpose';
+import { SpinnerContainer } from '~/src/components/common/Spinner';
 
 type RouteDetail = NonNullable<Awaited<ReturnType<typeof getRouteById>>>;
 type Waypoint = RouteDetail['places'][0];
@@ -233,12 +234,12 @@ export default function RouteDetailClient({ route }: RouteDetailClientProps) {
     return { lat: 37.5665, lng: 126.978 };
   }, [currentPlaces]);
 
-  if (status !== 'authenticated') {
-    return (
-      <div className="container mx-auto p-4 text-center">
-        <p>로그인 정보를 확인하는 중...</p>
-      </div>
-    );
+  if (status === 'loading') {
+    return <SpinnerContainer className="min-h-[60vh]" />;
+  }
+
+  if (status === 'unauthenticated') {
+    return null;
   }
 
   return (

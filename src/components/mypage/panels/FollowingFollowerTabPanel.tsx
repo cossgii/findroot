@@ -13,7 +13,8 @@ import { modalAtom } from '~/src/stores/app-store';
 import { addToastAtom, removeToastAtom } from '~/src/stores/toast-store';
 import { useRouter } from 'next/navigation';
 import { cn } from '~/src/utils/class-name';
-import UserListItemSkeleton from '~/src/components/layout/UserListItemSkeleton'; // New import
+import UserListItemSkeleton from '~/src/components/layout/UserListItemSkeleton';
+import EmptyState from '~/src/components/common/EmptyState';
 
 type FollowType = 'following' | 'followers';
 
@@ -151,11 +152,13 @@ export default function FollowingFollowerTabPanel() {
     }
     if (!users || users.length === 0) {
       return (
-        <p className="text-gray-500 text-center py-10">
-          {activeFollowTab === 'following'
-            ? '팔로잉하는 사용자가 없습니다.'
-            : '나를 팔로우하는 사용자가 없습니다.'}
-        </p>
+        <EmptyState
+          message={
+            activeFollowTab === 'following'
+              ? '팔로잉하는 사용자가 없습니다.'
+              : '나를 팔로우하는 사용자가 없습니다.'
+          }
+        />
       );
     }
 

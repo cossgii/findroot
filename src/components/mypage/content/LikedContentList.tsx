@@ -10,6 +10,8 @@ import { addToastAtom, removeToastAtom } from '~/src/stores/toast-store';
 import { RouteWithPlaces } from '~/src/components/districts/RestaurantRouteContainer';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 import { cn } from '~/src/utils/class-name';
+import { SpinnerContainer } from '~/src/components/common/Spinner';
+import EmptyState from '~/src/components/common/EmptyState';
 
 interface LikedContentListProps {
   activeSubTab: MyPageSubTab;
@@ -97,18 +99,12 @@ export default function LikedContentList({
         ))}
       </ul>
     ) : (
-      <p className="text-gray-500 text-center py-10">
-        좋아요를 누른 장소가 없습니다.
-      </p>
+      <EmptyState message="좋아요를 누른 장소가 없습니다." />
     );
   }
 
   if (!likedRoutes) {
-    return (
-      <p className="text-gray-500 text-center py-10">
-        루트 정보를 불러오는 중이거나, 좋아요를 누른 루트가 없습니다.
-      </p>
-    );
+    return <EmptyState message="좋아요를 누른 루트가 없습니다." />;
   }
 
   return likedRoutes.length > 0 ? (
@@ -150,7 +146,7 @@ export default function LikedContentList({
             {expandedRouteId === route.id && (
               <div className="mt-4 pt-4 border-t">
                 {isLoadingRouteDetails ? (
-                  <p className="text-gray-500">루트 상세 정보 불러오는 중...</p>
+                  <SpinnerContainer className="min-h-[80px]" />
                 ) : routeDetails ? (
                   <div className="flex flex-col space-y-4">
                     {routeDetails.places.map(({ place, label }) => (
@@ -162,7 +158,7 @@ export default function LikedContentList({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-red-500">
+                  <p className="text-sm text-red-500 text-center py-2">
                     루트 정보를 불러오지 못했습니다.
                   </p>
                 )}

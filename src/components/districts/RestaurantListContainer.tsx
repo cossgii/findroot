@@ -1,5 +1,6 @@
 import RestaurantCard from '~/src/components/districts/RestaurantCard';
 import { Restaurant } from '~/src/types/restaurant';
+import EmptyState from '~/src/components/common/EmptyState';
 
 interface RestaurantListContainerProps {
   places: Restaurant[];
@@ -14,11 +15,7 @@ export default function RestaurantListContainer({
 }: RestaurantListContainerProps) {
   if (places.length === 0) {
     return (
-      <div className="flex justify-center items-center h-40 rounded-lg bg-gray-50">
-        <p className="text-gray-500">
-          {`${districtName}에 등록된 장소(${categoryName})가 없습니다.`}
-        </p>
-      </div>
+      <EmptyState message={`${districtName}에 등록된 장소(${categoryName})가 없습니다.`} />
     );
   }
 

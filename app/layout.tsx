@@ -8,12 +8,14 @@ import '~/src/styles/globals.css';
 
 import KakaoMapApiLoader from '~/src/components/common/KakaoMapApiLoader';
 import Toast from '~/src/components/common/Toast';
+import SessionExpiryWatcher from '~/src/components/auth/SessionExpiryWatcher';
 
 import ReactQueryProvider from '~/src/providers/react-query-provider';
 import { Suspense } from 'react';
 import { metadata as siteMetadata } from './metadata';
+import type { Metadata } from 'next';
 
-export const metadata = siteMetadata;
+export const metadata: Metadata = siteMetadata;
 
 export default function RootLayout({
   children,
@@ -39,6 +41,7 @@ export default function RootLayout({
                   <Header />
                 </Suspense>
                 <main className="flex-grow pt-header">{children}</main>
+                <SessionExpiryWatcher />
                 <GlobalModalRenderer />
                 <Toast />
                 <KakaoMapApiLoader />

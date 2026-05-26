@@ -10,6 +10,8 @@ import { useState, useEffect } from 'react';
 
 import Button from '~/src/components/common/Button';
 import Pagination from '~/src/components/common/Pagination';
+import { SpinnerContainer } from '~/src/components/common/Spinner';
+import EmptyState from '~/src/components/common/EmptyState';
 import {
   Avatar,
   AvatarImage,
@@ -230,8 +232,12 @@ export default function CommentSection({
         <CommentForm routeId={routeId} onSuccess={handleCommentSuccess} />
       )}
       <div className="mt-6">
-        {isLoading && <p>댓글을 불러오는 중...</p>}
-        {isError && <p>댓글을 불러오는데 실패했습니다.</p>}
+        {isLoading && <SpinnerContainer className="min-h-[80px]" />}
+        {isError && (
+          <p className="text-sm text-red-500 text-center py-4">
+            댓글을 불러오는데 실패했습니다.
+          </p>
+        )}
         {commentData?.data && commentData.data.length > 0 ? (
           <>
             {commentData.data.map((comment) => (
@@ -251,11 +257,7 @@ export default function CommentSection({
             )}
           </>
         ) : (
-          !isLoading && (
-            <p className="text-gray-500 py-8 text-center">
-              작성된 댓글이 없습니다.
-            </p>
-          )
+          !isLoading && <EmptyState message="작성된 댓글이 없습니다." />
         )}
       </div>
     </div>

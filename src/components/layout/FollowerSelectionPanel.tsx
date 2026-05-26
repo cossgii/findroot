@@ -13,6 +13,7 @@ import Input from '~/src/components/common/Input';
 import { useUserSearch } from '~/src/hooks/useUserSearch';
 import { useSession } from 'next-auth/react';
 import UserListItemSkeleton from './UserListItemSkeleton';
+import EmptyState from '~/src/components/common/EmptyState';
 import { User as UserIcon, Star } from 'lucide-react';
 import AnimatedUserList from './AnimatedUserList';
 import { useRouter } from 'next/navigation';
@@ -204,9 +205,7 @@ export default function FollowerSelectionPanel({
                         onClose={onClose}
                       />
                     ) : (
-                      <p className="text-sm text-gray-500">
-                        검색 결과가 없습니다.
-                      </p>
+                      <EmptyState message="검색 결과가 없습니다." className="min-h-[80px]" />
                     )}
                   </div>
                 ) : (
@@ -227,9 +226,7 @@ export default function FollowerSelectionPanel({
                         {isFetchingNextPage && <UserListItemSkeleton />}
                       </>
                     ) : (
-                      <p className="text-sm text-gray-500">
-                        팔로잉하는 사용자가 없습니다.
-                      </p>
+                      <EmptyState message="팔로잉하는 사용자가 없습니다." className="min-h-[80px]" />
                     )}
                   </ul>
                 )}

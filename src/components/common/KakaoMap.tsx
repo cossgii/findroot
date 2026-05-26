@@ -4,6 +4,7 @@ import { HTMLAttributes, useEffect, useRef } from 'react';
 import { PlaceCategory } from '@prisma/client';
 import { useAtomValue } from 'jotai';
 import { isKakaoMapApiLoadedAtom } from '~/src/stores/app-store';
+import Spinner from '~/src/components/common/Spinner';
 
 interface MarkerData {
   latitude: number;
@@ -159,8 +160,8 @@ const KakaoMap = ({
 
   if (!isApiLoaded) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-gray-200">
-        <p>지도를 불러오는 중입니다...</p>
+      <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
+        <Spinner size="md" />
       </div>
     );
   }

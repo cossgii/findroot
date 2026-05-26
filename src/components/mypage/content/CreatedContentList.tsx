@@ -9,6 +9,7 @@ import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 import { ClientPlace, ClientRoutePlace } from '~/src/types/shared';
 import { RouteStopLabel } from '@prisma/client';
 import { cn } from '~/src/utils/class-name';
+import EmptyState from '~/src/components/common/EmptyState';
 import AddAlternativeModal from '~/src/components/routes/AddAlternativeModal';
 import EditAlternativeModal from '~/src/components/routes/EditAlternativeModal';
 import { useSession } from 'next-auth/react';
@@ -282,7 +283,7 @@ export default function CreatedContentList({
         ))}
       </ul>
     ) : (
-      <p className="text-gray-500 text-center py-10">등록한 장소가 없습니다.</p>
+      <EmptyState message="등록한 장소가 없습니다." />
     );
   }
 
@@ -543,6 +544,6 @@ export default function CreatedContentList({
       )}
     </ul>
   ) : (
-    <p className="text-gray-500 text-center py-10">등록한 루트가 없습니다.</p>
+    <EmptyState message="등록한 루트가 없습니다." />
   );
 }

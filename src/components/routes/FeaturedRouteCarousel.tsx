@@ -2,6 +2,8 @@
 
 import React, { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { SpinnerContainer } from '~/src/components/common/Spinner';
+import EmptyState from '~/src/components/common/EmptyState';
 import { RouteWithLikeData } from '~/src/types/restaurant';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -55,19 +57,11 @@ export default function FeaturedRouteCarousel({
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg">
-        <p className="text-gray-500">대표 루트 불러오는 중...</p>
-      </div>
-    );
+    return <SpinnerContainer className="h-full bg-gray-50 rounded-lg" />;
   }
 
   if (isError || !routes || routes.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg">
-        <p className="text-gray-500">대표 루트가 없습니다.</p>
-      </div>
-    );
+    return <EmptyState message="대표 루트가 없습니다." className="h-full" />;
   }
 
   return (
