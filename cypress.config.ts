@@ -1,5 +1,11 @@
 import { defineConfig } from 'cypress';
-import { PrismaClient, Prisma } from '@prisma/client';
+import {
+  PrismaClient,
+  Prisma,
+  PlaceCategory,
+  RouteStopLabel,
+  RoutePurpose,
+} from '@prisma/client';
 import bcrypt from 'bcryptjs';
 require('dotenv').config();
 
@@ -238,6 +244,88 @@ export default defineConfig({
             );
           }
           return null;
+        },
+
+        'db:deleteUserByLoginId': async (loginId: string) => {
+          try {
+            const user = await client.user.findUnique({ where: { loginId } });
+            if (user) {
+              await client.user.delete({ where: { id: user.id } });
+              console.log(`✅ Deleted user: ${loginId}`);
+            }
+          } catch (_error) {
+            console.log(
+              `Note: Could not delete user "${loginId}". It may not exist.`,
+            );
+          }
+          return null;
+        },
+
+        'db:createTestRoute': async () => {
+          try {
+            const testUser = await client.user.findUnique({
+              where: { loginId: 'testuser' },
+              select: { id: true },
+            });
+            if (!testUser)
+              throw new Error('testuser not found. Run db:cleanup first.');
+
+            const [place1, place2] = await Promise.all([
+              client.place.create({
+                data: {
+                  name: 'Cypress 테스트 장소 1',
+                  address: '서울특별시 중구 테스트로 1',
+                  latitude: 37.5665,
+                  longitude: 126.978,
+                  description: 'Cypress test place 1',
+                  category: PlaceCategory.MEAL,
+                  district: '중구',
+                  creatorId: testUser.id,
+                },
+              }),
+              client.place.create({
+                data: {
+                  name: 'Cypress 테스트 장소 2',
+                  address: '서울특별시 중구 테스트로 2',
+                  latitude: 37.567,
+                  longitude: 126.979,
+                  description: 'Cypress test place 2',
+                  category: PlaceCategory.DRINK,
+                  district: '중구',
+                  creatorId: testUser.id,
+                },
+              }),
+            ]);
+
+            const route = await client.route.create({
+              data: {
+                name: 'Cypress 테스트 루트',
+                description: 'Cypress 댓글 테스트용 루트',
+                creatorId: testUser.id,
+                places: {
+                  create: [
+                    {
+                      placeId: place1.id,
+                      order: 1,
+                      label: RouteStopLabel.MEAL,
+                    },
+                    {
+                      placeId: place2.id,
+                      order: 2,
+                      label: RouteStopLabel.CAFE,
+                    },
+                  ],
+                },
+                purpose: RoutePurpose.ENTIRE,
+              },
+            });
+
+            console.log(`✅ Created test route: ${route.id}`);
+            return route.id;
+          } catch (error) {
+            console.error('❌ db:createTestRoute failed:', error);
+            throw error;
+          }
         },
       });
 

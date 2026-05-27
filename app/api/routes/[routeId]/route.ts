@@ -13,6 +13,7 @@ const RouteParamsSchema = z.object({
 });
 
 export const GET = apiHandler({
+  optionalAuth: true,
   handler: async ({ params, session }) => {
     const { routeId } = RouteParamsSchema.parse(params);
     const userId = session?.user?.id;

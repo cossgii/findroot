@@ -126,7 +126,7 @@ describe('로그인 인증 단위 테스트 (validateCredentials)', () => {
           loginId: 'nonexistent',
           password: 'password123',
         }),
-      ).rejects.toThrow('가입되지 않은 아이디입니다.');
+      ).rejects.toThrow('아이디 또는 비밀번호가 올바르지 않습니다.');
 
       expect(mockedDb.user.findUnique).toHaveBeenCalledWith({
         where: { loginId: 'nonexistent' },
@@ -247,7 +247,7 @@ describe('로그인 인증 단위 테스트 (validateCredentials)', () => {
           loginId: 'testuser',
           password: 'wrongPassword',
         }),
-      ).rejects.toThrow('비밀번호가 일치하지 않습니다.');
+      ).rejects.toThrow('아이디 또는 비밀번호가 올바르지 않습니다.');
 
       expect(mockedBcrypt.compare).toHaveBeenCalledWith(
         'wrongPassword',
@@ -423,7 +423,7 @@ describe('로그인 인증 단위 테스트 (validateCredentials)', () => {
           loginId: sqlInjection,
           password: 'password',
         }),
-      ).rejects.toThrow('가입되지 않은 아이디입니다.');
+      ).rejects.toThrow('아이디 또는 비밀번호가 올바르지 않습니다.');
 
       // Prisma는 자동으로 파라미터화하므로 안전
       expect(mockedDb.user.findUnique).toHaveBeenCalledWith({

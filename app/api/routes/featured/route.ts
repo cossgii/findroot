@@ -10,6 +10,7 @@ const featuredRoutesQuerySchema = z.object({
 });
 
 export const GET = apiHandler({
+  optionalAuth: true,
   querySchema: featuredRoutesQuerySchema,
   handler: async ({ query, session }) => {
     const { districtId, creatorId, purpose } = query;

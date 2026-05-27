@@ -17,13 +17,7 @@ describe('팔로잉 패널 페이지네이션 테스트', () => {
       followerLoginId: 'testuser',
       count: USERS_TO_CREATE,
     });
-    cy.intercept('GET', '/api/auth/session').as('getSession');
-
-    cy.visit('/login');
-    cy.get('input[name="loginId"]').type('testuser');
-    cy.get('input[name="password"]').type('test1234!');
-    cy.get('button[type="submit"]').click();
-    cy.wait('@getSession');
+    cy.login();
   });
 
   const openFollowerSelectionPanel = () => {
@@ -60,7 +54,6 @@ describe('팔로잉 패널 페이지네이션 테스트', () => {
     });
 
     cy.visit('/districts/all');
-    cy.wait('@getSession');
     cy.get('h2').should('be.visible');
     openFollowerSelectionPanel();
 

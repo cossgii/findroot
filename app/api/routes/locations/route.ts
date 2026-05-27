@@ -19,6 +19,7 @@ const routeLocationQuerySchema = z.object({
 });
 
 export const GET = apiHandler({
+  optionalAuth: true,
   querySchema: routeLocationQuerySchema,
   handler: async ({ query, session }) => {
     const currentUserId = session?.user?.id;

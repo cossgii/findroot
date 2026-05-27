@@ -24,6 +24,7 @@ const updatePlaceBodySchema = z.object({
 });
 
 export const GET = apiHandler({
+  optionalAuth: true,
   handler: async ({ params, session }) => {
     const { placeId } = paramsSchema.parse(params);
     const userId = session?.user?.id;

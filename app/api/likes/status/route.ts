@@ -15,6 +15,7 @@ const likeStatusQuerySchema = z
   });
 
 export const GET = apiHandler({
+  optionalAuth: true,
   querySchema: likeStatusQuerySchema,
   handler: async ({ query, session }) => {
     const { placeId, routeId } = query;

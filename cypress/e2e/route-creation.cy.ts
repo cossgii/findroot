@@ -24,11 +24,7 @@ describe('루트 생성 테스트', () => {
 
   beforeEach(() => {
     cy.task('db:cleanup');
-    cy.visit('/login');
-    cy.get('input[name="loginId"]').type('testuser');
-    cy.get('input[name="password"]').type('test1234!');
-    cy.get('button[type="submit"]').click();
-    cy.url().should('eq', Cypress.config().baseUrl + '/');
+    cy.login();
     cy.visit('/mypage');
     cy.contains('h1', '마이페이지').should('be.visible');
   });

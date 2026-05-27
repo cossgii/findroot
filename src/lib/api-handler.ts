@@ -31,6 +31,7 @@ type Handler<TBody = unknown, TQuery = unknown> = (
 interface HandlerOptions<TBody, TQuery> {
   handler: Handler<TBody, TQuery>;
   auth?: boolean;
+  optionalAuth?: boolean;
   bodySchema?: ZodType<TBody>;
   querySchema?: ZodType<TQuery>;
   rateLimit?: RateLimitConfig;
@@ -53,9 +54,9 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
       }
 
       let session: Session | null = null;
-      if (options.auth) {
+      if (options.auth || options.optionalAuth) {
         session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (options.auth && !session?.user?.id) {
           throw new ApiError('Unauthorized', 401);
         }
       }

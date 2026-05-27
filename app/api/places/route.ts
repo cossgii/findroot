@@ -15,6 +15,7 @@ const getPlacesQuerySchema = z.object({
 });
 
 export const GET = apiHandler({
+  optionalAuth: true,
   querySchema: getPlacesQuerySchema,
   handler: async ({ query, session }) => {
     const userId = session?.user?.id;

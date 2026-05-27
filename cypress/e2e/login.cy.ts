@@ -5,7 +5,6 @@ describe('로그인 및 로그아웃 테스트', () => {
 
   it('사용자는 성공적으로 로그인하고 로그아웃할 수 있어야 한다', () => {
     cy.visit('/login');
-    cy.wait(1000);
     cy.get('input[name="loginId"]').type('testuser');
     cy.get('input[name="password"]').type('test1234!');
     cy.get('button[type="submit"]').click();

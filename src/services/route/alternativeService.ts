@@ -1,4 +1,5 @@
 import { db } from '~/lib/db';
+import { NotFoundError, ForbiddenError, BadRequestError } from '~/src/utils/api-errors';
 
 async function verifyRouteOwnership(routePlaceId: string, userId: string) {
   const routePlace = await db.routePlace.findUnique({
@@ -7,11 +8,11 @@ async function verifyRouteOwnership(routePlaceId: string, userId: string) {
   });
 
   if (!routePlace) {
-    throw new Error('RoutePlace not found');
+    throw new NotFoundError('경유지를 찾을 수 없습니다.');
   }
 
   if (routePlace.route.creatorId !== userId) {
-    throw new Error('Unauthorized');
+    throw new ForbiddenError('이 루트를 수정할 권한이 없습니다.');
   }
   return true;
 }
@@ -52,7 +53,7 @@ export async function createAlternative({
   });
 
   if (existingAlternativesCount >= 3) {
-    throw new Error('Maximum of 3 alternatives per route stop is allowed.');
+    throw new BadRequestError('경유지당 대안 장소는 최대 3개까지 등록할 수 있습니다.');
   }
 
   return db.alternative.create({
@@ -83,11 +84,11 @@ export async function updateAlternative({
   });
 
   if (!alternative) {
-    throw new Error('Alternative not found');
+    throw new NotFoundError('대안 장소를 찾을 수 없습니다.');
   }
 
   if (alternative.routePlace.route.creatorId !== userId) {
-    throw new Error('Unauthorized');
+    throw new ForbiddenError('이 루트를 수정할 권한이 없습니다.');
   }
 
   return db.alternative.update({
@@ -113,11 +114,11 @@ export async function deleteAlternative({
   });
 
   if (!alternative) {
-    throw new Error('Alternative not found');
+    throw new NotFoundError('대안 장소를 찾을 수 없습니다.');
   }
 
   if (alternative.routePlace.route.creatorId !== userId) {
-    throw new Error('Unauthorized');
+    throw new ForbiddenError('이 루트를 수정할 권한이 없습니다.');
   }
 
   return db.alternative.delete({

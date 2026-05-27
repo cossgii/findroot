@@ -13,6 +13,7 @@ const placesQuerySchema = z.object({
 });
 
 export const GET = apiHandler({
+  optionalAuth: true,
   querySchema: placesQuerySchema,
   handler: async ({ query, session }) => {
     const currentUserId = session?.user?.id;

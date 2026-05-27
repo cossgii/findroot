@@ -78,19 +78,13 @@ describe("'좋아요' 기능 플로우", () => {
       _testUserId = userId as string;
     });
 
-    cy.intercept('GET', '/api/auth/session').as('getSession');
     cy.intercept('POST', '/api/places').as('createPlace');
     cy.intercept('POST', '/api/likes').as('addLike');
     cy.intercept('DELETE', '/api/likes*').as('removeLike');
     cy.intercept('GET', '/api/districts/places*').as('getDistrictPlaces');
     cy.intercept('GET', '/api/users/*/places*').as('getUserPlaces');
 
-    cy.visit('/login');
-    cy.get('input[name="loginId"]').type('testuser');
-    cy.get('input[name="password"]').type('test1234!');
-    cy.get('button[type="submit"]').click();
-    cy.url().should('not.include', '/login');
-    cy.wait('@getSession');
+    cy.login();
 
     cy.visit('/mypage');
     cy.contains('button', '내 콘텐츠').click();
@@ -140,6 +134,7 @@ describe("'좋아요' 기능 플로우", () => {
 
   const resetContentCreatorAtom = (): void => {
     cy.visit('/');
+    cy.get('main').should('exist');
     cy.window().then((win) => {
       const localStorageKeys = Object.keys(win.localStorage);
       localStorageKeys.forEach((key) => {
@@ -163,7 +158,6 @@ describe("'좋아요' 기능 플로우", () => {
         }
       });
     });
-    cy.wait(500);
   };
   const visitDistrictWithMyTab = (districtId: string): void => {
     cy.visit(`${Cypress.config().baseUrl}/districts/${districtId}`);
