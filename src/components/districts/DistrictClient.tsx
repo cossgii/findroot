@@ -20,6 +20,7 @@ import { Place } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 import RouteToggle from '~/src/components/common/RouteToggle';
 import FeaturedRouteCarousel from '~/src/components/routes/FeaturedRouteCarousel';
+import FollowButton from '~/src/components/user/FollowButton';
 import { ClientRoute } from '~/src/types/shared';
 import RouteListSkeletonGrid from '~/src/components/routes/RouteListSkeletonGrid';
 import RouteList from '~/src/components/routes/RouteList';
@@ -165,11 +166,13 @@ export default function DistrictClient({
         ? session.user.id
         : undefined;
 
-  const effectiveDistrictId = selectedDistrictFilter === 'all' ? districtId : selectedDistrictFilter;
+  const effectiveDistrictId =
+    selectedDistrictFilter === 'all' ? districtId : selectedDistrictFilter;
   const effectiveDistrictName =
     selectedDistrictFilter === 'all'
       ? districtInfo?.name || '전체'
-      : SEOUL_DISTRICTS.find((d) => d.id === selectedDistrictFilter)?.name || '전체';
+      : SEOUL_DISTRICTS.find((d) => d.id === selectedDistrictFilter)?.name ||
+        '전체';
 
   const { data: allPlaceLocations = [] } = useQuery<PlaceLocation[], Error>({
     queryKey: ['placeLocations', effectiveDistrictName, targetUserId],
@@ -286,7 +289,9 @@ export default function DistrictClient({
         params.set('targetUserId', targetUserId);
       }
 
-      const response = await fetch(`/api/routes/locations?${params.toString()}`);
+      const response = await fetch(
+        `/api/routes/locations?${params.toString()}`,
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch routes on client');
       }
@@ -318,9 +323,6 @@ export default function DistrictClient({
 
   const mapPolylines: never[] = [];
 
-  const creatorName =
-    contentCreator.type === 'user' ? `${contentCreator.userName}님의` : '추천';
-
   return (
     <div className="flex flex-col desktop:flex-row h-full desktop:gap-4 desktop:items-center">
       <div className="w-full mobile:w-[375px] tablet:w-[744px] desktop:w-1/2 mx-auto h-[440px] relative">
@@ -343,44 +345,36 @@ export default function DistrictClient({
       </div>
 
       <div className="flex-grow desktop:w-1/2 p-4 overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">
-            {routeView === 'districts'
-              ? `${effectiveDistrictName} ${creatorName} 맛집 정보`
-              : `${effectiveDistrictName} ${creatorName} 루트 정보`}
-          </h2>
-        </div>
-
-        <div className="sticky top-0 z-10 bg-white py-2 -mt-2 mb-4 flex justify-center">
+        <div className="sticky top-0 z-10 bg-white py-2 mb-4 flex justify-center">
           <RouteToggle
-            routeView={routeView}
-            onToggleClick={(view) => {
-              if (view === 'districts') {
-                setRouteView('districts');
-                handleUrlChange({
-                  sort: currentSort,
-                  page: currentPage,
-                  category: currentCategory,
-                  purpose: undefined,
-                });
-              } else {
-                if (sessionStatus !== 'authenticated' || !session?.user?.id) {
-                  setModal({
-                    type: 'LOGIN_PROMPT',
-                    props: {
-                      title: '로그인이 필요합니다',
-                      message: '로그인하고 루트를 확인해보세요!',
-                      onConfirm: () =>
-                        router.push(`/login?callbackUrl=${pathname}`),
-                      onCancel: () => {},
-                    },
+              routeView={routeView}
+              onToggleClick={(view) => {
+                if (view === 'districts') {
+                  setRouteView('districts');
+                  handleUrlChange({
+                    sort: currentSort,
+                    page: currentPage,
+                    category: currentCategory,
+                    purpose: undefined,
                   });
-                  return;
+                } else {
+                  if (sessionStatus !== 'authenticated' || !session?.user?.id) {
+                    setModal({
+                      type: 'LOGIN_PROMPT',
+                      props: {
+                        title: '로그인이 필요합니다',
+                        message: '로그인하고 루트를 확인해보세요!',
+                        onConfirm: () =>
+                          router.push(`/login?callbackUrl=${pathname}`),
+                        onCancel: () => {},
+                      },
+                    });
+                    return;
+                  }
+                  setIsPurposeOverlayOpen(true);
                 }
-                setIsPurposeOverlayOpen(true);
-              }
-            }}
-          />
+              }}
+            />
         </div>
 
         {routeView === 'districts' ? (
@@ -404,11 +398,21 @@ export default function DistrictClient({
               </nav>
             </div>
 
-            <SortDropdown
-              currentSort={currentSort}
-              onSortChange={handleSortChange}
-              maxVisibleItems={5}
-            />
+            <div className="flex items-center justify-between mb-2">
+              {contentCreator.type === 'user' ? (
+                <FollowButton
+                  targetUserId={contentCreator.userId}
+                  initialIsFollowing={false}
+                />
+              ) : (
+                <div />
+              )}
+              <SortDropdown
+                currentSort={currentSort}
+                onSortChange={handleSortChange}
+                maxVisibleItems={5}
+              />
+            </div>
             {isLoadingPlaces ? (
               <RestaurantListSkeletonGrid />
             ) : (

@@ -1,6 +1,7 @@
 'use client';
 
 import { forwardRef, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '~/src/utils/class-name';
 
 interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value'> {
@@ -28,6 +29,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               'w-full rounded-xl border-2 border-secondary-50 bg-gray-50 px-[16px] py-[10px] shadow-sm outline-2 transition-colors duration-75 hover:border-primary-300 focus:outline-primary-600',
               error && 'border-2 border-red-600',
               value && 'border-2 border-secondary-50',
+              type === 'password' && 'pr-10',
               className,
             )}
             type={showPassword && type === 'password' ? 'text' : type}
@@ -36,9 +38,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={togglePassword}
-              className="absolute right-2 top-1/2 -translate-y-1/2 transform"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
-            ></button>
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           )}
         </div>
       </>

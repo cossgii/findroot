@@ -174,12 +174,10 @@ export default function FollowerSelectionPanel({
                   </ul>
                 )}
 
-                <h3 className="text-md font-bold mt-4 mb-2 border-t pt-2">
-                  팔로잉 사용자
-                </h3>
-                <div className="py-2">
+                <div className="mt-4 border-t pt-3">
+                  <h3 className="text-sm font-semibold text-gray-500 mb-2">유저 검색</h3>
                   <Input
-                    placeholder="사용자 검색"
+                    placeholder="이름 또는 아이디 검색"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full"
@@ -192,7 +190,7 @@ export default function FollowerSelectionPanel({
                 data-cy="follower-list-scroll-area"
               >
                 {searchTerm ? (
-                  <div className="space-y-1 max-h-40 overflow-y-auto pt-2">
+                  <div className="space-y-1 pt-2">
                     {isSearching ? (
                       Array.from({ length: 3 }).map((_, i) => (
                         <UserListItemSkeleton key={i} />
@@ -209,6 +207,8 @@ export default function FollowerSelectionPanel({
                     )}
                   </div>
                 ) : (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-500 mb-2">팔로잉</h3>
                   <ul className="space-y-2">
                     {isLoadingFollowing && !data ? (
                       Array.from({ length: 8 }).map((_, i) => (
@@ -229,6 +229,7 @@ export default function FollowerSelectionPanel({
                       <EmptyState message="팔로잉하는 사용자가 없습니다." className="min-h-[80px]" />
                     )}
                   </ul>
+                  </div>
                 )}
               </div>
             </animated.div>
