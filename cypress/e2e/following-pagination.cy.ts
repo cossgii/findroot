@@ -54,7 +54,7 @@ describe('팔로잉 패널 페이지네이션 테스트', () => {
     });
 
     cy.visit('/districts/all');
-    cy.get('h2').should('be.visible');
+    cy.get('[data-cy="creator-selector-button"]').should('be.visible');
     openFollowerSelectionPanel();
 
     // 1. 첫 팔로잉 유저 리스트 확인

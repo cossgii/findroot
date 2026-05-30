@@ -104,5 +104,13 @@ export default [
       },
     },
   },
+  {
+    files: ['cypress/**/*.{ts,tsx}'],
+    languageOptions: {
+      parserOptions: {
+        project: './cypress/tsconfig.json',
+      },
+    },
+  },
   prettierConfig,
 ];
