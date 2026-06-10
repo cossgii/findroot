@@ -7,3 +7,8 @@ node_modules
 
 /generated/prisma
 /.env.production.local
+
+# Claude Code
+.claude/
+CLAUDE.md
+AGENTS.md

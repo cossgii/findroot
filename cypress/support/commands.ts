@@ -6,10 +6,3 @@ Cypress.Commands.add('login', (loginId = 'testuser', password = 'test1234!') => 
   cy.url().should('eq', Cypress.config().baseUrl + '/');
 });
 
-declare global {
-  namespace Cypress {
-    interface Chainable {
-      login(loginId?: string, password?: string): Chainable<void>;
-    }
-  }
-}

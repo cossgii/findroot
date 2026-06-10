@@ -7,25 +7,38 @@ datasource db {
 }
 
 model User {
-  id               String    @id @default(cuid())
+  id               String        @id @default(cuid())
   name             String
-  loginId          String    @unique @map("login_id")
+  loginId          String        @unique @map("login_id")
   email            String
-  emailVerified    DateTime? @map("email_verified")
+  emailVerified    DateTime?     @map("email_verified")
   image            String?
   password         String?
   accounts         Account[]
-  following        Follow[]  @relation("Follower")
-  followers        Follow[]  @relation("Following")
+  following        Follow[]      @relation("Follower")
+  followers        Follow[]      @relation("Following")
   likes            Like[]
-  receivedMessages Message[] @relation("ReceivedMessages")
-  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[]     @relation("ReceivedMessages")
+  sentMessages     Message[]     @relation("SentMessages")
   places           Place[]
   routes           Route[]
   sessions         Session[]
   comments         Comment[]
+  deviceTokens     DeviceToken[]
 
   @@map("users")
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  platform  String
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("device_tokens")
 }
 
 model Account {

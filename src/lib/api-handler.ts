@@ -4,6 +4,8 @@ import { z, ZodType } from 'zod';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { ApiError } from '~/src/utils/api-errors';
 import { checkRateLimit, getClientIp, RateLimitConfig, RATE_LIMITS } from '~/src/lib/rate-limiter';
+import { verifyAppToken } from '~/lib/app-jwt';
+import { db } from '~/lib/db';
 
 export const apiSuccess = <T>(data: T, status = 200): NextResponse<T> => {
   return NextResponse.json(data, { status });
@@ -56,6 +58,24 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
       let session: Session | null = null;
       if (options.auth || options.optionalAuth) {
         session = await getServerSession(authOptions);
+
+        // 쿠키 세션이 없으면 Bearer 토큰으로 폴백 (모바일 앱용)
+        if (!session?.user?.id) {
+          const authHeader = req.headers.get('Authorization');
+          if (authHeader?.startsWith('Bearer ')) {
+            const payload = await verifyAppToken(authHeader.slice(7));
+            if (payload) {
+              const user = await db.user.findUnique({ where: { id: payload.userId } });
+              if (user) {
+                session = {
+                  user: { id: user.id, name: user.name, email: user.email, image: user.image ?? undefined },
+                  expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                };
+              }
+            }
+          }
+        }
+
         if (options.auth && !session?.user?.id) {
           throw new ApiError('Unauthorized', 401);
         }
