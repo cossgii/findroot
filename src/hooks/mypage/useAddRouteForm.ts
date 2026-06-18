@@ -72,7 +72,7 @@ export const useAddRouteForm = ({
     defaultValues: {
       name: '',
       description: '',
-      purpose: RoutePurpose.ENTIRE,
+      purpose: RoutePurpose.FAMILY,
     },
   });
 

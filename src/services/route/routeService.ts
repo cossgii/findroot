@@ -250,7 +250,7 @@ export async function getRoutes(
     }
   }
 
-  if (purpose && purpose !== 'ENTIRE') {
+  if (purpose) {
     whereClause.purpose = purpose;
   }
 
@@ -363,7 +363,7 @@ export async function getAllPublicRoutes(
     }
   }
 
-  if (purpose && purpose !== 'ENTIRE') {
+  if (purpose) {
     whereClause.purpose = purpose;
   }
 

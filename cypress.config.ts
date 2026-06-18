@@ -316,7 +316,7 @@ export default defineConfig({
                     },
                   ],
                 },
-                purpose: RoutePurpose.ENTIRE,
+                purpose: RoutePurpose.FAMILY,
               },
             });
 

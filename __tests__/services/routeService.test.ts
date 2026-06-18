@@ -25,7 +25,6 @@ jest.mock('@prisma/client', () => ({
     GATHERING: 'GATHERING',
     SOLO: 'SOLO',
     COUPLE: 'COUPLE',
-    ENTIRE: 'ENTIRE',
   },
 }));
 
@@ -66,7 +65,7 @@ describe('routeService', () => {
           { placeId: 'place-1', order: 1, label: RouteStopLabel.MEAL },
           { placeId: 'place-2', order: 2, label: RouteStopLabel.CAFE },
         ],
-        purpose: RoutePurpose.ENTIRE, // purpose 속성 추가
+        purpose: RoutePurpose.FAMILY,
       };
       const createdRoute = { id: 'route-1', ...routeData };
 

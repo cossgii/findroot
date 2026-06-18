@@ -60,7 +60,7 @@ const validRouteBody = {
   name: '테스트 루트',
   description: '설명',
   districtId: 'district-1',
-  purpose: 'ENTIRE',
+  purpose: 'FAMILY',
   places: [
     { placeId: 'place-1', order: 1, label: 'MEAL' },
     { placeId: 'place-2', order: 2, label: 'CAFE' },
