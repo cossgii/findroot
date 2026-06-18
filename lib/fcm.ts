@@ -33,9 +33,13 @@ export async function sendPushNotification(
       try {
         await messaging.send({
           token,
-          notification: { title, body },
-          data,
+          data: { title, body, ...(data ?? {}) },
           android: { priority: 'high' },
+          apns: {
+            payload: {
+              aps: { alert: { title, body }, sound: 'default' },
+            },
+          },
         });
       } catch (error: unknown) {
         // 유효하지 않은 토큰은 DB에서 제거

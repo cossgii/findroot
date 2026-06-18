@@ -32,12 +32,12 @@ export const POST = apiHandler({
     if (body.placeId) {
       const place = await db.place.findUnique({ where: { id: body.placeId }, select: { creatorId: true, name: true } });
       if (place && place.creatorId !== userId) {
-        sendPushNotification(place.creatorId, '새 좋아요', `${session!.user.name}님이 회원님의 장소를 좋아합니다.`);
+        await sendPushNotification(place.creatorId, '새 좋아요', `${session!.user.name}님이 회원님의 장소를 좋아합니다.`, { screen: 'place', id: body.placeId! });
       }
     } else if (body.routeId) {
       const route = await db.route.findUnique({ where: { id: body.routeId }, select: { creatorId: true, name: true } });
       if (route && route.creatorId !== userId) {
-        sendPushNotification(route.creatorId, '새 좋아요', `${session!.user.name}님이 회원님의 루트를 좋아합니다.`);
+        await sendPushNotification(route.creatorId, '새 좋아요', `${session!.user.name}님이 회원님의 루트를 좋아합니다.`, { screen: 'route', id: body.routeId! });
       }
     }
 

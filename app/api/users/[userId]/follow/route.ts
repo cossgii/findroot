@@ -16,7 +16,7 @@ export const POST = apiHandler({
     const follow = await followUser(followerId, followingId);
 
     // 팔로우 받은 사람에게 알림
-    sendPushNotification(followingId, '새 팔로워', `${session!.user.name}님이 팔로우하기 시작했습니다.`);
+    await sendPushNotification(followingId, '새 팔로워', `${session!.user.name}님이 팔로우하기 시작했습니다.`, { screen: 'user', id: followerId });
 
     return apiSuccess(follow, 201);
   },

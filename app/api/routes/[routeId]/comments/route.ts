@@ -45,7 +45,7 @@ export const POST = apiHandler({
     // 푸시 알림 (본인 루트 제외)
     const route = await db.route.findUnique({ where: { id: routeId }, select: { creatorId: true } });
     if (route && route.creatorId !== authorId) {
-      sendPushNotification(route.creatorId, '새 댓글', `${session!.user.name}님이 댓글을 남겼습니다: ${content.slice(0, 30)}`);
+      await sendPushNotification(route.creatorId, '새 댓글', `${session!.user.name}님이 댓글을 남겼습니다: ${content.slice(0, 30)}`, { screen: 'route', id: routeId });
     }
 
     return apiSuccess(
