@@ -78,7 +78,7 @@ export const useEditPlaceForm = ({
         longitude: placeData.longitude,
         district: placeData.district || '',
         description: placeData.description || '',
-        link: placeData.link || '',
+        link: placeData.link ?? null,
         category: placeData.category,
       });
     }

@@ -118,7 +118,7 @@ model Route {
   updatedAt        DateTime     @updatedAt @map("updated_at")
   creatorId        String       @map("creator_id")
   districtId       String?      @map("district_id")
-  purpose          RoutePurpose @default(ENTIRE)
+  purpose          RoutePurpose
   isRepresentative Boolean      @default(false) @map("is_representative")
   likes            Like[]
   likesCount       Int          @default(0)
@@ -185,7 +185,6 @@ enum RoutePurpose {
   GATHERING
   SOLO
   COUPLE
-  ENTIRE
 }
 
 model Follow {
