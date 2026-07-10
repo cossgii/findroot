@@ -16,6 +16,7 @@ const routeLocationQuerySchema = z.object({
   limit: z.coerce.number().min(1).default(5),
   purpose: z.nativeEnum(RoutePurpose).optional(),
   targetUserId: z.string().optional(),
+  sort: z.enum(['recent', 'likes']).optional(),
 });
 
 export const GET = apiHandler({
@@ -23,7 +24,7 @@ export const GET = apiHandler({
   querySchema: routeLocationQuerySchema,
   handler: async ({ query, session }) => {
     const currentUserId = session?.user?.id;
-    const { districtId, page, limit, purpose, targetUserId } = query;
+    const { districtId, page, limit, purpose, targetUserId, sort } = query;
 
     const paginatedData = await getAllPublicRoutes(
       districtId,
@@ -32,7 +33,7 @@ export const GET = apiHandler({
       limit,
       purpose,
       targetUserId,
-      undefined,
+      sort === 'likes',
     );
     return apiSuccess(paginatedData);
   },

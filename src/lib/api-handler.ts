@@ -68,7 +68,7 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
               const user = await db.user.findUnique({ where: { id: payload.userId } });
               if (user) {
                 session = {
-                  user: { id: user.id, name: user.name, email: user.email, image: user.image ?? undefined },
+                  user: { id: user.id, name: user.name, email: user.email, image: user.image ?? null },
                   expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                 };
               }

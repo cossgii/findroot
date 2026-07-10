@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     const { loginId, password } = await req.json();
     const user = await validateCredentials({ loginId, password });
     const token = await signAppToken(user.id);
-    return NextResponse.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+    return NextResponse.json({ token, user: { id: user.id, name: user.name, email: user.email, image: user.image } });
   } catch (error) {
     const message = error instanceof Error ? error.message : '로그인에 실패했습니다.';
     return NextResponse.json({ message }, { status: 401 });

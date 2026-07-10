@@ -26,7 +26,7 @@ export const SEOUL_DISTRICTS: DistrictInfo[] = [
   { id: 'Seongbuk-gu', name: '성북구', lat: 37.5894, lng: 127.0167 },
   { id: 'Songpa-gu', name: '송파구', lat: 37.5145, lng: 127.1066 },
   { id: 'Yangcheon-gu', name: '양천구', lat: 37.5169, lng: 126.8664 },
-  { id: 'Yeongdeungpo-gu_1_', name: '영등포구', lat: 37.5264, lng: 126.8963 },
+  { id: 'Yeongdeungpo-gu', name: '영등포구', lat: 37.5264, lng: 126.8963 },
   { id: 'Yongsan-gu', name: '용산구', lat: 37.5325, lng: 126.99 },
   { id: 'Eunpyeong-gu', name: '은평구', lat: 37.6027, lng: 126.9291 },
   { id: 'Jongno-gu', name: '종로구', lat: 37.573, lng: 126.9794 },

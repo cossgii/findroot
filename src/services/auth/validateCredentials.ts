@@ -53,5 +53,6 @@ export async function validateCredentials(
     id: user.id,
     name: user.name,
     email: user.email,
+    image: user.image ?? null,
   };
 }

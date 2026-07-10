@@ -41,31 +41,6 @@ export async function checkPlaceExists(address: string, creatorId: string) {
   return !!existingPlace;
 }
 
-export async function getPlacesForFeed(userId: string) {
-  const followedUsers = await db.follow.findMany({
-    where: { followerId: userId },
-    select: { followingId: true },
-  });
-  const followedUserIds = followedUsers.map((follow) => follow.followingId);
-  const places = await db.place.findMany({
-    where: {
-      creatorId: {
-        in: followedUserIds,
-      },
-    },
-    include: {
-      creator: {
-        select: { id: true, name: true, image: true },
-      },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
-
-  return places.map(serializeDatesInPlace);
-}
-
 export async function getPlacesByDistrict(
   districtName: string,
   userId: string | undefined,
