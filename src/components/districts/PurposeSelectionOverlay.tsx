@@ -3,15 +3,16 @@
 import React from 'react';
 import { useTransition, animated } from '@react-spring/web';
 import { RoutePurpose } from '@prisma/client';
-import { PURPOSE_MAP } from '@/constants/purpose';
+import { PURPOSE_MAP, type PurposeSelection } from '@/constants/purpose';
 
 interface PurposeSelectionOverlayProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectPurpose: (purpose: RoutePurpose) => void;
+  onSelectPurpose: (purpose: PurposeSelection) => void;
 }
 
-const purposes = Object.keys(PURPOSE_MAP) as RoutePurpose[];
+type PurposeItem = PurposeSelection;
+const purposes: PurposeItem[] = ['ALL', ...(Object.keys(PURPOSE_MAP) as RoutePurpose[])];
 
 export default function PurposeSelectionOverlay({
   isOpen,
@@ -81,10 +82,10 @@ export default function PurposeSelectionOverlay({
                         onClick={() => onSelectPurpose(purpose)}
                       >
                         <h3 className="text-2xl font-semibold mb-2">
-                          {PURPOSE_MAP[purpose].title}
+                          {purpose === 'ALL' ? '전체' : PURPOSE_MAP[purpose].title}
                         </h3>
                         <p className="text-gray-600">
-                          {PURPOSE_MAP[purpose].description}
+                          {purpose === 'ALL' ? '모든 목적의 루트 보기' : PURPOSE_MAP[purpose].description}
                         </p>
                       </animated.div>
                     ))}

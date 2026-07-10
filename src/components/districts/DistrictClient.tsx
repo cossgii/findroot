@@ -13,6 +13,7 @@ import {
 import SortDropdown from '~/src/components/common/SortDropdown';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { PlaceCategory, RoutePurpose } from '@prisma/client';
+import { type PurposeSelection } from '@/constants/purpose';
 import { cn } from '~/src/utils/class-name';
 import PlaceList from './PlaceList';
 import RestaurantListSkeletonGrid from './RestaurantListSkeletonGrid';
@@ -102,13 +103,14 @@ export default function DistrictClient({
   const selectedDistrictFilter = useAtomValue(selectedDistrictFilterAtom);
 
   const initialPurposeFromUrl = searchParams.get('purpose') as
-    | RoutePurpose
+    | PurposeSelection
     | undefined;
   const [routeView, setRouteView] = useAtom(routeViewAtom);
   const [isPurposeOverlayOpen, setIsPurposeOverlayOpen] = useState(false);
   const currentPurpose = searchParams.get('purpose') as
-    | RoutePurpose
+    | PurposeSelection
     | undefined;
+  const purposeForApi = currentPurpose === 'ALL' ? undefined : (currentPurpose as RoutePurpose | undefined);
 
   useEffect(() => {
     if (initialPurposeFromUrl && routeView !== 'routes') {
@@ -282,8 +284,8 @@ export default function DistrictClient({
       if (effectiveDistrictId && effectiveDistrictId !== 'all') {
         params.set('districtId', effectiveDistrictId);
       }
-      if (currentPurpose) {
-        params.set('purpose', currentPurpose);
+      if (purposeForApi) {
+        params.set('purpose', purposeForApi);
       }
       if (targetUserId) {
         params.set('targetUserId', targetUserId);
@@ -339,7 +341,7 @@ export default function DistrictClient({
           <FeaturedRouteCarousel
             districtId={effectiveDistrictId}
             creatorId={targetUserId}
-            purpose={currentPurpose}
+            purpose={purposeForApi}
           />
         )}
       </div>

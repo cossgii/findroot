@@ -1,5 +1,7 @@
 import { RoutePurpose } from '@prisma/client';
 
+export type PurposeSelection = RoutePurpose | 'ALL';
+
 export const PURPOSE_MAP: Record<
   RoutePurpose,
   { title: string; description: string }
@@ -13,8 +15,12 @@ export const PURPOSE_MAP: Record<
 export const PURPOSE_OPTIONS = (
   Object.keys(PURPOSE_MAP) as RoutePurpose[]
 ).map((key) => ({
-  id: key,
+  id: key as PurposeSelection,
   name: PURPOSE_MAP[key].title,
 }));
+
+export const ALL_PURPOSE_OPTION = { id: 'ALL' as PurposeSelection, name: '전체' };
+
+export const PURPOSE_OPTIONS_WITH_ALL = [ALL_PURPOSE_OPTION, ...PURPOSE_OPTIONS];
 
 export const PURPOSE_FORM_OPTIONS = PURPOSE_OPTIONS;

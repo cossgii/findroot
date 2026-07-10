@@ -6,6 +6,7 @@ import { authOptions } from '~/src/services/auth/authOptions';
 import { SEOUL_DISTRICTS } from '~/src/utils/districts';
 import DistrictClient from '~/src/components/districts/DistrictClient';
 import { PlaceCategory, RoutePurpose } from '@prisma/client';
+import { type PurposeSelection } from '@/constants/purpose';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,7 @@ interface DistrictPageProps {
     sort?: 'recent' | 'likes';
     page?: string;
     category?: PlaceCategory;
-    purpose?: RoutePurpose;
+    purpose?: PurposeSelection;
     targetUserId?: string;
   }>;
 }
@@ -47,9 +48,10 @@ export default async function DistrictPage({
     sort = 'recent',
     page: pageParam = '1',
     category,
-    purpose,
+    purpose: rawPurpose,
     targetUserId,
   } = resolvedSearchParams;
+  const purpose: RoutePurpose | undefined = rawPurpose === 'ALL' ? undefined : rawPurpose;
   const districtId = districtName;
   const districtInfo = SEOUL_DISTRICTS.find((d) => d.id === districtId);
   const center = districtInfo
