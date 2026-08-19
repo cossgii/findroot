@@ -38,7 +38,7 @@ export default function Pagination({
           <li>
             <button
               onClick={() => onPageChange(startPage - 1)}
-              className="flex items-center justify-center px-4 h-10 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700"
+              className="flex items-center justify-center px-4 h-10 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
               aria-label="이전 블록으로 이동"
             >
               <span className="sr-only">Previous Block</span>
@@ -53,6 +53,7 @@ export default function Pagination({
             className={cn(
               'flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed',
               !hasPrevBlock ? 'rounded-s-lg' : '',
+              'dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 dark:disabled:opacity-30',
             )}
             aria-label="이전 페이지로 이동"
           >
@@ -67,8 +68,8 @@ export default function Pagination({
               className={cn(
                 'flex items-center justify-center px-4 h-10 leading-tight border border-gray-300',
                 currentPage === page
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700',
+                  ? 'text-primary-600 bg-primary-50 dark:text-primary-400 dark:bg-primary-950'
+                  : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200',
               )}
             >
               {page}
@@ -82,6 +83,7 @@ export default function Pagination({
             className={cn(
               'flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed',
               !hasNextBlock ? 'rounded-e-lg' : '',
+              'dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 dark:disabled:opacity-30',
             )}
             aria-label="다음 페이지로 이동"
           >
@@ -93,7 +95,7 @@ export default function Pagination({
           <li>
             <button
               onClick={() => onPageChange(endPage + 1)}
-              className="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700"
+              className="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
               aria-label="다음 블록으로 이동"
             >
               <span className="sr-only">Next Block</span>

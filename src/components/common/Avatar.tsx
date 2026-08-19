@@ -2,46 +2,62 @@
 import * as React from 'react';
 import Image from 'next/image';
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { User } from 'lucide-react';
 
 import { cn } from '~/src/utils/class-name';
 
+type AvatarSize = 'small' | 'medium' | 'large';
+
+const AvatarSizeContext = React.createContext<AvatarSize>('large');
+
+const sizePxMap: Record<AvatarSize, string> = {
+  small: '28px',
+  medium: '40px',
+  large: '56px',
+};
+
+const avatarVariants = cva('relative flex shrink-0 rounded-full shadow-sm', {
+  variants: {
+    size: {
+      small: 'h-7 w-7',
+      medium: 'h-10 w-10',
+      large: 'h-14 w-14',
+    },
+  },
+  defaultVariants: {
+    size: 'large',
+  },
+});
+
 const Avatar = React.forwardRef<
   HTMLSpanElement,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root> & {
-    size?: 'small' | 'medium' | 'large';
-  }
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root> &
+    VariantProps<typeof avatarVariants>
 >(({ className, size = 'large', ...props }, ref) => {
-  const sizeClass =
-    size === 'small'
-      ? 'h-7 w-7'
-      : size === 'medium'
-        ? 'h-10 w-10'
-        : 'h-14 w-14';
-
   return (
-    <AvatarPrimitive.Root
-      ref={ref}
-      className={cn(
-        'relative flex shrink-0 rounded-full shadow-sm',
-        sizeClass,
-        className,
-      )}
-      {...props}
-    />
+    <AvatarSizeContext.Provider value={size ?? 'large'}>
+      <AvatarPrimitive.Root
+        ref={ref}
+        className={cn(avatarVariants({ size }), className)}
+        {...props}
+      />
+    </AvatarSizeContext.Provider>
   );
 });
 Avatar.displayName = AvatarPrimitive.Root.displayName;
 
-interface AvatarImageProps extends Omit<
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>,
-  'src'
-> {
+interface AvatarImageProps
+  extends Omit<
+    React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>,
+    'src'
+  > {
   src?: string;
 }
 
 const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
   ({ className, src, alt }, ref) => {
+    const size = React.useContext(AvatarSizeContext);
     if (!src) {
       return null;
     }
@@ -55,7 +71,7 @@ const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
           'aspect-square h-full w-full overflow-hidden rounded-full object-cover',
           className,
         )}
-        sizes="48px"
+        sizes={sizePxMap[size]}
         unoptimized
       />
     );
@@ -70,12 +86,12 @@ const AvatarFallback = React.forwardRef<
   <AvatarPrimitive.Fallback
     ref={ref}
     className={cn(
-      'bg-muted flex h-full w-full items-center justify-center rounded-full bg-gray-200',
+      'flex h-full w-full items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600',
       className,
     )}
     {...props}
   >
-    <User className="h-3/5 w-3/5 text-gray-500" />
+    <User className="h-3/5 w-3/5 text-gray-500 dark:text-gray-300" />
   </AvatarPrimitive.Fallback>
 ));
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;

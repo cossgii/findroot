@@ -10,12 +10,12 @@ export default function EmptyState({ message, description, className }: EmptySta
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center min-h-[120px] rounded-xl bg-gray-50 px-6 py-10',
+        'flex flex-col items-center justify-center min-h-[120px] rounded-xl bg-gray-50 px-6 py-10 dark:bg-gray-800',
         className,
       )}
     >
-      <p className="text-sm font-medium text-gray-500">{message}</p>
-      {description && <p className="text-xs text-gray-400 mt-1">{description}</p>}
+      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{message}</p>
+      {description && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{description}</p>}
     </div>
   );
 }

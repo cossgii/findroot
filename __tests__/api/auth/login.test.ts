@@ -57,6 +57,7 @@ describe('로그인 인증 단위 테스트 (validateCredentials)', () => {
         id: 'user-1',
         name: 'Test User',
         email: 'test@example.com',
+        image: null,
       });
       expect(mockedDb.user.findUnique).toHaveBeenCalledWith({
         where: { loginId: 'testuser' },

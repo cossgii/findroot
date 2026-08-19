@@ -12,3 +12,5 @@ node_modules
 .claude/
 CLAUDE.md
 AGENTS.md
+*storybook.log
+storybook-static

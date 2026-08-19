@@ -21,7 +21,13 @@ jest.mock('~/lib/db', () => ({
     comment: {
       count: jest.fn().mockResolvedValue(1),
     },
+    route: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
   },
+}));
+jest.mock('~/lib/fcm', () => ({
+  sendPushNotification: jest.fn().mockResolvedValue(undefined),
 }));
 
 const mockedGetServerSession = getServerSession as jest.Mock;

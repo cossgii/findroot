@@ -74,13 +74,17 @@ export default function Dropdown<T>({
   contentClassName,
   align = 'right',
   renderInFlow = false,
-  maxVisibleItems, // Destructured prop
+  disabled = false,
+  maxVisibleItems,
 }: DropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const closeDropdown = () => setIsOpen(false);
-  const toggleDropdown = () => setIsOpen((prev) => !prev);
+  const toggleDropdown = () => {
+    if (disabled) return;
+    setIsOpen((prev) => !prev);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -108,9 +112,10 @@ export default function Dropdown<T>({
     <div
       className={cn(
         'flex items-center justify-between px-4 py-2 border border-gray-300 rounded-md',
-        'min-w-[120px] text-sm hover:bg-gray-50',
-        !value ? 'text-gray-400' : 'text-gray-700',
+        'min-w-[120px] text-sm hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700',
+        !value ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-200',
         'min-w-0',
+        disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
         triggerClassName,
       )}
     >
@@ -143,7 +148,7 @@ export default function Dropdown<T>({
         {isOpen && (
           <div
             className={cn(
-              'bg-white border border-gray-200 rounded-md shadow-lg mt-2',
+              'bg-white border border-gray-200 rounded-md shadow-lg mt-2 dark:bg-gray-800 dark:border-gray-600',
               renderInFlow ? '' : 'absolute min-w-full z-20',
               renderInFlow ? '' : align === 'left' ? 'left-0' : 'right-0',
               contentClassName,
@@ -165,10 +170,10 @@ export default function Dropdown<T>({
                     onClick={() => handleSelect(option)}
                     className={cn(
                       'px-4 py-2 text-sm cursor-pointer whitespace-nowrap',
-                      value && JSON.stringify(option) === JSON.stringify(value)
-                        ? 'bg-primary-100 text-primary-700 font-bold'
-                        : 'text-gray-700',
-                      'hover:bg-primary-50',
+                      value && getOptionLabel(option) === getOptionLabel(value)
+                        ? 'bg-primary-100 text-primary-700 font-bold dark:bg-primary-950 dark:text-primary-300'
+                        : 'text-gray-700 dark:text-gray-200',
+                      'hover:bg-primary-50 dark:hover:bg-gray-700',
                     )}
                   >
                     {getOptionLabel(option)}

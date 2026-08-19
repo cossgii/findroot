@@ -15,11 +15,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800',
+          'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 dark:bg-primary-500 dark:hover:bg-primary-400 dark:active:bg-primary-300',
         secondary:
-          'bg-secondary-600 text-white hover:bg-secondary-700 active:bg-secondary-800',
+          'bg-secondary-600 text-white hover:bg-secondary-700 active:bg-secondary-800 dark:bg-secondary-500 dark:hover:bg-secondary-400 dark:active:bg-secondary-300',
         outlined:
-          'border border-primary-600 bg-white text-primary-600 hover:border-primary-700 hover:text-primary-700 active:border-primary-800 active:text-primary-800',
+          'border border-primary-600 bg-white text-primary-600 hover:border-primary-700 hover:text-primary-700 active:border-primary-800 active:text-primary-800 dark:border-primary-400 dark:bg-gray-900 dark:text-primary-400 dark:hover:border-primary-300 dark:hover:text-primary-300',
       },
       size: {
         small: 'h-10 text-sm',
@@ -33,12 +33,12 @@ const buttonVariants = cva(
       {
         variant: ['primary', 'secondary'],
         disabled: true,
-        className: 'bg-secondary-300 text-secondary-500',
+        className: 'bg-secondary-300 text-secondary-500 dark:bg-secondary-700 dark:text-secondary-500',
       },
       {
         variant: 'outlined',
         disabled: true,
-        className: 'border-secondary-300 bg-white text-secondary-400',
+        className: 'border-secondary-300 bg-white text-secondary-400 dark:border-secondary-700 dark:bg-gray-900 dark:text-secondary-600',
       },
     ],
     defaultVariants: {

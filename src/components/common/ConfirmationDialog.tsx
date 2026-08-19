@@ -26,12 +26,12 @@ export default function ConfirmationDialog({
         <DialogOverlay className="fixed inset-0 bg-black/50 z-[9998]" />
         <DialogContent onClick={(e) => e.stopPropagation()} className={cn(
           "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-          "bg-white p-6 rounded-lg shadow-lg z-[9999]",
+          "bg-white p-6 rounded-lg shadow-lg z-[9999] dark:bg-gray-800",
           "sm:max-w-[425px]"
         )}>
           <div>
-            <DialogTitle className="text-xl font-bold mb-2">{title}</DialogTitle>
-            <DialogDescription className="text-gray-700 mb-4">{message}</DialogDescription>
+            <DialogTitle className="text-xl font-bold mb-2 dark:text-gray-100">{title}</DialogTitle>
+            <DialogDescription className="text-gray-700 mb-4 dark:text-gray-300">{message}</DialogDescription>
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button type="button" variant="outlined" onClick={onCancel}>

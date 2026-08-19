@@ -28,6 +28,8 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "__tests__/**/*"
