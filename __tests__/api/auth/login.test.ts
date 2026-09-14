@@ -140,7 +140,7 @@ describe('로그인 인증 단위 테스트 (validateCredentials)', () => {
   // 실패 케이스 - 소셜 로그인 계정
   // ============================================
   describe('실패 케이스 - 소셜 로그인 계정', () => {
-    it('Google 계정으로 가입된 사용자는 자격 증명 로그인 불가', async () => {
+    it('소셜 계정으로 가입된 사용자는 일반 실패 메시지와 함께 자격 증명 로그인이 거부되어야 한다 (가입 방식 노출 금지)', async () => {
       const socialUser = {
         id: 'user-1',
         loginId: 'google_12345',
@@ -151,31 +151,21 @@ describe('로그인 인증 단위 테스트 (validateCredentials)', () => {
         emailVerified: null,
       };
 
-      const googleAccount = {
-        userId: 'user-1',
-        provider: 'google',
-        providerAccountId: '12345',
-      };
-
       (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(socialUser);
-      (mockedDb.account.findFirst as jest.Mock).mockResolvedValue(
-        googleAccount,
-      );
 
       await expect(
         validateCredentials({
           loginId: 'google_12345',
           password: 'anyPassword',
         }),
-      ).rejects.toThrow('이 아이디는 GOOGLE 계정으로 가입되었습니다.');
+      ).rejects.toThrow('아이디 또는 비밀번호가 올바르지 않습니다.');
 
-      expect(mockedDb.account.findFirst).toHaveBeenCalledWith({
-        where: { userId: 'user-1' },
-      });
+      // 계정 열거(user enumeration) 방지: provider 조회 자체를 하지 않아야 한다
+      expect(mockedDb.account.findFirst).not.toHaveBeenCalled();
     });
 
-    it('Kakao 계정으로 가입된 사용자는 자격 증명 로그인 불가', async () => {
-      const socialUser = {
+    it('provider 종류와 무관하게 항상 동일한 일반 메시지를 반환해야 한다', async () => {
+      const kakaoUser = {
         id: 'user-2',
         loginId: 'kakao_67890',
         email: 'kakao@example.com',
@@ -185,43 +175,14 @@ describe('로그인 인증 단위 테스트 (validateCredentials)', () => {
         emailVerified: null,
       };
 
-      const kakaoAccount = {
-        userId: 'user-2',
-        provider: 'kakao',
-        providerAccountId: '67890',
-      };
-
-      (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(socialUser);
-      (mockedDb.account.findFirst as jest.Mock).mockResolvedValue(kakaoAccount);
+      (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(kakaoUser);
 
       await expect(
         validateCredentials({
           loginId: 'kakao_67890',
           password: 'anyPassword',
         }),
-      ).rejects.toThrow('이 아이디는 KAKAO 계정으로 가입되었습니다.');
-    });
-
-    it('provider 정보가 없으면 "다른" 계정으로 표시', async () => {
-      const socialUser = {
-        id: 'user-3',
-        loginId: 'unknown_user',
-        email: 'unknown@example.com',
-        name: 'Unknown User',
-        password: null,
-        image: null,
-        emailVerified: null,
-      };
-
-      (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(socialUser);
-      (mockedDb.account.findFirst as jest.Mock).mockResolvedValue(null);
-
-      await expect(
-        validateCredentials({
-          loginId: 'unknown_user',
-          password: 'anyPassword',
-        }),
-      ).rejects.toThrow('이 아이디는 다른 계정으로 가입되었습니다.');
+      ).rejects.toThrow('아이디 또는 비밀번호가 올바르지 않습니다.');
     });
   });
 

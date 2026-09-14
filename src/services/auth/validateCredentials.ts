@@ -29,13 +29,9 @@ export async function validateCredentials(
     throw new Error(GENERIC_ERROR);
   }
 
-  // 소셜 로그인 계정 체크 (어떤 provider인지 안내)
+  // 소셜 로그인 계정 체크 (아이디 존재나 가입 방식을 노출하지 않도록 일반 메시지 사용)
   if (!user.password) {
-    const account = await db.account.findFirst({
-      where: { userId: user.id },
-    });
-    const provider = account?.provider?.toUpperCase() ?? '다른';
-    throw new Error(`이 아이디는 ${provider} 계정으로 가입되었습니다.`);
+    throw new Error(GENERIC_ERROR);
   }
 
   // 비밀번호 검증
