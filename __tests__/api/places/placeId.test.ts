@@ -21,7 +21,7 @@ const mockSession = {
 };
 
 const createTestContext = (placeId: string) => ({
-  params: { placeId },
+  params: Promise.resolve({ placeId }),
 });
 
 describe('/api/places/[placeId]', () => {

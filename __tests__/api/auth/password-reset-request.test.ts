@@ -71,7 +71,7 @@ describe('POST /api/auth/password-reset/request', () => {
     });
 
     // Act
-    const response = await POST(req, { params: {} });
+    const response = await POST(req, { params: Promise.resolve({}) });
     const body = await response.json();
 
     // Assert
@@ -95,7 +95,7 @@ describe('POST /api/auth/password-reset/request', () => {
     });
 
     // Act
-    const response = await POST(req, { params: {} });
+    const response = await POST(req, { params: Promise.resolve({}) });
     const body = await response.json();
 
     // Assert
@@ -113,7 +113,7 @@ describe('POST /api/auth/password-reset/request', () => {
     });
 
     // Act
-    const response = await POST(req, { params: {} });
+    const response = await POST(req, { params: Promise.resolve({}) });
     const body = await response.json();
 
     // Assert
@@ -129,7 +129,7 @@ describe('POST /api/auth/password-reset/request', () => {
     });
 
     // Act
-    const response = await POST(req, { params: {} });
+    const response = await POST(req, { params: Promise.resolve({}) });
     const body = await response.json();
 
     // Assert

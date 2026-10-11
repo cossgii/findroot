@@ -4,7 +4,7 @@ import { User } from '@prisma/client';
 export async function getUserById(userId: string) {
   return db.user.findUnique({
     where: { id: userId },
-    select: { id: true, name: true, loginId: true, email: true, image: true },
+    select: { id: true, name: true, loginId: true, image: true },
   });
 }
 

@@ -233,6 +233,7 @@ model Message {
 model PasswordResetToken {
   id              String   @id @default(cuid())
   email           String
+  userId          String?  @map("user_id")
   selector        String   @unique
   hashedValidator String   @map("hashed_validator")
   expires         DateTime

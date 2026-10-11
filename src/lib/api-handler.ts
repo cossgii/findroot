@@ -3,11 +3,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z, ZodType } from 'zod';
 import { authOptions } from '~/src/services/auth/authOptions';
 import { ApiError } from '~/src/utils/api-errors';
-import { checkRateLimit, getClientIp, RateLimitConfig, RATE_LIMITS } from '~/src/lib/rate-limiter';
+import {
+  checkRateLimit,
+  getClientIp,
+  RateLimitConfig,
+  RATE_LIMITS,
+} from '~/src/lib/rate-limiter';
 import { verifyAppToken } from '~/lib/app-jwt';
 import { db } from '~/lib/db';
 
 export const apiSuccess = <T>(data: T, status = 200): NextResponse<T> => {
+  if (status === 204) {
+    return new NextResponse(null, { status }) as NextResponse<T>;
+  }
   return NextResponse.json(data, { status });
 };
 
@@ -52,7 +60,10 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
       const ip = getClientIp(req);
       const key = `${req.nextUrl.pathname}:${ip}`;
       if (!checkRateLimit(key, rateLimitConfig)) {
-        return NextResponse.json({ message: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' }, { status: 429 });
+        return NextResponse.json(
+          { message: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+          { status: 429 },
+        );
       }
 
       let session: Session | null = null;
@@ -65,11 +76,20 @@ export function apiHandler<TBody = unknown, TQuery = unknown>(
           if (authHeader?.startsWith('Bearer ')) {
             const payload = await verifyAppToken(authHeader.slice(7));
             if (payload) {
-              const user = await db.user.findUnique({ where: { id: payload.userId } });
+              const user = await db.user.findUnique({
+                where: { id: payload.userId },
+              });
               if (user) {
                 session = {
-                  user: { id: user.id, name: user.name, email: user.email, image: user.image ?? null },
-                  expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                  user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    image: user.image ?? null,
+                  },
+                  expires: new Date(
+                    Date.now() + 30 * 24 * 60 * 60 * 1000,
+                  ).toISOString(),
                 };
               }
             }

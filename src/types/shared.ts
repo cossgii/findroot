@@ -41,7 +41,7 @@ export interface ClientUser {
   id: string;
   name: string | null;
   loginId: string;
-  email: string | null;
+  email?: string | null;
   image: string | null;
   password?: string | null;
 }

@@ -41,8 +41,17 @@ describe('userService', () => {
       expect(result).toEqual(mockUser);
       expect(mockedDb.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'user-1' },
-        select: { id: true, name: true, loginId: true, email: true, image: true },
+        select: { id: true, name: true, loginId: true, image: true },
       });
+    });
+
+    it('이메일을 조회 조건에 포함하지 않는다 (공개 프로필 PII 노출 방지)', async () => {
+      (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+
+      await getUserById('user-1');
+
+      const select = (mockedDb.user.findUnique as jest.Mock).mock.calls[0][0].select;
+      expect(select).not.toHaveProperty('email');
     });
 
     it('존재하지 않는 사용자는 null을 반환한다', async () => {

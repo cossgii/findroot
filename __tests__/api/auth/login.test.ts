@@ -132,7 +132,33 @@ describe('로그인 인증 단위 테스트 (validateCredentials)', () => {
       expect(mockedDb.user.findUnique).toHaveBeenCalledWith({
         where: { loginId: 'nonexistent' },
       });
-      expect(mockedBcrypt.compare).not.toHaveBeenCalled();
+      expect(mockedBcrypt.compare).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ============================================
+  // 로그인 시도 제한 (rate limit)
+  // ============================================
+  describe('로그인 시도 제한', () => {
+    it('같은 IP에서 짧은 시간 내 허용치를 초과하면 요청을 거부해야 한다', async () => {
+      (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(null);
+      const headers = { 'x-forwarded-for': '203.0.113.9' };
+
+      for (let i = 0; i < 10; i++) {
+        await expect(
+          validateCredentials(
+            { loginId: 'nonexistent', password: 'pw' },
+            headers,
+          ),
+        ).rejects.toThrow('아이디 또는 비밀번호가 올바르지 않습니다.');
+      }
+
+      await expect(
+        validateCredentials(
+          { loginId: 'nonexistent', password: 'pw' },
+          headers,
+        ),
+      ).rejects.toThrow('요청이 너무 많습니다');
     });
   });
 

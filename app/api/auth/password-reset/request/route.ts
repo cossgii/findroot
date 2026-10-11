@@ -29,6 +29,7 @@ export const POST = apiHandler({
       await db.passwordResetToken.create({
         data: {
           email: user.email,
+          userId: user.id,
           selector: selector,
           hashedValidator: hashedValidator,
           expires: tokenExpires,

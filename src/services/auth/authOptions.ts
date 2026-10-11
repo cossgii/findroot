@@ -48,8 +48,8 @@ export const authOptions: AuthOptions = {
         loginId: { label: 'Login ID', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
-        return validateCredentials(credentials);
+      async authorize(credentials, req) {
+        return validateCredentials(credentials, req?.headers);
       },
     }),
   ],

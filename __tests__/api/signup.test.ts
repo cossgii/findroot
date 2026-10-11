@@ -63,7 +63,7 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req, { params: {} });
+      const response = await POST(req, { params: Promise.resolve({}) });
       const body = await response.json();
 
       // Assert
@@ -103,7 +103,7 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req, { params: {} });
+      const response = await POST(req, { params: Promise.resolve({}) });
       const body = await response.json();
 
       // Assert
@@ -129,7 +129,7 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req, { params: {} });
+      const response = await POST(req, { params: Promise.resolve({}) });
       const body = await response.json();
 
       // Assert
@@ -148,7 +148,7 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req, { params: {} });
+      const response = await POST(req, { params: Promise.resolve({}) });
       const body = await response.json();
 
       // Assert
@@ -174,7 +174,7 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req, { params: {} });
+      const response = await POST(req, { params: Promise.resolve({}) });
       const body = await response.json();
 
       // Assert
@@ -204,7 +204,7 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req, { params: {} });
+      const response = await POST(req, { params: Promise.resolve({}) });
       const body = await response.json();
 
       // Assert
@@ -229,7 +229,7 @@ describe('POST /api/signup', () => {
       });
 
       // Act
-      const response = await POST(req, { params: {} });
+      const response = await POST(req, { params: Promise.resolve({}) });
       const body = await response.json();
 
       // Assert

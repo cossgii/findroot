@@ -44,17 +44,18 @@ describe('POST /api/auth/password-reset/reset', () => {
     (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true); // For validator comparison
 
     // Mock the findUnique call for passwordResetToken
+    const mockUser = { id: 'user-1', email: 'test@example.com' };
     (mockedDb.passwordResetToken.findUnique as jest.Mock).mockResolvedValue({
       id: 'token123',
-      email: 'test@example.com', // Important: API uses email from token
+      email: mockUser.email,
+      userId: mockUser.id,
       selector: mockToken,
       hashedValidator: mockHashedValidator,
       expires: new Date(Date.now() + 3600000), // 1 hour from now
     });
 
-    // Mock the user findFirst call
-    const mockUser = { id: 'user-1', email: 'test@example.com' };
-    (mockedDb.user.findFirst as jest.Mock).mockResolvedValue(mockUser);
+    // Mock the user lookup by id
+    (mockedDb.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
 
     // Mock the transaction
     (mockedDb.$transaction as jest.Mock).mockResolvedValue([{}, {}]);
@@ -65,7 +66,7 @@ describe('POST /api/auth/password-reset/reset', () => {
     });
 
     // Act
-    const response = await POST(req, { params: {} });
+    const response = await POST(req, { params: Promise.resolve({}) });
     const body = await response.json();
 
     // Assert
@@ -77,8 +78,33 @@ describe('POST /api/auth/password-reset/reset', () => {
       data: { password: 'new-hashed-password' },
     });
     expect(mockedDb.passwordResetToken.deleteMany).toHaveBeenCalledWith({
-      where: { email: mockUser.email },
+      where: { userId: mockUser.id },
     });
+  });
+
+  it('토큰에 userId가 없으면(마이그레이션 이전 토큰) 400을 반환해야 한다', async () => {
+    const mockToken = 'legacy-token';
+    (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
+    (mockedDb.passwordResetToken.findUnique as jest.Mock).mockResolvedValue({
+      id: 'token123',
+      email: 'test@example.com',
+      userId: null,
+      selector: mockToken,
+      hashedValidator: 'hashed-legacy-token',
+      expires: new Date(Date.now() + 3600000),
+    });
+
+    const req = new NextRequest('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({ selector: mockToken, validator: mockToken, password: 'newPassword123!' }),
+    });
+
+    const response = await POST(req, { params: Promise.resolve({}) });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.message).toBe('유효하지 않거나 만료된 토큰입니다.');
+    expect(mockedDb.user.update).not.toHaveBeenCalled();
   });
 
   it('유효하지 않은 토큰이면, 400 에러를 반환해야 한다', async () => {
@@ -91,7 +117,7 @@ describe('POST /api/auth/password-reset/reset', () => {
     });
 
     // Act
-    const response = await POST(req, { params: {} });
+    const response = await POST(req, { params: Promise.resolve({}) });
     const body = await response.json();
 
     // Assert
@@ -107,7 +133,7 @@ describe('POST /api/auth/password-reset/reset', () => {
     });
 
     // Act
-    const response = await POST(req, { params: {} });
+    const response = await POST(req, { params: Promise.resolve({}) });
     const body = await response.json();
 
     // Assert
@@ -138,7 +164,7 @@ describe('POST /api/auth/password-reset/reset', () => {
     });
 
     // Act
-    const response = await POST(req, { params: {} });
+    const response = await POST(req, { params: Promise.resolve({}) });
     const body = await response.json();
 
     // Assert
