@@ -27,7 +27,6 @@ import {
   GOOGLE_CLIENT_SECRET,
   KAKAO_CLIENT_ID,
   KAKAO_CLIENT_SECRET,
-  MAIN_ACCOUNT_ID,
   NEXTAUTH_SECRET,
 } from '~/config';
 
@@ -132,17 +131,7 @@ export const authOptions: AuthOptions = {
     },
     async session({ session, token }) {
       if (token.id && session.user) {
-        const userFromDb = await db.user.findUnique({
-          where: { id: token.id },
-        });
-
-        if (userFromDb) {
-          session.user.name = userFromDb.name;
-          session.user.email = userFromDb.email;
-          session.user.image = userFromDb.image;
-          session.user.id = userFromDb.id;
-          session.user.isAdmin = userFromDb.id === MAIN_ACCOUNT_ID;
-        }
+        session.user.id = token.id;
       }
       return session;
     },

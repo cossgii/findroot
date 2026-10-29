@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ClientUser as User } from '~/src/types/shared';
-import { useSession } from 'next-auth/react';
 
 import {
   Form,
@@ -44,7 +43,6 @@ export default function UserProfileEditForm({
   onSave,
   onCancel,
 }: UserProfileEditFormProps) {
-  const { update: updateSession } = useSession();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(user.image);
   const [isUploading, setIsUploading] = useState(false);
@@ -99,7 +97,6 @@ export default function UserProfileEditForm({
         throw new Error('Failed to update profile.');
 
       const updatedUser = await profileUpdateResponse.json();
-      await updateSession({ user: updatedUser });
       onSave(updatedUser);
       alert('프로필이 성공적으로 업데이트되었습니다.');
     } catch (error) {

@@ -1,4 +1,4 @@
-import { updateUser } from '~/src/services/user/userService';
+import { getCurrentUserById, updateUser } from '~/src/services/user/userService';
 import { z } from 'zod';
 import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 
@@ -14,7 +14,8 @@ const updateUserBodySchema = z.object({
 export const GET = apiHandler({
   auth: true,
   handler: async ({ session }) => {
-    return apiSuccess(session!.user);
+    const user = await getCurrentUserById(session!.user.id);
+    return apiSuccess(user);
   },
 });
 

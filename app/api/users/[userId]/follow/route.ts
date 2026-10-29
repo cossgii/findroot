@@ -2,6 +2,7 @@ import { followUser, unfollowUser } from '~/src/services/user/followService';
 import { z } from 'zod';
 import { apiHandler, apiSuccess } from '~/src/lib/api-handler';
 import { sendPushNotification } from '~/lib/fcm';
+import { db } from '~/lib/db';
 
 const UserFollowParamsSchema = z.object({
   userId: z.string({ message: '유효한 사용자 ID가 필요합니다.' }),
@@ -16,7 +17,8 @@ export const POST = apiHandler({
     const follow = await followUser(followerId, followingId);
 
     // 팔로우 받은 사람에게 알림
-    await sendPushNotification(followingId, '새 팔로워', `${session!.user.name}님이 팔로우하기 시작했습니다.`, { screen: 'user', id: followerId });
+    const actor = await db.user.findUnique({ where: { id: followerId }, select: { name: true } });
+    await sendPushNotification(followingId, '새 팔로워', `${actor?.name}님이 팔로우하기 시작했습니다.`, { screen: 'user', id: followerId });
 
     return apiSuccess(follow, 201);
   },

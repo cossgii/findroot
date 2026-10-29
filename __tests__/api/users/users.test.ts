@@ -6,7 +6,7 @@ import { GET as GET_ME, PUT as PUT_ME } from '~/app/api/users/me/route';
 import { POST as POST_FOLLOW, DELETE as DELETE_FOLLOW } from '~/app/api/users/[userId]/follow/route';
 import { GET as GET_FOLLOW_STATUS } from '~/app/api/users/[userId]/follow/status/route';
 import { getServerSession } from 'next-auth';
-import { updateUser } from '~/src/services/user/userService';
+import { getCurrentUserById, updateUser } from '~/src/services/user/userService';
 import { followUser, unfollowUser, getFollowStatus } from '~/src/services/user/followService';
 import { NextRequest } from 'next/server';
 
@@ -16,6 +16,7 @@ jest.mock('~/src/services/user/followService');
 jest.mock('~/src/services/auth/authOptions', () => ({ authOptions: {} }));
 
 const mockedGetServerSession = getServerSession as jest.Mock;
+const mockedGetCurrentUserById = getCurrentUserById as jest.Mock;
 const mockedUpdateUser = updateUser as jest.Mock;
 const mockedFollowUser = followUser as jest.Mock;
 const mockedUnfollowUser = unfollowUser as jest.Mock;
@@ -55,12 +56,15 @@ describe('GET /api/users/me', () => {
   });
 
   it('현재 로그인한 유저 정보를 반환한다', async () => {
+    mockedGetCurrentUserById.mockResolvedValue(mockUser);
+
     const req = createRequest('GET');
     const res = await GET_ME(req, { params: mockParams() });
     const body = await res.json();
 
     expect(res.status).toBe(200);
     expect(body.id).toBe('user-1');
+    expect(mockedGetCurrentUserById).toHaveBeenCalledWith('user-1');
   });
 
   it('인증 없이 요청 시 401을 반환한다', async () => {
