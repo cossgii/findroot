@@ -48,6 +48,7 @@
   },
   "name": "findroot",
   "version": "1.0.0",
+  "private": true,
   "main": "index.js",
   "dependencies": {
     "@auth/prisma-adapter": "2.10.0",
@@ -100,6 +101,6 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "description": ""
 }
