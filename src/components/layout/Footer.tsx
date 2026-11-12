@@ -11,8 +11,13 @@ export default function Footer() {
       <p>&copy; 2026 FindRoot. All rights reserved.</p>
       <p>
         Contact:{' '}
-        <a href="mailto:contact@findroot.com" className="underline">
-          contact@findroot.com
+        <a
+          href="https://github.com/cossgii/findroot/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline"
+        >
+          GitHub Issues
         </a>
       </p>
     </footer>
