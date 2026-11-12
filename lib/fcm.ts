@@ -33,6 +33,7 @@ export async function sendPushNotification(
       try {
         await messaging.send({
           token,
+          notification: { title, body },
           data: { title, body, ...(data ?? {}) },
           android: { priority: 'high' },
           apns: {
